@@ -37,7 +37,8 @@ test.describe('byte budgets', () => {
     const m = await load(page, '/en/');
     expect(sum(m, 'document', 'gz')).toBeLessThanOrEqual(46_080);
     expect(sum(m, 'script', 'gz')).toBeLessThanOrEqual(35_840);
-    expect(sum(m, 'stylesheet', 'gz')).toBeLessThanOrEqual(25_600);
+    // One shared stylesheet for the whole site: measured about 16.6 KB gzip (105.6 KB raw).
+    expect(sum(m, 'stylesheet', 'gz')).toBeLessThanOrEqual(18_432);
   });
 
   for (const [lang, critical, total] of [
@@ -85,10 +86,49 @@ test.describe('byte budgets', () => {
     expect(new Set(urls).size).toBe(urls.length);
   });
 
-  test('render-blocking stylesheet count on /en/ is recorded', async ({ page }, info) => {
+  test('render-blocking stylesheet count on /en/ is exactly one', async ({ page }, info) => {
     await page.goto('/en/');
     const n = await page.locator('head link[rel="stylesheet"]:not([media="print"])').count();
     info.annotations.push({ type: 'render-blocking stylesheets', description: String(n) });
+    expect(n).toBe(1);
+  });
+
+  test('every sitemap page references the same single stylesheet', async ({ request }) => {
+    const sitemap = await (await request.get('/sitemap-0.xml')).text();
+    const paths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]!).pathname);
+    expect(paths.length).toBeGreaterThan(10);
+    const sheets = new Set<string>();
+    for (const path of paths) {
+      const html = await (await request.get(path)).text();
+      const hrefs = [...html.matchAll(/<link\b[^>]*>/g)]
+        .map((m) => m[0])
+        .filter((tag) => /rel="stylesheet"/.test(tag) && !/media="print"/.test(tag))
+        .map((tag) => /href="([^"]+)"/.exec(tag)?.[1] ?? '');
+      expect(hrefs.length, path).toBeLessThanOrEqual(1);
+      for (const h of hrefs) sheets.add(h);
+    }
+    expect(sheets.size).toBe(1);
+  });
+
+  test('client-side navigation downloads no new stylesheet', async ({ page }) => {
+    await page.goto('/en/');
+    await page.waitForLoadState('networkidle');
+    const css: string[] = [];
+    page.on('request', (req) => {
+      if (req.resourceType() === 'stylesheet' || new URL(req.url()).pathname.endsWith('.css'))
+        css.push(req.url());
+    });
+    await page.getByRole('link', { name: 'Explore solutions' }).first().click();
+    await expect(page).toHaveURL(/\/en\/solutions\/$/);
+    await page.waitForLoadState('networkidle');
+    await page
+      .getByRole('banner')
+      .getByRole('link', { name: 'About', exact: true })
+      .first()
+      .click();
+    await expect(page).toHaveURL(/\/en\/about\/$/);
+    await page.waitForLoadState('networkidle');
+    expect(css).toEqual([]);
   });
 });
 

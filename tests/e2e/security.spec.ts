@@ -74,6 +74,39 @@ test('interactive features still work under the CSP', async ({ page }) => {
   expect(csp).toEqual([]);
 });
 
+test('prefetch, idle prefetch and client-side navigation produce no CSP violations', async ({
+  page,
+}) => {
+  await applyProductionHeaders(page);
+  const consoleCsp: string[] = [];
+  page.on(
+    'console',
+    (m) => /Content Security Policy|Refused to/i.test(m.text()) && consoleCsp.push(m.text()),
+  );
+  const pageFetches: string[] = [];
+  page.on('request', (r) => {
+    const { pathname } = new URL(r.url());
+    if (r.resourceType() === 'fetch' && /^\/(en|vi)\//.test(pathname)) pageFetches.push(pathname);
+  });
+  await page.goto('/en/');
+  const solutions = page.getByRole('link', { name: 'Explore solutions' });
+  await solutions.hover();
+  await page.waitForTimeout(200);
+  await solutions.click();
+  await expect(page).toHaveURL(/\/en\/solutions\/$/);
+  const about = page.locator('.primary-nav a.nav-link[href="/en/experience/"]');
+  await about.hover();
+  await page.waitForTimeout(200);
+  await about.click();
+  await expect(page).toHaveURL(/\/en\/experience\/$/);
+  // Long enough for the idle prefetch (3 s after load) to run under the production CSP.
+  await page.waitForTimeout(4_000);
+  expect(pageFetches.length).toBeGreaterThan(0);
+  const seen = await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp);
+  expect(seen).toEqual([]);
+  expect(consoleCsp).toEqual([]);
+});
+
 test('no page ships inline scripts or style blocks', async ({ request }) => {
   const sitemap = await (await request.get('/sitemap-0.xml')).text();
   const urls = [...sitemap.matchAll(/<loc>https?:\/\/[^/]+(\/[^<]*)<\/loc>/g)].map((m) => m[1]!);

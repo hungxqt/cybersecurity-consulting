@@ -82,27 +82,31 @@ function resolveLib(fromFile: string, specifier: string): string | null {
 
 function violations(): { files: number; scripts: number; problems: string[] } {
   const files = [...walk('src/components', '.astro'), ...walk('src/pages', '.astro')];
+  const modules = walk('src/scripts', '.ts');
   const problems: string[] = [];
   let scripts = 0;
-  for (const file of files) {
-    for (const code of clientScripts(readFileSync(file, 'utf8'))) {
-      scripts++;
-      for (const ref of importsOf(code)) {
-        if (ref.typeOnly) continue;
-        if (I18N_FROM_CLIENT.test(ref.specifier)) {
-          problems.push(`${relative('.', file)} imports ${ref.specifier}`);
-          continue;
-        }
-        const lib = resolveLib(file, ref.specifier);
-        if (!lib) continue;
-        for (const inner of importsOf(readFileSync(lib, 'utf8'))) {
-          if (!inner.typeOnly && I18N_FROM_LIB.test(inner.specifier))
-            problems.push(`${relative('.', file)} → ${relative('.', lib)} imports ./i18n`);
-        }
+  const check = (file: string, code: string): void => {
+    scripts++;
+    for (const ref of importsOf(code)) {
+      if (ref.typeOnly) continue;
+      if (I18N_FROM_CLIENT.test(ref.specifier)) {
+        problems.push(`${relative('.', file)} imports ${ref.specifier}`);
+        continue;
+      }
+      const lib = resolveLib(file, ref.specifier);
+      if (!lib) continue;
+      for (const inner of importsOf(readFileSync(lib, 'utf8'))) {
+        if (!inner.typeOnly && I18N_FROM_LIB.test(inner.specifier))
+          problems.push(`${relative('.', file)} → ${relative('.', lib)} imports ./i18n`);
       }
     }
+  };
+  for (const file of files) {
+    for (const code of clientScripts(readFileSync(file, 'utf8'))) check(file, code);
   }
-  return { files: files.length, scripts, problems };
+  // Standalone client modules (src/scripts) are bundled for the browser as well.
+  for (const file of modules) check(file, readFileSync(file, 'utf8'));
+  return { files: files.length + modules.length, scripts, problems };
 }
 
 describe('client script imports', () => {
@@ -147,5 +151,14 @@ describe('client script imports', () => {
     expect(files).toBeGreaterThan(10);
     expect(scripts).toBeGreaterThan(5);
     expect(problems).toEqual([]);
+  });
+
+  it('the prefetch module is checked and pulls in no dictionaries', () => {
+    expect(walk('src/scripts', '.ts').map((f) => relative('.', f).replaceAll('\\', '/'))).toContain(
+      'src/scripts/prefetch.ts',
+    );
+    expect(
+      importsOf(readFileSync('src/lib/prefetchPolicy.ts', 'utf8')).map((r) => r.specifier),
+    ).toEqual(['./nextStep']);
   });
 });

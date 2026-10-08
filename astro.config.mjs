@@ -10,6 +10,10 @@ const site = process.env.SITE_URL ?? 'https://hungtran.id.vn';
 export default defineConfig({
   site,
   trailingSlash: 'always',
+  // Astro's built-in prefetch (enabled by default through ClientRouter) is replaced by
+  // src/scripts/prefetch.ts: network-aware, cached, and reused by the client-side navigation.
+  // Leaving both on would fetch every hovered page twice.
+  prefetch: false,
   build: { format: 'directory', inlineStylesheets: 'never' },
   redirects: {
     '/': '/en/',
@@ -29,6 +33,8 @@ export default defineConfig({
   ],
   vite: {
     // Never inline scripts or assets: keeps the CSP free of 'unsafe-inline' for scripts and styles.
-    build: { chunkSizeWarningLimit: 700, assetsInlineLimit: 0 },
+    // cssCodeSplit: false emits one shared, cacheable stylesheet for every page, so client-side
+    // navigation never has to download or wait for CSS (it stays an external file because of the CSP).
+    build: { chunkSizeWarningLimit: 700, assetsInlineLimit: 0, cssCodeSplit: false },
   },
 });

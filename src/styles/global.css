@@ -311,6 +311,19 @@ kbd,
   }
 }
 
+/* Page transitions: the browser's default cross-fade is ~250 ms; 120 ms keeps it perceptible but quick.
+   The block above does not match view-transition pseudo-elements, so reduced motion swaps instantly here. */
+::view-transition-group(root) {
+  animation-duration: 0.12s;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 /* Long-form content (MDX bodies). Works in both themes through the semantic tokens. */
 .prose {
   max-width: var(--measure);

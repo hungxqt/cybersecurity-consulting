@@ -39,6 +39,29 @@ First time with Playwright: `npx playwright install chromium`.
 
 Performance gates (LHCI `assertMatrix`, mobile and desktop, six URLs): LCP 2500 ms, CLS 0.1, TBT 200 ms, performance 0.9, accessibility 1, font bytes capped (110 KiB EN, 210 KiB VI). `tests/e2e/perf.spec.ts` adds gzip budgets, a font request audit, a layout-shift test and an interaction-latency proxy under a 4x CPU throttle.
 
+## Navigation performance
+
+Moving between pages is a client-side view transition (Astro `ClientRouter`). Two things keep it fast:
+
+- **One shared stylesheet.** `vite.build.cssCodeSplit: false` in `astro.config.mjs` emits a single `/_astro/style.<hash>.css` (about 105.6 KB raw, 16.6 KB gzip) that every page links, so a client-side navigation downloads no CSS. Trade-off: the first page load carries the CSS of the whole site (about +6.5 KB gzip on the home page compared with the per-page files), accepted because it is small, cached for every later page, and the Lighthouse gates still pass. It stays an external file (the CSP allows no inline styles).
+- **Smart prefetch.** `src/lib/prefetchPolicy.ts` holds the pure rules, `src/scripts/prefetch.ts` the runtime, and Astro's built-in prefetch is switched off (`prefetch: false`) so a page is never fetched twice.
+  - Hover or keyboard focus starts a fetch of the target HTML after 65 ms, touch and `pointerdown` start it immediately. Leaving the link first cancels it.
+  - About 3 s after a page has loaded, up to 3 likely next pages (the "Where to next" targets plus the contact page) are fetched, one at a time, once each. At most 2 page requests are in flight.
+  - Fetched HTML is kept in memory for 90 s (24 pages). The `astro:before-preparation` hook hands it to the router, so hover-then-click requests the page once; a click while the fetch is still running waits for that same request. Any miss or error falls back to Astro's normal loader. Scripts a prefetched page needs are hinted with `modulepreload`.
+  - Network-aware: nothing is fetched with Save-Data, `prefers-reduced-data`, `2g` or `slow-2g`, or in a hidden tab. `3g` allows hover, focus and touch but no idle prefetch; idle prefetch needs `4g` or an unknown connection.
+  - Only same-origin pages under `/en/` and `/vi/` are eligible. Files, `mailto:`/`tel:`, external links, `target="_blank"`, downloads, legacy redirect pages and links to the current page are skipped. Add `data-no-prefetch` to opt a link out; `data-astro-reload` (the language switch) skips both prefetch and client routing.
+- **Transition.** The cross-fade lasts 120 ms and is removed under `prefers-reduced-motion: reduce`.
+
+Apart from the contact form submission, the only requests the site makes after load are these same-origin page and asset prefetches (`connect-src 'self'` covers them; nothing leaves the origin).
+
+Measure it (build first with `npm run build`):
+
+| Command                                          | What it does                                                                                                                                                        |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node scripts/css-report.mjs`                    | Stylesheets per built page, raw and gzip size, pages with 0, 1 or more sheets                                                                                       |
+| `node scripts/measure-nav.mjs --label <name>`    | Cold, hover, idle and touch navigation timings and request counts on emulated Slow 4G (`--runs`, `--cpu`, `--url`); writes `.agents/tasks/navspeed/nav-<name>.json` |
+| `npx playwright test tests/e2e/prefetch.spec.ts` | Behaviour of the prefetch rules in a real browser                                                                                                                   |
+
 ## Replace before going live
 
 1. **Domain**: the build defaults to `https://hungtran.id.vn`; set `SITE_URL` (repository variable) only to build for another host. Keep `public/.well-known/security.txt` (`Canonical`, `Contact`, and the `Expires` date, which must be renewed within a year) in step.
@@ -79,7 +102,7 @@ Consider pinning the actions in the workflow to commit SHAs.
 
 - Strict CSP with no `unsafe-inline` for scripts or styles (only `style-src-attr` for a few inline style attributes). The build never inlines scripts or styles (`astro.config.mjs`), and `tests/e2e/security.spec.ts` replays the site under the production headers and fails on any violation.
 - If you add a third-party script, font, image host or API, extend the CSP in `public/_headers` deliberately.
-- The journeys are static playbooks; the only network request the site makes is the contact form submission.
+- The journeys are static playbooks. Apart from the contact form submission (Formspree), the site only makes same-origin requests for its own pages and assets (navigation prefetch, see Navigation performance).
 
 ## Accessibility and motion
 
@@ -90,7 +113,8 @@ Targets WCAG 2.2 AA: keyboard operation for the graph, the Atlas diagram and the
 ```
 src/lib/          Pure, tested logic: quizScore, compliance, phishGame, glossary, hunt, contactForm, i18n, interpolate, jsonld,
                   palette, contrast (colour tokens and WCAG ratios), nexus (graph data), atlas (architecture data), journeys, nav, nextStep, content (incl. resolveForLang),
-                  legacyRoutes, sitemapFilter
+                  legacyRoutes, sitemapFilter, prefetchPolicy (navigation prefetch rules)
+src/scripts/      Client modules shared by every page (prefetch.ts)
 src/components/   Astro components (UI renders what lib computes)
 src/content/      MDX collections (posts, verified cases) and JSON data (certifications, team, services, frameworks)
 src/i18n/         en.json (source) and vi.json
