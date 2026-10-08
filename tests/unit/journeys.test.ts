@@ -1,4 +1,3 @@
-import { readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import en from '../../src/i18n/en.json';
 import vi from '../../src/i18n/vi.json';
@@ -92,11 +91,6 @@ describe('journey definitions', () => {
     expect(isOption(LAUNCH, undefined)).toBe(false);
     expect(isOption(LAUNCH, '')).toBe(false);
     expect(isOption(LAUNCH, 42)).toBe(false);
-  });
-
-  it('does not collide with scenario slugs', () => {
-    const slugs = readdirSync('src/content/cases/en').map((f) => f.replace(/\.mdx?$/, ''));
-    for (const j of JOURNEYS) expect(slugs).not.toContain(j.id);
   });
 
   it('uses U+2212 for negative clock values', () => {
@@ -265,6 +259,9 @@ describe('beat text', () => {
       if (!k.startsWith('journey.')) continue;
       expect(v, k).not.toMatch(claim);
       expect(v, k).not.toMatch(/\b\d+\s*(%|percent)/i);
+      expect(v, k).not.toMatch(
+        /\b(detected|contained|resolved|recovered)\b[^.]*\b\d+\s*(minutes?|hours?|days?)\b/i,
+      );
     }
   });
 
@@ -293,7 +290,7 @@ describe('beat text', () => {
       'journey.retry',
       'journey.related',
       'journey.other',
-      'journey.illustrative',
+      'journey.playbook',
       'journey.act',
       'journey.count',
       'journey.strip',
@@ -320,7 +317,6 @@ describe('beat text', () => {
       'exp.note.label',
       'exp.note',
       'exp.journeys',
-      'exp.scan',
       'exp.references',
       'exp.beats',
       'exp.start',

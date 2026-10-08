@@ -3,7 +3,7 @@ import Icon from './Icon.astro';
 import { slugOf } from '../lib/content';
 import { localizedPath, useT, type Lang } from '../lib/i18n';
 
-/** Scenario library rows: SECTOR | title | solutions | Read the scenario. The title link covers the row. */
+/** Reference project rows: SECTOR | title | solutions | Read the project. The title link covers the row. */
 interface Entry {
   id: string;
   data: { title: string; sector: string; services: string[] };
@@ -62,7 +62,7 @@ const t = useT(lang);
     color: var(--text);
     text-decoration: none;
   }
-  /* The link's box covers the whole row, so the "Read the scenario" text is part of the target. */
+  /* The link's box covers the whole row, so the "Read the project" text is part of the target. */
   .lib__title a::after {
     content: '';
     position: absolute;

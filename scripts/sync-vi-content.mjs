@@ -15,7 +15,8 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 
-const COLLECTIONS = ['posts', 'cases', 'jobs'];
+const COLLECTIONS = ['posts', 'cases'];
+const mdxNames = (dir) => readdirSync(dir).filter((n) => /\.mdx?$/.test(n));
 const TEXT_KEYS = new Set(['title', 'description', 'label', 'sector']);
 const MARK = '[VI] ';
 const MARKER_LINE = `${MARK}Translate this entry.`;
@@ -47,7 +48,7 @@ for (const col of COLLECTIONS) {
   const viDir = join('src/content', col, 'vi');
   if (!existsSync(enDir)) continue;
   mkdirSync(viDir, { recursive: true });
-  const enNames = new Set(readdirSync(enDir));
+  const enNames = new Set(mdxNames(enDir));
   for (const name of enNames) {
     const target = join(viDir, name);
     const fresh = placeholder(readFileSync(join(enDir, name), 'utf8'));
@@ -64,7 +65,7 @@ for (const col of COLLECTIONS) {
       console.log(`regenerated ${target}`);
     }
   }
-  for (const name of readdirSync(viDir)) {
+  for (const name of mdxNames(viDir)) {
     if (enNames.has(name)) continue;
     const orphan = join(viDir, name);
     if (isPlaceholder(readFileSync(orphan, 'utf8'))) {

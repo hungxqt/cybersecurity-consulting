@@ -1,8 +1,8 @@
 /**
  * Breach to Resilience: the two interactive journeys and their situation boards (design §6.3).
  * Pure TypeScript, no DOM and no i18n import: the Astro components, the client script and the
- * unit tests share one source of truth. Every scenario is illustrative: nothing here describes a
- * client, and no beat claims a performance figure.
+ * unit tests share one source of truth. Every playbook is generic: nothing here describes a client,
+ * and no beat claims a performance figure.
  *
  * Clock strings use U+2212 (the real minus sign). `order` drives sorting; `clock` is display text.
  */
@@ -15,7 +15,7 @@ export interface BoardState {
   attackerAt: NodeId | null;
   /** Flare ring on the mark (dashed in hypothetical mode). */
   compromised: NodeId[];
-  /** Cyanotype tick, same as the ambient "contained" tick. */
+  /** Cyanotype tick, same Cyanotype tick as a contained system. */
   contained: NodeId[];
 }
 

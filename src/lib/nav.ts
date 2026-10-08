@@ -24,7 +24,6 @@ export const FOOTER_SOLUTIONS: NavItem[] = [...SOLUTIONS, METHOD];
 
 export const FOOTER_EXPERIENCE: NavItem[] = [
   { key: 'nav.journeys', path: '/experience/#journeys' },
-  { key: 'nav.scenarios', path: '/experience/#library' },
   { key: 'nav.blog', path: '/blog/' },
   { key: 'nav.resources', path: '/resources/' },
 ];

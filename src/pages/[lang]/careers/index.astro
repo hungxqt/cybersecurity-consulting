@@ -1,16 +1,13 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import SheetHeader from '../../../components/SheetHeader.astro';
-import { forLang, slugOf } from '../../../lib/content';
+import Icon from '../../../components/Icon.astro';
 import { langStaticPaths } from '../../../lib/paths';
-import { localizedPath, useT, type Lang } from '../../../lib/i18n';
-import { jobsAreSamples } from '../../../lib/site';
+import { localizedHref, useT, type Lang } from '../../../lib/i18n';
 
 export const getStaticPaths = langStaticPaths;
 const lang = Astro.params.lang as Lang;
 const t = useT(lang);
-const jobs = forLang(await getCollection('jobs'), lang);
 ---
 
 <BaseLayout lang={lang} theme="atlas" title={t('nav.careers')} description={t('careers.lede')}>
@@ -21,162 +18,23 @@ const jobs = forLang(await getCollection('jobs'), lang);
     titleStrong={t('careers.title.strong')}
     lede={t('careers.lede')}
   />
-  {jobsAreSamples && (
-    <div class="container">
-      <p class="sample-note" role="note" data-sample>
-        {t('careers.sample')}
-      </p>
-    </div>
-  )}
   <section class="section" aria-labelledby="open-h">
     <div class="container">
       <h2 id="open-h" class="section__label">
         {t('careers.open')}
       </h2>
-      {jobs.length === 0 ? (
-        <p>
-          {t('careers.empty')} <a href={localizedPath(lang, '/contact/')}>{t('nav.contact')}</a>
-        </p>
-      ) : (
-        <table class="roles">
-          <thead>
-            <tr>
-              <th scope="col">{t('careers.role')}</th>
-              <th scope="col">{t('careers.team')}</th>
-              <th scope="col">{t('careers.location')}</th>
-              <th scope="col">{t('careers.type')}</th>
-              <th scope="col">{t('careers.level')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {jobs.map((j) => (
-              <tr>
-                <th scope="row" class="roles__role">
-                  <a href={localizedPath(lang, `/careers/${slugOf(j.id)}/`)}>{j.data.title}</a>
-                </th>
-                <td data-label={t('careers.team')}>{t(`nav.${j.data.team}`)}</td>
-                <td data-label={t('careers.location')}>{j.data.location}</td>
-                <td data-label={t('careers.type')}>{t(`careers.type.${j.data.type}`)}</td>
-                <td data-label={t('careers.level')}>{t(`careers.level.${j.data.level}`)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <p class="none">{t('careers.none')}</p>
+      <a class="btn btn--primary" href={localizedHref(lang, '/contact/?topic=careers')}>
+        {t('careers.cta')}
+        <Icon name="arrow-right" />
+      </a>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .sample-note {
+  .none {
     max-width: var(--measure);
-    margin-block: 0 var(--s-4);
-    padding: var(--s-3) var(--s-4);
-    border: 1px solid var(--rule-ui);
-    background: var(--surface);
-    color: var(--text);
-  }
-  .roles {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .roles thead {
-    display: none;
-  }
-  .roles tr {
-    position: relative;
-    display: block;
-    padding-block: var(--s-4);
-    border-top: 1px solid var(--rule);
-  }
-  .roles tbody {
-    display: block;
-    border-bottom: 1px solid var(--rule);
-  }
-  .roles th,
-  .roles td {
-    text-align: left;
-    font-weight: 400;
-  }
-  .roles td {
-    display: inline;
-    font-family: var(--font-mono);
-    font-size: var(--fs-data);
-    color: var(--text-dim);
-  }
-  .roles td:not(:last-child)::after {
-    content: ' · ';
-  }
-  .roles__role {
-    display: block;
-    margin-bottom: var(--s-2);
-    font-family: var(--font-strong);
-    font-weight: 600;
-    font-size: var(--fs-h3);
-  }
-  .roles__role a {
-    color: var(--text);
-    text-decoration: none;
-  }
-  /* Stretched link: the whole row is the target. */
-  .roles__role a::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-  }
-  .roles__role a:hover {
-    text-decoration: underline 1px var(--accent);
-    text-underline-offset: 0.2em;
-  }
-  .roles__role a:focus-visible {
-    outline: none;
-  }
-  .roles tr:has(a:focus-visible) {
-    outline: 2px solid var(--focus);
-    outline-offset: 2px;
-  }
-  @media (min-width: 720px) {
-    .roles thead {
-      display: table-header-group;
-    }
-    .roles thead th {
-      padding: var(--s-2) var(--s-3) var(--s-2) 0;
-      border-bottom: 1px solid var(--rule-ui);
-      font-family: var(--font-mono);
-      font-size: var(--fs-label);
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-    }
-    :global(html[lang='vi']) .roles thead th {
-      text-transform: none;
-      letter-spacing: 0.02em;
-    }
-    .roles tbody {
-      display: table-row-group;
-      border-bottom: 0;
-    }
-    .roles tr {
-      display: table-row;
-      padding: 0;
-      border: 0;
-    }
-    .roles tbody tr {
-      border-bottom: 1px solid var(--rule);
-    }
-    .roles th,
-    .roles td {
-      display: table-cell;
-      padding: var(--s-4) var(--s-3) var(--s-4) 0;
-      vertical-align: baseline;
-    }
-    .roles td:not(:last-child)::after {
-      content: none;
-    }
-    .roles__role {
-      margin: 0;
-      font-size: var(--fs-lead);
-    }
+    margin-block: 0 var(--s-5);
   }
 </style>

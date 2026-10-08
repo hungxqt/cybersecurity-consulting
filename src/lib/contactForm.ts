@@ -8,7 +8,6 @@ export interface ContactValues {
   email: string;
   company: string;
   topic: string;
-  role: string;
   message: string;
   consent: boolean;
   /** Honeypot: real visitors never fill this in. */
@@ -55,31 +54,22 @@ export function clean(text: string, max: number): string {
 
 export interface Prefill {
   topic?: Topic;
-  role?: string;
   message?: string;
   /** Which source filled the message, for the notice text. */
-  source?: 'scan' | 'quiz' | 'hunt';
+  source?: 'quiz' | 'hunt';
 }
 
-/** Read ?role=, ?scan=, ?quiz=, ?hunt=, ?domain= from a query string. Everything is sanitised. */
+/** Read ?topic=, ?quiz=, ?hunt= from a query string. Everything is sanitised. */
 export function prefillFromQuery(search: string): Prefill {
   const q = new URLSearchParams(search);
   const out: Prefill = {};
 
-  const role = q.get('role');
-  if (role && /^[a-z0-9-]{1,60}$/.test(role)) {
-    out.role = role;
-    out.topic = 'careers';
-  }
+  const topic = q.get('topic');
+  if (topic && (TOPICS as readonly string[]).includes(topic)) out.topic = topic as Topic;
 
-  const scan = q.get('scan');
   const quiz = q.get('quiz');
   const hunt = q.get('hunt');
-  if (scan) {
-    out.message = `${clean(scan, 800)}\n\n`;
-    out.source = 'scan';
-    out.topic = 'audit';
-  } else if (quiz) {
+  if (quiz) {
     out.message = `${clean(quiz, 800)}\n\n`;
     out.source = 'quiz';
     out.topic = 'consulting';

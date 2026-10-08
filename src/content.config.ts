@@ -3,7 +3,6 @@ import { glob, file } from 'astro/loaders';
 import {
   caseSchema,
   certificationSchema,
-  jobSchema,
   postSchema,
   serviceSchema,
   teamSchema,
@@ -15,7 +14,6 @@ const md = (dir: string) => glob({ pattern: '**/*.{md,mdx}', base: `./src/conten
 export const collections = {
   posts: defineCollection({ loader: md('posts'), schema: postSchema }),
   cases: defineCollection({ loader: md('cases'), schema: caseSchema }),
-  jobs: defineCollection({ loader: md('jobs'), schema: jobSchema }),
   services: defineCollection({
     loader: file('./src/content/data/services.json'),
     schema: serviceSchema,

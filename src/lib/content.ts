@@ -23,6 +23,27 @@ export function forLang<T extends Entry>(entries: T[], lang: Lang): T[] {
     .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 }
 
+/** A non-English entry whose title is still the untranslated '[VI]' placeholder. */
+export function isPlaceholderEntry(e: { data: { title: string } }): boolean {
+  return e.data.title.startsWith('[VI]');
+}
+
+/**
+ * Entries to show on a language's pages. Untranslated (placeholder) entries are replaced by their
+ * English original, so '[VI]' never reaches a visitor. A fallback entry keeps its 'en/...' id: use
+ * slugOf(entry.id) for URLs and langOf(entry.id) for the language the content is really in.
+ */
+export function resolveForLang<T extends Entry & { data: { title: string } }>(
+  entries: T[],
+  lang: Lang,
+): T[] {
+  if (lang === 'en') return forLang(entries, 'en');
+  const real = forLang(entries, lang).filter((e) => !isPlaceholderEntry(e));
+  const have = new Set(real.map((e) => slugOf(e.id)));
+  const fallback = forLang(entries, 'en').filter((e) => !have.has(slugOf(e.id)));
+  return [...real, ...fallback].sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+}
+
 interface Taggable extends Entry {
   data: Entry['data'] & { tags: string[] };
 }
@@ -77,31 +98,13 @@ export function publishedTeam<M extends TeamLike, C extends CredentialLike>(
 }
 
 interface CaseLike {
-  data: { illustrative: boolean; verified: boolean; metrics?: unknown[] | undefined };
+  data: { verified: boolean; metrics?: unknown[] | undefined };
 }
 
-/** Cases that are real client references: not illustrative and verified. */
+/** Cases that are real, permitted client references. Nothing else may be rendered. */
 export function verifiedCases<T extends CaseLike>(entries: T[]): T[] {
-  return entries.filter((e) => e.data.illustrative === false && e.data.verified);
+  return entries.filter((e) => e.data.verified);
 }
-
-export interface CaseView {
-  banner: boolean;
-  metrics: boolean;
-  referenceLabel: 'cases.reference' | null;
-}
-
-/** What a scenario page may show: the banner iff illustrative; metrics and the label only when verified. */
-export function caseView(entry: CaseLike): CaseView {
-  const { illustrative, verified, metrics } = entry.data;
-  const real = !illustrative && verified;
-  return {
-    banner: illustrative === true,
-    metrics: real && (metrics?.length ?? 0) > 0,
-    referenceLabel: real ? 'cases.reference' : null,
-  };
-}
-
 export function formatDate(date: Date, lang: Lang): string {
   return new Intl.DateTimeFormat(lang === 'vi' ? 'vi-VN' : 'en-GB', {
     year: 'numeric',

@@ -1,9 +1,7 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHero from '../../components/SectionHero.astro';
 import Icon from '../../components/Icon.astro';
-import { forLang, slugOf } from '../../lib/content';
 import { TOPICS } from '../../lib/contactForm';
 import { langStaticPaths } from '../../lib/paths';
 import { useT, type Lang } from '../../lib/i18n';
@@ -12,7 +10,6 @@ import { CONTACT_EMAIL, FORMSPREE_ENDPOINT, FORMSPREE_ID } from '../../lib/site'
 export const getStaticPaths = langStaticPaths;
 const lang = Astro.params.lang as Lang;
 const t = useT(lang);
-const jobs = forLang(await getCollection('jobs'), lang);
 
 const strings = Object.fromEntries(
   [
@@ -29,7 +26,6 @@ const strings = Object.fromEntries(
     'contact.fail.title',
     'contact.fail.body',
     'contact.fail.config',
-    'contact.prefill.scan',
     'contact.prefill.quiz',
     'contact.prefill.hunt',
   ].map((k) => [k, t(k, { email: CONTACT_EMAIL, name: '{name}', n: '{n}' })]),
@@ -52,7 +48,6 @@ strings['contact.ok.body'] = t('contact.ok.body', { name: '{name}', email: '{ema
       data-contact
       data-endpoint={FORMSPREE_ENDPOINT}
       data-configured={FORMSPREE_ID !== 'REPLACE_ME' ? 'true' : 'false'}
-      data-roles={JSON.stringify(jobs.map((j) => slugOf(j.id)))}
     >
       <form class="form" data-form method="post" action={FORMSPREE_ENDPOINT} novalidate>
         <p class="form__notice mono" role="status" data-notice hidden></p>
@@ -107,16 +102,6 @@ strings['contact.ok.body'] = t('contact.ok.body', { name: '{name}', email: '{ema
             ))}
           </select>
           <p class="field__err" id="c-topic-err" data-err="topic"></p>
-        </div>
-
-        <div class="field" data-role-field hidden>
-          <label for="c-role">{t('contact.role')}</label>
-          <select id="c-role" name="role">
-            <option value="">{t('contact.role.none')}</option>
-            {jobs.map((j) => (
-              <option value={slugOf(j.id)}>{j.data.title}</option>
-            ))}
-          </select>
         </div>
 
         <div class="field">
@@ -422,35 +407,25 @@ strings['contact.ok.body'] = t('contact.ok.body', { name: '{name}', email: '{ema
     const notice = q<HTMLElement>('[data-notice]');
     const okBox = q<HTMLElement>('[data-ok]');
     const failBox = q<HTMLElement>('[data-fail]');
-    const roleField = q<HTMLElement>('[data-role-field]');
     const field = (name: string) =>
       form.elements.namedItem(name) as HTMLInputElement & HTMLSelectElement & HTMLTextAreaElement;
     const endpoint = root.dataset.endpoint ?? '';
     const configured = root.dataset.configured === 'true';
-    const roles = JSON.parse(root.dataset.roles ?? '[]') as string[];
 
-    const syncRole = () => {
-      roleField.hidden = field('topic').value !== 'careers';
-    };
-    field('topic').addEventListener('change', syncRole);
-
-    // Prefill from ?role= / ?scan= / ?quiz= / ?hunt=
+    // Prefill from ?topic= / ?quiz= / ?hunt=
     const pre = prefillFromQuery(location.search);
     if (pre.topic) field('topic').value = pre.topic;
-    if (pre.role && roles.includes(pre.role)) field('role').value = pre.role;
     if (pre.message) {
       field('message').value = pre.message;
       notice.textContent = S[`contact.prefill.${pre.source}`] ?? '';
       notice.hidden = false;
     }
-    syncRole();
 
     const values = (): ContactValues => ({
       name: field('name').value,
       email: field('email').value,
       company: field('company').value,
       topic: field('topic').value,
-      role: field('role').value,
       message: field('message').value,
       consent: field('consent').checked,
       website: field('_gotcha').value,
@@ -516,7 +491,6 @@ strings['contact.ok.body'] = t('contact.ok.body', { name: '{name}', email: '{ema
           email: v.email.trim(),
           company: v.company.trim(),
           topic: v.topic,
-          role: v.topic === 'careers' ? v.role : '',
           message: v.message.trim(),
           _subject: `HungTran website: ${v.topic}`,
           _gotcha: '',
@@ -555,7 +529,6 @@ strings['contact.ok.body'] = t('contact.ok.body', { name: '{name}', email: '{ema
     q<HTMLButtonElement>('[data-again]').addEventListener('click', () => {
       form.reset();
       notice.hidden = true;
-      syncRole();
       okBox.hidden = true;
       form.hidden = false;
       field('name').focus();

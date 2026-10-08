@@ -1,15 +1,14 @@
 /**
  * Cyber Intelligence Nexus: the data behind the home-page attack-path graph (design §6.1).
  * Pure TypeScript with no DOM and no i18n import, so the client script, the Astro component and
- * the unit tests share one source of truth. Everything here describes a simulated, generic
- * organisation, never a client.
+ * the unit tests share one source of truth. Everything here describes a generic reference
+ * environment, never a client.
  *
  * Coordinates are mark centres in viewBox units: `wide` is a 1000×600 box (≥ 720 px), `tall` a
  * 600×1200 box (< 720 px). Authored so tests/unit/nexus.test.ts (label-aware hit boxes at 557 px
  * wide and 324 px tall) passes; a label that breaks it is shortened in en.json, not squeezed.
  */
 import { interpolate } from './interpolate';
-import { createThreatStream, formatClock, type AttackType, type ThreatEvent } from './threatSim';
 
 export type NodeKind = 'threat' | 'asset' | 'sensor';
 export type ZoneId = 'internet' | 'perimeter' | 'corporate' | 'crown';
@@ -345,77 +344,6 @@ export function spatialNext(id: NodeId, dir: Dir, layout: Layout): NodeId | null
 export function nodesForLens(lens: Lens): NodeId[] {
   if (lens === 'all') return NODES.map((n) => n.id);
   return NODES.filter((n) => n.services.includes(lens)).map((n) => n.id);
-}
-
-// --- Ambient simulation ---------------------------------------------------------------------
-
-/** The only attack types with a natural path through this graph. */
-export const AMBIENT_TYPES = [
-  'credential-stuffing',
-  'ssh-bruteforce',
-  'phishing-kit',
-  'sql-injection',
-  'ransomware-dropper',
-  'zero-day-probe',
-] as const satisfies readonly AttackType[];
-
-export type AmbientType = (typeof AMBIENT_TYPES)[number];
-
-const EVENT_EDGE: Record<AmbientType, string> = {
-  'credential-stuffing': 'a3',
-  'ssh-bruteforce': 'a5',
-  'phishing-kit': 'a1',
-  'sql-injection': 'a4',
-  'ransomware-dropper': 'a6',
-  'zero-day-probe': 'a4',
-};
-
-function isAmbient(type: string): type is AmbientType {
-  return (AMBIENT_TYPES as readonly string[]).includes(type);
-}
-
-/** Attack edge an event type travels, or null when it has no natural path here. */
-export function eventToEdge(type: string): string | null {
-  return isAmbient(type) ? EVENT_EDGE[type] : null;
-}
-
-/** Deterministic stream of threatSim events, skipping types that have no edge. */
-export function nexusAmbient(seed: number): { next: () => ThreatEvent } {
-  const stream = createThreatStream(seed);
-  return {
-    next(): ThreatEvent {
-      for (let i = 0; i < 1000; i++) {
-        const e = stream.next();
-        if (eventToEdge(e.type) !== null) return e;
-      }
-      throw new Error('nexusAmbient: no mapped event in 1000 draws');
-    },
-  };
-}
-
-/** Two fixed rows per event, so no log line ever wraps: `14:02:11 · phishing-kit`, `SGN › blocked · 38ms`. */
-export function formatAmbientRows(event: ThreatEvent, secondsOfDay: number): [string, string] {
-  return [
-    `${formatClock(secondsOfDay)} · ${event.type}`,
-    `${event.origin.code} \u203A ${event.outcome} · ${event.latencyMs}ms`,
-  ];
-}
-
-/** Fixed sample for the server-rendered and reduced-motion log. */
-export function sampleAmbient(
-  count = 3,
-  seed = 20260914,
-  startSeconds = 14 * 3600 + 2 * 60 + 11,
-): [string, string][] {
-  const stream = nexusAmbient(seed);
-  const rows: [string, string][] = [];
-  let clock = startSeconds;
-  for (let i = 0; i < count; i++) {
-    const e = stream.next();
-    rows.push(formatAmbientRows(e, clock));
-    clock += Math.max(1, Math.round(e.delayMs / 1000));
-  }
-  return rows;
 }
 
 // --- Relationships and copy -----------------------------------------------------------------

@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Dummy Formspree id so the contact form is "configured" in tests (requests are mocked).
+  # Test Formspree id so the contact form is configured in tests (requests are mocked).
   PUBLIC_FORMSPREE_ID: testform
 
 jobs:

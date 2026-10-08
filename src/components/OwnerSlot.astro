@@ -8,7 +8,7 @@ const { label, file } = Astro.props;
 ---
 
 {import.meta.env.DEV && (
-  <div class="container">
+  <div class="container" data-owner-slot>
     <p class="owner-slot mono">
       Owner content: {label} — edit {file}
     </p>

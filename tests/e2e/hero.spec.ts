@@ -1,8 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const ROW1 = /^\d{2}:\d{2}:\d{2} · [a-z0-9-]+$/;
-const ROW2 = /^[A-Z]{3} › (blocked|contained|escalated) · \d+ms$/;
 const IDS = [
   'phish', 'stuffing', 'recon', 'ransom', 'mailgw', 'vpn', 'webapp',
   'edr', 'laptops', 'idp', 'siem', 'api', 'data', 'backups',
@@ -71,7 +69,7 @@ test('preview persists from a node through the lens group to a Covered-by link',
   await expect(card(page, 'intro')).toBeHidden();
 });
 
-test('intro card, lens group name, table and pause', async ({ page }) => {
+test('intro card, lens group name and table', async ({ page }) => {
   await live(page);
   await expect(page.locator('dl.nx-legend dd')).toHaveCount(5);
   await expect(page.getByRole('group', { name: 'View by solution' })).toBeVisible();
@@ -80,44 +78,14 @@ test('intro card, lens group name, table and pause', async ({ page }) => {
 
   await page.locator('.nexus__table summary').click();
   await expect(page.locator('.nexus__table tbody tr')).toHaveCount(14);
-
-  const root = page.locator('[data-nexus]');
-  await expect(root).toHaveAttribute('data-ambient', 'on');
-  const btn = page.locator('[data-ambient-toggle]');
-  await btn.click();
-  await expect(root).toHaveAttribute('data-ambient', 'off');
-  await expect(btn).toHaveAttribute('aria-pressed', 'true');
-  await btn.click();
-  await expect(root).toHaveAttribute('data-ambient', 'on');
 });
 
-test('event log rows follow the format and never overflow at 360px', async ({ page }) => {
-  await page.setViewportSize({ width: 360, height: 740 });
-  await live(page);
-  const rows = page.locator('[data-log] li');
-  await expect(rows).toHaveCount(6);
-  const texts = await rows.allTextContents();
-  texts.forEach((t, i) => expect(t).toMatch(i % 2 === 0 ? ROW1 : ROW2));
-  const overflow = await rows.evaluateAll((els) => els.some((e) => e.scrollWidth > e.clientWidth));
-  expect(overflow).toBe(false);
-  await page.waitForTimeout(3200); // one live event arrives and keeps 6 rows
-  await expect(rows).toHaveCount(6);
-  const live2 = await rows.allTextContents();
-  live2.forEach((t, i) => expect(t).toMatch(i % 2 === 0 ? ROW1 : ROW2));
-});
-
-test('DOM order is stage, lens, panel, log, controls', async ({ page }) => {
+test('DOM order is stage, lens, panel, controls', async ({ page }) => {
   await live(page);
   const order = await page.evaluate(() =>
     [...document.querySelector('.nexus')!.children].map((c) => c.className.split(' ')[0]),
   );
-  expect(order).toEqual([
-    'nexus__stage',
-    'nexus__lens',
-    'nexus__panel',
-    'nexus__log',
-    'nexus__controls',
-  ]);
+  expect(order).toEqual(['nexus__stage', 'nexus__lens', 'nexus__panel', 'nexus__controls']);
 });
 
 test('mobile first viewport shows the graph (360x740)', async ({ page }) => {
@@ -198,12 +166,8 @@ test('axe finds no violations on the home hero', async ({ page }) => {
 
 test.describe('reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
-  test('stays static: no ambient, 6 rows, no pause button, 14 table rows', async ({ page }) => {
+  test('stays static: 14 table rows', async ({ page }) => {
     await live(page);
-    await page.waitForTimeout(2800);
-    await expect(page.locator('[data-nexus]')).toHaveAttribute('data-ambient', 'off');
-    await expect(page.locator('[data-log] li')).toHaveCount(6);
-    await expect(page.locator('[data-ambient-toggle]')).toBeHidden();
     await page.locator('.nexus__table summary').click();
     await expect(page.locator('.nexus__table tbody tr')).toHaveCount(14);
   });

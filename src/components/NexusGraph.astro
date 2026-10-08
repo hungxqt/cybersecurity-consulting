@@ -8,15 +8,14 @@ import {
   adjacency,
   describeNode,
   relations,
-  sampleAmbient,
   type NexusNode,
   type NodeId,
 } from '../lib/nexus';
 
 /**
- * The attack-path graph (design §6.1): a simulated organisation drawn as 14 systems across four
+ * The attack-path graph (design §6.1): a reference environment drawn as 14 systems across four
  * trust zones. Server-rendered and complete without JS; the script below adds preview/pin,
- * the lens, keyboard movement and the labelled ambient simulation.
+ * the lens and keyboard movement.
  *
  * Node anchor: the CSS `translate: -13px -50%` below must stay equal to NODE_ANCHOR_PX in
  * src/lib/nexus.ts, and the crown-zone mirroring must match isMirrored() there.
@@ -41,14 +40,12 @@ const coveredBy = (n: NexusNode) =>
 
 const wideBox = VIEWBOX.wide;
 const tallBox = VIEWBOX.tall;
-const log = sampleAmbient(3).flat();
-const strings = JSON.stringify({ pause: t('nexus.pause'), resume: t('nexus.resume') });
 const lenses = ['all', 'consulting', 'audit', 'soc'] as const;
 const legendMarks = ['threat', 'asset', 'sensor'] as const;
 const nodeById = new Map(NODES.map((n) => [n.id, n]));
 ---
 
-<div class="nexus" data-nexus data-ambient="off" data-strings={strings}>
+<div class="nexus" data-nexus>
   <div
     class="nexus__stage"
     role="group"
@@ -137,9 +134,7 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
         aria-describedby={`nx-d-${n.id}`}
         tabindex={n.id === 'idp' ? 0 : -1}
       >
-        <span class="nx-node__mark nx-mark" data-kind={n.kind} aria-hidden="true">
-          <i class="nx-tick"></i>
-        </span>
+        <span class="nx-node__mark nx-mark" data-kind={n.kind} aria-hidden="true"></span>
         <span class="nx-node__label">{label(n.id)}</span>
       </button>
     ))}
@@ -224,19 +219,7 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
     })}
   </div>
 
-  <div class="nexus__log" aria-hidden="true">
-    <p class="label">{t('nexus.logLabel')}</p>
-    <ol data-log>
-      {log.map((row) => (
-        <li>{row}</li>
-      ))}
-    </ol>
-  </div>
-
   <div class="nexus__controls">
-    <button type="button" class="btn" data-ambient-toggle aria-pressed="false">
-      {t('nexus.pause')}
-    </button>
     <details class="nexus__table">
       <summary>{t('nexus.tableSummary')}</summary>
       <div
@@ -352,14 +335,6 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
     stroke: var(--threat);
     stroke-dasharray: none;
   }
-  .nx-dot {
-    fill: var(--threat);
-    display: none;
-  }
-  .nx-dot[data-on] {
-    display: inline;
-  }
-
   .nx-zone {
     position: absolute;
     inset-inline-start: var(--x);
@@ -470,23 +445,6 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
     border-color: var(--threat);
     rotate: 45deg;
   }
-  .nx-tick {
-    position: absolute;
-    inset-block-start: -5px;
-    inset-inline-start: -5px;
-    inline-size: 4px;
-    block-size: 4px;
-    display: none;
-  }
-  .nx-node[data-tick='accent'] .nx-tick {
-    display: block;
-    background: var(--accent);
-  }
-  .nx-node[data-tick='threat'] .nx-tick {
-    display: block;
-    background: var(--threat);
-  }
-
   /* Hot (previewed node + neighbours): others drop to Ash text and Wire Strong marks. */
   .nexus__stage[data-active] .nx-node:not([data-hot]) .nx-node__label {
     color: var(--text-dim);
@@ -678,36 +636,7 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
     border-top: 2px dashed var(--threat);
   }
 
-  /* Event log: 6 fixed rows, never wraps. */
-  .nexus__log {
-    padding-block: var(--s-4);
-    border-top: 1px solid var(--rule);
-  }
-  .nexus__log .label {
-    margin: 0 0 var(--s-2);
-  }
-  .nexus__log ol {
-    display: grid;
-    grid-auto-rows: 1.5em;
-    block-size: 9em;
-    align-content: start;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-family: var(--font-mono);
-    font-size: var(--fs-data);
-    font-variant-numeric: tabular-nums;
-  }
-  .nexus__log li {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .nexus__log li:nth-child(even) {
-    color: var(--text-dim);
-  }
-
-  /* Controls row: pause + table disclosure. */
+  /* Controls row: table disclosure. */
   .nexus__controls {
     display: flex;
     flex-wrap: wrap;
@@ -715,17 +644,6 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
     gap: var(--s-3) var(--s-5);
     padding-block-start: var(--s-4);
     border-top: 1px solid var(--rule);
-  }
-  .nexus:not([data-live]) [data-ambient-toggle] {
-    visibility: hidden;
-  }
-  [data-ambient-toggle][hidden] {
-    display: none;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    [data-ambient-toggle] {
-      display: none;
-    }
   }
   .nexus__table {
     flex: 1 1 14rem;
@@ -777,21 +695,14 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
 
 <script>
   import {
-    EDGES,
-    NODE_BY_ID,
-    eventToEdge,
-    formatAmbientRows,
     isNodeId,
-    nexusAmbient,
     readingOrder,
     spatialNext,
-    VIEWBOX,
     type Dir,
     type Layout,
     type NodeId,
   } from '../lib/nexus';
 
-  const STORAGE_KEY = 'ht-nexus-ambient';
   const LENSES = ['all', 'consulting', 'audit', 'soc'];
   const KEY_DIR: Record<string, Dir> = {
     ArrowLeft: 'left',
@@ -799,34 +710,11 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
     ArrowUp: 'up',
     ArrowDown: 'down',
   };
-  const EVENT_MS = 2400;
-  const TRAVEL_MS = 900;
-  const ONWARD_MS = 600;
-  const TICK_MS = 1200;
-
   let teardown: (() => void) | null = null;
-
-  function readPaused(): boolean {
-    try {
-      return sessionStorage.getItem(STORAGE_KEY) === 'off';
-    } catch {
-      return false;
-    }
-  }
-  function writePaused(paused: boolean) {
-    try {
-      sessionStorage.setItem(STORAGE_KEY, paused ? 'off' : 'on');
-    } catch {
-      /* private mode: preference simply is not persisted */
-    }
-  }
 
   function init(root: HTMLElement): () => void {
     const stage = root.querySelector<HTMLElement>('.nexus__stage')!;
     const panel = root.querySelector<HTMLElement>('.nexus__panel')!;
-    const logEl = root.querySelector<HTMLElement>('[data-log]')!;
-    const toggle = root.querySelector<HTMLButtonElement>('[data-ambient-toggle]')!;
-    const strings = JSON.parse(root.dataset.strings ?? '{}') as { pause: string; resume: string };
 
     const buttons = new Map<NodeId, HTMLButtonElement>();
     for (const b of root.querySelectorAll<HTMLButtonElement>('[data-node]')) {
@@ -843,7 +731,6 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
     const edgeEls = [...root.querySelectorAll<SVGLineElement>('[data-edge]')];
 
     const wideMq = window.matchMedia('(min-width: 720px)');
-    const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const layout = (): Layout => (wideMq.matches ? 'wide' : 'tall');
 
     const ac = new AbortController();
@@ -851,8 +738,6 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
 
     let previewed: NodeId | null = null;
     let pinned: NodeId | null = null;
-    let userPaused = readPaused();
-    let visible = false;
 
     const shown = () => pinned ?? previewed;
 
@@ -874,7 +759,6 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
           src !== null && (e.dataset.from === src || e.dataset.to === src),
         );
       }
-      syncAmbient();
     }
 
     function setRoving(id: NodeId) {
@@ -957,186 +841,10 @@ const nodeById = new Map(NODES.map((n) => [n.id, n]));
       );
     }
 
-    // --- ambient simulation -------------------------------------------------------------
-    const stream = nexusAmbient(20260914);
-    let timer = 0;
-    let raf = 0;
-    let running = false;
-    const tickTimers = new Set<number>();
-    const dots = [...root.querySelectorAll<SVGElement>('.nexus__edges')].map((svg) => {
-      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      dot.setAttribute('class', 'nx-dot');
-      dot.setAttribute('r', '3');
-      svg.append(dot);
-      return dot;
-    });
-
-    const canRun = () =>
-      visible && !document.hidden && !userPaused && !motionMq.matches && shown() === null;
-
-    function syncToggle() {
-      toggle.textContent = userPaused ? strings.resume : strings.pause;
-      toggle.setAttribute('aria-pressed', String(userPaused));
-      toggle.hidden = motionMq.matches;
-    }
-
-    function clearVisuals() {
-      cancelAnimationFrame(raf);
-      raf = 0;
-      for (const d of dots) d.removeAttribute('data-on');
-      for (const id of tickTimers) clearTimeout(id);
-      tickTimers.clear();
-      for (const b of buttons.values()) b.removeAttribute('data-tick');
-    }
-
-    function coords(id: NodeId, l: Layout) {
-      return NODE_BY_ID[id][l];
-    }
-
-    function showTick(id: NodeId, kind: 'accent' | 'threat') {
-      const b = buttons.get(id);
-      if (!b) return;
-      b.dataset.tick = kind;
-      const h = window.setTimeout(() => {
-        b.removeAttribute('data-tick');
-        tickTimers.delete(h);
-      }, TICK_MS);
-      tickTimers.add(h);
-    }
-
-    function fire() {
-      timer = 0;
-      if (!running) return;
-      const e = stream.next();
-      const edgeId = eventToEdge(e.type);
-      const edge = EDGES.find((x) => x.id === edgeId);
-      if (!edge) {
-        schedule();
-        return;
-      }
-      const l = layout();
-      const dot = dots[l === 'wide' ? 0 : 1]!;
-      const a = coords(edge.from, l);
-      const b = coords(edge.to, l);
-      const sensorEdge =
-        e.outcome === 'blocked'
-          ? null
-          : (EDGES.find((x) => x.from === edge.to && x.kind === 'telemetry') ?? null);
-      const c = sensorEdge ? coords(sensorEdge.to, l) : null;
-      const stageW = stage.clientWidth || 1;
-      dot.setAttribute('r', String((3 * VIEWBOX[l].w) / stageW));
-
-      const now = new Date();
-      const rows = formatAmbientRows(
-        e,
-        now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds(),
-      );
-      const li = rows.map((text) => {
-        const el = document.createElement('li');
-        el.textContent = text;
-        return el;
-      });
-      logEl.prepend(...li);
-      while (logEl.children.length > 6) logEl.lastElementChild?.remove();
-
-      const start = performance.now();
-      const total = TRAVEL_MS + (c ? ONWARD_MS : 0);
-      let ticked = false;
-      const step = (t: number) => {
-        raf = 0;
-        if (!running) return;
-        const elapsed = t - start;
-        let x: number;
-        let y: number;
-        if (elapsed < TRAVEL_MS) {
-          const p = elapsed / TRAVEL_MS;
-          x = a.x + (b.x - a.x) * p;
-          y = a.y + (b.y - a.y) * p;
-        } else if (c) {
-          const p = Math.min(1, (elapsed - TRAVEL_MS) / ONWARD_MS);
-          x = b.x + (c.x - b.x) * p;
-          y = b.y + (c.y - b.y) * p;
-        } else {
-          x = b.x;
-          y = b.y;
-        }
-        dot.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
-        dot.setAttribute('data-on', '');
-        if (elapsed >= total) {
-          if (!ticked) {
-            ticked = true;
-            if (sensorEdge)
-              showTick(sensorEdge.to, e.outcome === 'escalated' ? 'threat' : 'accent');
-            else showTick(edge.to, 'accent');
-            const h = window.setTimeout(() => {
-              dot.removeAttribute('data-on');
-              tickTimers.delete(h);
-            }, TICK_MS);
-            tickTimers.add(h);
-          }
-          return;
-        }
-        raf = requestAnimationFrame(step);
-      };
-      raf = requestAnimationFrame(step);
-      schedule();
-    }
-
-    function schedule() {
-      if (!running || timer) return;
-      timer = window.setTimeout(fire, EVENT_MS);
-    }
-
-    function syncAmbient() {
-      const should = canRun();
-      if (should && !running) {
-        running = true;
-        root.dataset.ambient = 'on';
-        schedule();
-      } else if (!should && running) {
-        running = false;
-        root.dataset.ambient = 'off';
-        clearTimeout(timer);
-        timer = 0;
-        clearVisuals();
-      }
-      syncToggle();
-    }
-
-    toggle.addEventListener(
-      'click',
-      () => {
-        userPaused = !userPaused;
-        writePaused(userPaused);
-        syncAmbient();
-      },
-      opts,
-    );
-    document.addEventListener('visibilitychange', syncAmbient, opts);
-    motionMq.addEventListener('change', syncAmbient, opts);
-    const io = new IntersectionObserver((entries) => {
-      visible = entries.some((en) => en.isIntersecting);
-      syncAmbient();
-    });
-    io.observe(root);
-
     render();
     root.setAttribute('data-live', '');
 
-    // Defer the first simulated event off the critical path.
-    const idle = (cb: () => void) =>
-      typeof window.requestIdleCallback === 'function'
-        ? window.requestIdleCallback(cb)
-        : window.setTimeout(cb, 200);
-    idle(syncAmbient);
-
-    return () => {
-      ac.abort();
-      io.disconnect();
-      running = false;
-      clearTimeout(timer);
-      clearVisuals();
-    };
+    return () => ac.abort();
   }
 
   function boot() {

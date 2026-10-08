@@ -22,46 +22,25 @@ export const caseSchema = z
     date: z.coerce.date(),
     sector: z.string().min(1),
     services: z.array(serviceId).min(1),
-    /** Results are only allowed on a verified, non-illustrative case (see superRefine below). */
+    /** Results are only allowed on a verified case (see superRefine below). */
     metrics: z
       .array(z.object({ value: z.string().min(1), label: z.string().min(1) }))
       .min(2)
       .max(4)
       .optional(),
-    /** True while the case is a sample scenario rather than a named client engagement. */
-    illustrative: z.boolean().default(true),
     /** Set to true only with the client's permission and evidence to publish the case. */
     verified: z.boolean().default(false),
     draft: z.boolean().default(false),
   })
   .superRefine((c, ctx) => {
-    if (c.metrics && !(c.illustrative === false && c.verified === true)) {
+    if (c.metrics && c.verified !== true) {
       ctx.addIssue({
         code: 'custom',
         path: ['metrics'],
-        message: 'metrics require a verified, non-illustrative case',
-      });
-    }
-    if (c.illustrative === false && c.verified !== true) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['verified'],
-        message: 'a non-illustrative case must be verified',
+        message: 'metrics require a verified case',
       });
     }
   });
-
-export const jobSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().min(1).max(220),
-  date: z.coerce.date(),
-  team: serviceId,
-  location: z.string().min(1),
-  type: z.enum(['full-time', 'part-time', 'contract']),
-  level: z.enum(['junior', 'mid', 'senior', 'lead']),
-  draft: z.boolean().default(false),
-});
-
 export const serviceSchema = z.object({
   id: serviceId,
   order: z.number().int().positive(),
@@ -102,6 +81,5 @@ export const teamSchema = z.object({
 
 export type Post = z.infer<typeof postSchema>;
 export type CaseStudy = z.infer<typeof caseSchema>;
-export type Job = z.infer<typeof jobSchema>;
 export type Certification = z.infer<typeof certificationSchema>;
 export type TeamMember = z.infer<typeof teamSchema>;

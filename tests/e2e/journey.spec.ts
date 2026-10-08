@@ -20,7 +20,7 @@ const ids = (page: Page, attr: 'data-compromised' | 'data-contained') =>
   );
 
 test.describe('beats, decision and links', () => {
-  test('renders the act names and the scenario clock', async ({ page }) => {
+  test('renders the act names and the playbook clock', async ({ page }) => {
     await open(page, VENDOR);
     await expect(page.locator('[data-beat] h3')).toHaveText([
       'Act 1 · Recon',
@@ -42,9 +42,9 @@ test.describe('beats, decision and links', () => {
       'T+04:00',
       'T+3d',
     ]);
-    await expect(page.getByRole('navigation', { name: 'Scenario clock' })).toBeAttached();
+    await expect(page.getByRole('navigation', { name: 'Playbook clock' })).toBeAttached();
     await expect(page.locator('[data-tick][aria-current="step"]')).toHaveCount(1);
-    await expect(page.getByText('Illustrative scenario').first()).toBeVisible();
+    await expect(page.getByText(/^Playbook · /).first()).toBeVisible();
     await open(page, LAUNCH);
     await expect(page.locator('[data-beat] h3')).toHaveText([
       'Act 1 · Design',
@@ -324,9 +324,7 @@ test('the experience index lists both journeys as reel rows', async ({ page }) =
   await expect(reels.nth(0)).toContainText('8 beats · 1 decision');
   await expect(reels.nth(1)).toContainText('Before launch');
   await expect(reels.nth(1)).toContainText('5 beats · 1 decision');
-  await expect(
-    page.getByText('Built from typical engagements. No client names, no client results.'),
-  ).toBeVisible();
+  await expect(page.getByText('They describe no client and report no result.')).toBeVisible();
   await page.getByRole('link', { name: /Start the journey\s*:\s*Before launch/ }).click();
   await expect(page).toHaveURL(/\/en\/experience\/journeys\/before-launch\/$/);
 });

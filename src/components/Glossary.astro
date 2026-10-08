@@ -14,10 +14,9 @@ const terms: Term[] = TERM_IDS.map((id) => ({
   def: t(`gloss.${id}.def`),
 }));
 const sorted = searchTerms(terms, '');
-// A-Z index letters: first letter of each term (ignoring the [VI] placeholder marker and accents).
+// A-Z index letters: first letter of each term (ignoring accents).
 const letterOf = (s: string) =>
   s
-    .replace(/^\[VI\]\s*/, '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .charAt(0)

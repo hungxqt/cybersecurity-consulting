@@ -3,14 +3,14 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import SheetHeader from '../../../components/SheetHeader.astro';
 import HuntSpot from '../../../components/HuntSpot.astro';
-import { forLang, formatDate, readingMinutes, slugOf } from '../../../lib/content';
+import { formatDate, readingMinutes, resolveForLang, slugOf } from '../../../lib/content';
 import { langStaticPaths } from '../../../lib/paths';
 import { localizedPath, useT, type Lang } from '../../../lib/i18n';
 
 export const getStaticPaths = langStaticPaths;
 const lang = Astro.params.lang as Lang;
 const t = useT(lang);
-const posts = forLang(await getCollection('posts'), lang);
+const posts = resolveForLang(await getCollection('posts'), lang);
 ---
 
 <BaseLayout lang={lang} theme="atlas" title={t('nav.blog')} description={t('blog.lede')}>

@@ -10,15 +10,9 @@ const BASE = [
   ['/services/audit/', '/solutions/audit/'],
   ['/services/soc/', '/solutions/soc/'],
   ['/case-studies/', '/experience/'],
-  [
-    '/case-studies/logistics-detection-in-minutes/',
-    '/experience/scenarios/logistics-soc-onboarding/',
-  ],
-  ['/case-studies/fintech-soc2-in-five-months/', '/experience/scenarios/fintech-soc2-readiness/'],
-  [
-    '/case-studies/health-portal-threat-modeling/',
-    '/experience/scenarios/health-portal-threat-modeling/',
-  ],
+  ['/case-studies/logistics-detection-in-minutes/', '/experience/'],
+  ['/case-studies/fintech-soc2-in-five-months/', '/experience/'],
+  ['/case-studies/health-portal-threat-modeling/', '/experience/'],
 ];
 
 /** @type {[string, string][]} */

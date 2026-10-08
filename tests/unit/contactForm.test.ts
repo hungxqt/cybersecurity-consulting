@@ -6,7 +6,6 @@ const good: ContactValues = {
   email: 'sam@example.com',
   company: '',
   topic: 'soc',
-  role: '',
   message: 'We would like a SOC proposal.',
   consent: true,
   website: '',
@@ -60,35 +59,29 @@ describe('validateContact', () => {
 });
 
 describe('prefillFromQuery', () => {
-  it('maps a role to careers', () => {
-    expect(prefillFromQuery('?role=penetration-tester')).toEqual({
-      role: 'penetration-tester',
-      topic: 'careers',
-    });
+  it('accepts a known ?topic= and ignores anything else', () => {
+    expect(prefillFromQuery('?topic=careers')).toEqual({ topic: 'careers' });
+    expect(prefillFromQuery('?topic=consulting')).toEqual({ topic: 'consulting' });
+    expect(prefillFromQuery('?topic=nope')).toEqual({});
+    expect(prefillFromQuery('?topic=<script>')).toEqual({});
   });
-  it('rejects malformed roles', () => {
-    expect(prefillFromQuery('?role=../../etc/passwd')).toEqual({});
-    expect(prefillFromQuery('?role=' + 'a'.repeat(61))).toEqual({});
-    expect(prefillFromQuery('?role=<script>')).toEqual({});
-  });
-  it('fills the message from a scan, then quiz, then hunt (first match wins)', () => {
-    const scan = prefillFromQuery(
-      '?domain=example.com&scan=' +
-        encodeURIComponent('Simulated scan of example.com: risk 62/100'),
-    );
-    expect(scan.source).toBe('scan');
-    expect(scan.topic).toBe('audit');
-    expect(scan.message).toContain('example.com');
-    expect(prefillFromQuery('?quiz=Q&scan=S').source).toBe('scan');
-    expect(prefillFromQuery('?quiz=Quiz+result').source).toBe('quiz');
+  it('fills the message from a quiz, then hunt (quiz wins)', () => {
+    const quiz = prefillFromQuery('?quiz=Q&hunt=H');
+    expect(quiz.source).toBe('quiz');
+    expect(quiz.topic).toBe('consulting');
     expect(prefillFromQuery('?hunt=THREAT-HUNTER').message).toContain('THREAT-HUNTER');
+    expect(prefillFromQuery('?hunt=THREAT-HUNTER').source).toBe('hunt');
+  });
+  it('no longer reads the removed ?role=, ?scan= and ?domain= parameters', () => {
+    expect(prefillFromQuery('?role=penetration-tester')).toEqual({});
+    expect(prefillFromQuery('?scan=x&domain=y')).toEqual({});
   });
   it('sanitises control characters and caps length', () => {
     expect(clean('a\u0000b\u0007c\nd', 10)).toBe('abc\nd');
-    const long = prefillFromQuery('?scan=' + 'x'.repeat(5000));
+    const long = prefillFromQuery('?quiz=' + 'x'.repeat(5000));
     expect(long.message!.length).toBeLessThanOrEqual(802);
     expect(prefillFromQuery('?hunt=' + encodeURIComponent('<b>X</b>')).message).toBe(
-      'Threat hunt code: bX/b\n\n'.replace('/', ''),
+      'Threat hunt code: bXb\n\n',
     );
   });
   it('returns nothing for an empty query', () => {

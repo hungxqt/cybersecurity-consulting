@@ -75,9 +75,7 @@ test('every page ends with next-step cards that lead somewhere else', async ({ p
   ];
   for (const url of pages) {
     await page.goto(url);
-    const links = page
-      .getByRole('navigation', { name: /Where to next|\[VI\] Where to next/ })
-      .getByRole('link');
+    const links = page.getByRole('navigation', { name: 'Where to next' }).getByRole('link');
     await expect(links).toHaveCount(2);
     const hrefs = await links.evaluateAll((els) =>
       els.map((e) => (e as HTMLAnchorElement).getAttribute('href')),
@@ -100,12 +98,14 @@ test('following next-step links walks the journey', async ({ page }) => {
   await expect(page).toHaveURL(/\/en\/solutions\/soc\/$/);
 });
 
-test('scan next-step link jumps to the scan section on the experience page', async ({ page }) => {
+test('review next-step link opens the contact form with consulting preselected', async ({
+  page,
+}) => {
   await page.goto('/en/resources/');
   await page
     .getByRole('navigation', { name: 'Where to next' })
-    .getByRole('link', { name: /Scan your domain/ })
+    .getByRole('link', { name: /Request an attack-surface review/ })
     .click();
-  await expect(page).toHaveURL(/\/en\/experience\/#scan$/);
-  await expect(page.locator('#scan')).toBeInViewport();
+  await expect(page).toHaveURL(/\/en\/contact\/\?topic=consulting$/);
+  await expect(page.getByLabel('What do you need?')).toHaveValue('consulting');
 });

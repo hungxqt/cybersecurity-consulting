@@ -1,49 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { FEED, SECTORS, SEVERITIES, filterFeed, monthsOf } from '@/lib/feed';
 import { ROUNDS, isCorrect, scoreGame, verdictFor } from '@/lib/phishGame';
 import { TERM_IDS, normalize, searchTerms } from '@/lib/glossary';
 import { dictionaries } from '@/lib/i18n';
-
-describe('threat feed', () => {
-  it('is sorted newest first and uses known severities and sectors', () => {
-    const dates = FEED.map((e) => e.date);
-    expect(dates).toEqual([...dates].sort().reverse());
-    for (const e of FEED) {
-      expect(SEVERITIES).toContain(e.severity);
-      for (const s of e.sectors) expect(SECTORS).toContain(s);
-    }
-  });
-  it('filters by each dimension and combinations', () => {
-    expect(filterFeed(FEED, {})).toHaveLength(FEED.length);
-    expect(filterFeed(FEED, { severity: 'all', sector: 'all', month: 'all' })).toHaveLength(
-      FEED.length,
-    );
-    const crit = filterFeed(FEED, { severity: 'critical' });
-    expect(crit.length).toBeGreaterThan(0);
-    expect(crit.every((e) => e.severity === 'critical')).toBe(true);
-    const health = filterFeed(FEED, { sector: 'healthcare' });
-    expect(health.every((e) => e.sectors.includes('healthcare'))).toBe(true);
-    const sep = filterFeed(FEED, { month: '2026-09' });
-    expect(sep.every((e) => e.date.startsWith('2026-09'))).toBe(true);
-    const combo = filterFeed(FEED, {
-      severity: 'critical',
-      sector: 'healthcare',
-      month: '2026-09',
-    });
-    expect(combo.map((e) => e.id)).toEqual([11]);
-    expect(filterFeed(FEED, { severity: 'low', sector: 'finance' })).toEqual([]);
-  });
-  it('lists months newest first', () => {
-    expect(monthsOf(FEED)).toEqual(['2026-09', '2026-08']);
-  });
-  it('every entry has English and Vietnamese text keys', () => {
-    for (const e of FEED)
-      for (const lang of ['en', 'vi'] as const) {
-        expect(dictionaries[lang][`feed.${e.id}.title`]).toBeTruthy();
-        expect(dictionaries[lang][`feed.${e.id}.summary`]).toBeTruthy();
-      }
-  });
-});
 
 describe('phish game', () => {
   it('has ten rounds with a mix of phish and legit', () => {

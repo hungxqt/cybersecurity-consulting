@@ -4,8 +4,8 @@ import sitemap from '@astrojs/sitemap';
 import { LEGACY } from './src/lib/legacyRoutes.mjs';
 import { sitemapFilter } from './src/lib/sitemapFilter.mjs';
 
-// Set SITE_URL in CI / Cloudflare Pages to your real domain.
-const site = process.env.SITE_URL ?? 'https://hungtran.example';
+// Production domain; set SITE_URL in CI / Cloudflare Pages to override.
+const site = process.env.SITE_URL ?? 'https://hungtran.id.vn';
 
 export default defineConfig({
   site,

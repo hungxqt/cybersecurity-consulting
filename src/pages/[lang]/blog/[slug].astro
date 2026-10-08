@@ -2,16 +2,23 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Icon from '../../../components/Icon.astro';
-import { forLang, formatDate, readingMinutes, relatedByTags, slugOf } from '../../../lib/content';
+import {
+  formatDate,
+  langOf,
+  readingMinutes,
+  relatedByTags,
+  resolveForLang,
+  slugOf,
+} from '../../../lib/content';
 import { LOCALES, localizedPath, useT, type Lang } from '../../../lib/i18n';
 import { article } from '../../../lib/jsonld';
 
 export async function getStaticPaths() {
   const all = await getCollection('posts');
   return LOCALES.flatMap((lang) =>
-    forLang(all, lang).map((entry) => ({
+    resolveForLang(all, lang).map((entry) => ({
       params: { lang, slug: slugOf(entry.id) },
-      props: { entry, related: relatedByTags(entry, forLang(all, lang), 2) },
+      props: { entry, related: relatedByTags(entry, resolveForLang(all, lang), 2) },
     })),
   );
 }
@@ -21,14 +28,14 @@ const { entry, related } = Astro.props;
 const t = useT(lang);
 const { Content } = await render(entry);
 const minutes = readingMinutes(entry.body ?? '');
-const site = Astro.site ?? new URL('https://hungtran.example');
+const site = Astro.site ?? new URL('https://hungtran.id.vn');
 const ld = article({
   headline: entry.data.title,
   description: entry.data.description,
   datePublished: entry.data.date,
   author: entry.data.author,
   url: new URL(localizedPath(lang, `/blog/${slugOf(entry.id)}/`), site).href,
-  lang,
+  lang: langOf(entry.id) ?? lang,
   publisher: t('site.name'),
   image: new URL(`/og/${lang}.png`, site).href,
 });

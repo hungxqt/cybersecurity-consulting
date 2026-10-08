@@ -1,0 +1,128 @@
+---
+import Icon from './Icon.astro';
+import HuntSpot from './HuntSpot.astro';
+import { localizedHref, useT, type Lang } from '../lib/i18n';
+
+/**
+ * "How an alert is handled": four stages, one plain sentence each. Static and number-free:
+ * it describes the process, not a measured result.
+ */
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const stages = ['detect', 'triage', 'contain', 'report'] as const;
+---
+
+<section class="section" aria-labelledby="flow-h">
+  <div class="container grid">
+    <h2 id="flow-h" class="section__label">
+      {t('soc.flow.title')}
+    </h2>
+    <div class="flow-body">
+      <p class="flow__lede">{t('soc.flow.lede')}</p>
+      <ol class="flow">
+        {stages.map((s, i) => (
+          <li class="flow__stage">
+            <p class="flow__head">
+              <span class="flow__n mono" aria-hidden="true">
+                {i + 1}
+              </span>
+              <span class="flow__name">{t(`soc.flow.${s}.name`)}</span>
+            </p>
+            <p class="flow__text">{t(`soc.flow.${s}.text`)}</p>
+          </li>
+        ))}
+      </ol>
+      <div class="flow__foot">
+        <a class="btn btn--primary" href={localizedHref(lang, '/contact/?topic=soc')}>
+          {t('soc.cta')}
+          <Icon name="arrow-right" />
+        </a>
+        <p class="flow__spot">
+          <HuntSpot lang={lang} id="open-port" />
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .flow-body {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+  .flow__lede {
+    max-width: var(--measure);
+    margin-block: 0 var(--s-5);
+  }
+  .flow {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule-ui);
+  }
+  .flow__stage {
+    display: grid;
+    gap: var(--s-2);
+    padding-block: var(--s-5);
+    border-bottom: 1px solid var(--rule);
+  }
+  .flow__head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-3);
+    margin: 0;
+    max-inline-size: none;
+  }
+  .flow__n {
+    flex: none;
+    inline-size: 1.75rem;
+    color: var(--accent);
+    font-size: var(--fs-data);
+    font-weight: 500;
+  }
+  .flow__name {
+    font-family: var(--font-strong);
+    font-weight: 600;
+    font-size: var(--fs-h3);
+    line-height: 1.3;
+  }
+  .flow__text {
+    margin: 0;
+    padding-inline-start: calc(1.75rem + var(--s-3));
+    font-size: var(--fs-small);
+    line-height: 1.55;
+  }
+  .flow__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    margin-top: var(--s-6);
+  }
+  .flow__spot {
+    margin: 0;
+    max-width: none;
+  }
+  @media (min-width: 1080px) {
+    .flow-body {
+      grid-column: 4 / -1;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: var(--gutter);
+      border-bottom: 1px solid var(--rule);
+    }
+    .flow__stage {
+      align-content: start;
+      border-bottom: 0;
+    }
+    .flow__text {
+      padding-inline-start: 0;
+    }
+  }
+</style>

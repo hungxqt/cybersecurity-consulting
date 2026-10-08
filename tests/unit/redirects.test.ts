@@ -31,9 +31,6 @@ const KNOWN_PATHS = [
   '/solutions/audit/',
   '/solutions/soc/',
   '/experience/',
-  '/experience/scenarios/logistics-soc-onboarding/',
-  '/experience/scenarios/fintech-soc2-readiness/',
-  '/experience/scenarios/health-portal-threat-modeling/',
   '/about/',
   '/blog/',
   '/careers/',
@@ -50,6 +47,10 @@ describe('legacy routes', () => {
   });
   it('every target exists in the route list', () => {
     for (const [, to] of LEGACY) expect(ROUTES.has(to), to).toBe(true);
+  });
+  it('every case-studies URL lands on the experience page', () => {
+    for (const [from, to] of LEGACY.filter(([f]) => f.includes('/case-studies/')))
+      expect(to, from).toMatch(/^\/(en|vi)\/experience\/$/);
   });
   it('no target is itself a source', () => {
     const sources = new Set(LEGACY.map(([f]) => f));
@@ -110,10 +111,9 @@ describe('public/_redirects', () => {
 });
 
 describe('sitemapFilter', () => {
-  it('rejects legacy and specimen pages', () => {
+  it('rejects legacy pages', () => {
     expect(sitemapFilter('https://x.test/en/services/soc/')).toBe(false);
     expect(sitemapFilter('https://x.test/vi/case-studies/')).toBe(false);
-    expect(sitemapFilter('https://x.test/en/design/')).toBe(false);
   });
   it('accepts current pages', () => {
     expect(sitemapFilter('https://x.test/en/solutions/soc/')).toBe(true);

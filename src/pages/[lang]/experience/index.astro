@@ -4,18 +4,16 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import JourneyReel from '../../../components/JourneyReel.astro';
 import ScenarioRows from '../../../components/ScenarioRows.astro';
 import HuntSpot from '../../../components/HuntSpot.astro';
-import ScanConsole from '../../../components/ScanConsole.astro';
-import { forLang, verifiedCases } from '../../../lib/content';
+import Icon from '../../../components/Icon.astro';
+import { resolveForLang, verifiedCases } from '../../../lib/content';
 import { JOURNEYS } from '../../../lib/journeys';
 import { langStaticPaths } from '../../../lib/paths';
-import { localizedPath, useT, type Lang } from '../../../lib/i18n';
+import { localizedHref, localizedPath, useT, type Lang } from '../../../lib/i18n';
 
 export const getStaticPaths = langStaticPaths;
 const lang = Astro.params.lang as Lang;
 const t = useT(lang);
-const cases = forLang(await getCollection('cases'), lang);
-const references = verifiedCases(cases);
-const scenarios = cases.filter((c) => c.data.illustrative);
+const references = verifiedCases(resolveForLang(await getCollection('cases'), lang));
 ---
 
 <BaseLayout lang={lang} title={t('nav.experience')} description={t('exp.lede')}>
@@ -50,23 +48,24 @@ const scenarios = cases.filter((c) => c.data.illustrative);
           />
         ))}
       </div>
-    </div>
-  </section>
-
-  <ScanConsole lang={lang} />
-
-  <section id="library" class="section" aria-labelledby="library-h">
-    <div class="container">
-      <h2 id="library-h" class="section__label">
-        {t('cases.title')}
-      </h2>
-      <ScenarioRows lang={lang} entries={scenarios} />
       <p class="xl__spot">
         <HuntSpot lang={lang} id="exposed-backup" />
       </p>
     </div>
   </section>
 
+  <section id="review" class="section" aria-labelledby="review-h">
+    <div class="container">
+      <h2 id="review-h" class="section__label">
+        {t('exp.review.title')}
+      </h2>
+      <p class="review__body">{t('exp.review.body')}</p>
+      <a class="btn btn--primary" href={localizedHref(lang, '/contact/?topic=consulting')}>
+        {t('exp.review.cta')}
+        <Icon name="arrow-right" />
+      </a>
+    </div>
+  </section>
   {references.length > 0 && (
     <section id="references" class="section" aria-labelledby="refs-h" data-references>
       <div class="container">
@@ -110,6 +109,10 @@ const scenarios = cases.filter((c) => c.data.illustrative);
   .reels > :global(.reel:first-child) {
     border-top: 0;
     padding-block-start: 0;
+  }
+  .review__body {
+    max-width: var(--measure);
+    margin-block: 0 var(--s-5);
   }
   .xl__spot {
     margin: var(--s-3) 0 0;

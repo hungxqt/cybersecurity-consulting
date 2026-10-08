@@ -1,4 +1,4 @@
-/** Site-wide settings. Replace the placeholders before going live (see README). */
+/** Site-wide settings. See the README checklist before going live. */
 export const CONTACT_EMAIL = 'info@hungtran.id.vn';
 export const SECURITY_EMAIL = 'security@hungtran.id.vn';
 
@@ -7,14 +7,8 @@ export const SECURITY_POLICY_UPDATED = new Date('2026-10-08T00:00:00Z');
 
 /**
  * Formspree form id, set with PUBLIC_FORMSPREE_ID at build time (Cloudflare Pages env var).
- * The placeholder makes the form show a "not configured" message instead of failing silently.
+ * Without it the form shows a "not configured" message instead of failing silently.
  */
 export const FORMSPREE_ID: string =
   (import.meta.env.PUBLIC_FORMSPREE_ID as string | undefined) ?? 'REPLACE_ME';
 export const FORMSPREE_ENDPOINT = `https://formspree.io/f/${FORMSPREE_ID}`;
-
-/**
- * True while the careers pages show sample role descriptions. Set to false once the roles,
- * locations and terms are real (hides the "sample roles" notice).
- */
-export const jobsAreSamples = true;

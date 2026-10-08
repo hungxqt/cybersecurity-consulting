@@ -1,6 +1,6 @@
 ---
 import SolutionPage from '../../../components/SolutionPage.astro';
-import SocDashboard from '../../../components/SocDashboard.astro';
+import AlertFlow from '../../../components/AlertFlow.astro';
 import { langStaticPaths } from '../../../lib/paths';
 import type { Lang } from '../../../lib/i18n';
 export const getStaticPaths = langStaticPaths;
@@ -8,5 +8,5 @@ const lang = Astro.params.lang as Lang;
 ---
 
 <SolutionPage lang={lang} service="soc">
-  <SocDashboard lang={lang} />
+  <AlertFlow lang={lang} />
 </SolutionPage>

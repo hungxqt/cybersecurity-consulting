@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHero from '../../components/SectionHero.astro';
-import ThreatFeed from '../../components/ThreatFeed.astro';
 import PhishGame from '../../components/PhishGame.astro';
 import Glossary from '../../components/Glossary.astro';
 import { langStaticPaths } from '../../lib/paths';
@@ -20,12 +19,10 @@ const t = useT(lang);
     lede={t('res.lede')}
   >
     <nav class="jump" aria-label={t('res.nav.label')}>
-      <a href="#feed">{t('res.nav.feed')}</a>
       <a href="#game">{t('res.nav.game')}</a>
       <a href="#glossary">{t('res.nav.glossary')}</a>
     </nav>
   </SectionHero>
-  <ThreatFeed lang={lang} />
   <PhishGame lang={lang} />
   <Glossary lang={lang} />
 </BaseLayout>

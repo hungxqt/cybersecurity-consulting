@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { QUESTIONS, levelFor, radarPoints, scoreQuiz, summarizeQuiz } from '@/lib/quizScore';
 import { AREAS, applicableAreas, isShared, timeline } from '@/lib/compliance';
-import { containMinutes, socStats, sourceFor, stateAt } from '@/lib/socDash';
-import { createThreatStream } from '@/lib/threatSim';
 
 const all = (n: number) => QUESTIONS.map(() => n);
 
@@ -104,37 +102,5 @@ describe('compliance overlap', () => {
     const a = rows([...sel]).map((r) => sel.map((f) => isShared(r, f, sel)));
     const b = rows([...sel]).map((r) => sel.map((f) => isShared(r, f, sel)));
     expect(a).toEqual(b);
-  });
-});
-describe('soc dashboard', () => {
-  it('moves through states by age', () => {
-    expect(stateAt('blocked', 0)).toBe('new');
-    expect(stateAt('blocked', 1500)).toBe('triaging');
-    expect(stateAt('blocked', 5000)).toBe('closed');
-    expect(stateAt('contained', 5000)).toBe('closed');
-    expect(stateAt('escalated', 5000)).toBe('escalated');
-  });
-  it('handles empty input', () => {
-    expect(socStats([])).toEqual({ total: 0, escalated: 0, mttdMs: 0, mttrMin: 0 });
-  });
-  it('computes median detect time and counts escalations', () => {
-    const s = createThreatStream(3);
-    const events = Array.from({ length: 101 }, () => s.next());
-    const stats = socStats(events);
-    const sorted = events.map((e) => e.latencyMs).sort((a, b) => a - b);
-    expect(stats.mttdMs).toBe(sorted[50]);
-    expect(stats.escalated).toBe(events.filter((e) => e.outcome === 'escalated').length);
-    expect(stats.total).toBe(101);
-  });
-  it('containment time grows with outcome gravity', () => {
-    expect(containMinutes({ outcome: 'blocked', severity: 4 })).toBeLessThan(
-      containMinutes({ outcome: 'contained', severity: 1 }),
-    );
-    expect(containMinutes({ outcome: 'contained', severity: 4 })).toBeLessThan(
-      containMinutes({ outcome: 'escalated', severity: 1 }),
-    );
-  });
-  it('source is stable', () => {
-    expect(sourceFor(5)).toBe(sourceFor(5));
   });
 });

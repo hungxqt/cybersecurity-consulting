@@ -144,14 +144,14 @@ const EXTRAS: ContrastPair[] = [
     bg: NEXUS['c-slate'],
     kind: 'text',
     theme: 'nexus',
-    label: 'illustrative banner: Frost on Slate',
+    label: 'note panel: Frost on Slate',
   },
   {
     fg: NEXUS['c-ash'],
     bg: NEXUS['c-slate'],
     kind: 'text',
     theme: 'nexus',
-    label: 'illustrative banner: Ash on Slate',
+    label: 'note panel: Ash on Slate',
   },
 ];
 

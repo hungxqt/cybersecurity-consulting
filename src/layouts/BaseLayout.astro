@@ -46,7 +46,7 @@ const themeColor = theme === 'atlas' ? '#F2F4F5' : '#0D0F11';
 const fontPreloads = lang === 'vi' ? [bvp300Latin, bvp300Vietnamese, bvp300LatinExt] : [bvp300Latin];
 const t = useT(lang);
 const path = Astro.props.path ?? stripLocale(Astro.url.pathname);
-const site = Astro.site ?? new URL('https://hungtran.example');
+const site = Astro.site ?? new URL('https://hungtran.id.vn');
 const canonical = new URL(localizedPath(lang, path), site).href;
 const metaDescription = description ?? t('site.description');
 const fullTitle = title === t('site.name') ? title : `${title} · ${t('site.name')}`;

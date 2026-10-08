@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { SECURITY_EMAIL } from '@/lib/site';
-import { article, jobPosting, organization, serializeJsonLd } from '@/lib/jsonld';
+import { article, organization, serializeJsonLd } from '@/lib/jsonld';
 
 describe('json-ld', () => {
   it('builds an organization', () => {
@@ -29,21 +30,6 @@ describe('json-ld', () => {
     expect(a.datePublished).toBe('2026-08-12T00:00:00.000Z');
     expect(a.inLanguage).toBe('vi');
     expect(a.author).toEqual({ '@type': 'Organization', name: 'HungTran team' });
-  });
-  it('maps employment types and falls back safely', () => {
-    const base = {
-      title: 't',
-      description: 'd',
-      datePosted: new Date('2026-09-01'),
-      location: 'Hanoi',
-      organization: 'HungTran',
-      url: 'u',
-      lang: 'en' as const,
-    };
-    expect(jobPosting({ ...base, type: 'full-time' }).employmentType).toBe('FULL_TIME');
-    expect(jobPosting({ ...base, type: 'contract' }).employmentType).toBe('CONTRACTOR');
-    expect(jobPosting({ ...base, type: 'weird' }).employmentType).toBe('OTHER');
-    expect(jobPosting({ ...base, type: 'full-time' }).datePosted).toBe('2026-09-01');
   });
   it('escapes script-closing sequences', () => {
     const out = serializeJsonLd({ a: '</script><script>alert(1)</script>' });
@@ -113,5 +99,24 @@ describe('security.txt', () => {
   it('every Policy URL path is a page that exists', () => {
     const policy = /^Policy: https?:\/\/[^/]+(\/.+)$/m.exec(txt)![1]!;
     expect(existsSync(`src/pages/[lang]/${policy.split('/')[2]}.astro`)).toBe(true);
+  });
+});
+
+describe('production domain', () => {
+  const walk = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((d) =>
+      d.isDirectory() ? walk(join(dir, d.name)) : [join(dir, d.name)],
+    );
+  it('no source file points at the old placeholder domain', () => {
+    const files = [
+      'astro.config.mjs',
+      'src/layouts/BaseLayout.astro',
+      'src/pages/robots.txt.ts',
+      ...walk('src/pages').filter((f) => f.endsWith('.astro') || f.endsWith('.ts')),
+    ];
+    for (const f of files) expect(readFileSync(f, 'utf8'), f).not.toContain('hungtran.example');
+  });
+  it('defaults SITE_URL to the production domain', () => {
+    expect(readFileSync('astro.config.mjs', 'utf8')).toContain('https://hungtran.id.vn');
   });
 });

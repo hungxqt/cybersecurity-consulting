@@ -3,6 +3,7 @@ import {
   dictionaries,
   interpolate,
   isLang,
+  isPlaceholder,
   localizedHref,
   localizedPath,
   stripLocale,
@@ -13,8 +14,21 @@ import {
 } from '@/lib/i18n';
 
 const dicts: Record<Lang, Dict> = {
-  en: { hello: 'Hello {name}', only_en: 'English only', empty: 'Has English' },
-  vi: { hello: 'Xin chào {name}', empty: '   ' },
+  en: {
+    hello: 'Hello {name}',
+    only_en: 'English only',
+    empty: 'Has English',
+    todo: 'Todo {name}',
+    bare: 'Bare',
+    mid: 'Mid',
+  },
+  vi: {
+    hello: 'Xin chào {name}',
+    empty: '   ',
+    todo: '[VI] Untranslated {name}',
+    bare: '[VI]',
+    mid: 'Keep [VI] inside',
+  },
 };
 
 describe('translate', () => {
@@ -26,6 +40,20 @@ describe('translate', () => {
   });
   it('falls back to English when the value is blank', () => {
     expect(translate(dicts, 'vi', 'empty')).toBe('Has English');
+  });
+  it('falls back to English for an untranslated [VI] placeholder', () => {
+    expect(translate(dicts, 'vi', 'todo', { name: 'An' })).toBe('Todo An');
+    expect(translate(dicts, 'vi', 'bare')).toBe('Bare');
+  });
+  it('keeps a value that merely contains [VI] mid-string', () => {
+    expect(translate(dicts, 'vi', 'mid')).toBe('Keep [VI] inside');
+  });
+  it('detects placeholders', () => {
+    expect(isPlaceholder('[VI] x')).toBe(true);
+    expect(isPlaceholder('[VI]')).toBe(true);
+    expect(isPlaceholder('  ')).toBe(true);
+    expect(isPlaceholder(undefined)).toBe(true);
+    expect(isPlaceholder('Xin chào')).toBe(false);
   });
   it('returns the key when no dictionary has it', () => {
     expect(translate(dicts, 'en', 'nope.key')).toBe('nope.key');
@@ -55,9 +83,11 @@ describe('paths', () => {
   });
   it('localizes hrefs and keeps the fragment', () => {
     expect(localizedHref('en', '/solutions/#method')).toBe('/en/solutions/#method');
-    expect(localizedHref('vi', '/experience/#scan')).toBe('/vi/experience/#scan');
+    expect(localizedHref('vi', '/experience/#review')).toBe('/vi/experience/#review');
     expect(localizedHref('vi', '/about/')).toBe('/vi/about/');
     expect(localizedHref('en')).toBe('/en/');
+    expect(localizedHref('en', '/contact/?topic=consulting')).toBe('/en/contact/?topic=consulting');
+    expect(localizedHref('vi', '/contact/?topic=a#x')).toBe('/vi/contact/?topic=a#x');
     expect(localizedHref('en', '/solutions/soc#')).toBe('/en/solutions/soc/');
   });
 });

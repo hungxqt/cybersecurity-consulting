@@ -16,7 +16,7 @@ import { CONTACT_EMAIL } from '../../lib/site';
 export const getStaticPaths = langStaticPaths;
 const lang = Astro.params.lang as Lang;
 const t = useT(lang);
-const site = Astro.site ?? new URL('https://hungtran.example');
+const site = Astro.site ?? new URL('https://hungtran.id.vn');
 const ld = organization({
   name: t('site.name'),
   url: site.href,
@@ -27,7 +27,6 @@ const ld = organization({
 const tries = [
   { id: 'quiz', path: '/solutions/consulting/#quiz' },
   { id: 'matrix', path: '/solutions/audit/#matrix' },
-  { id: 'scan', path: '/experience/#scan' },
 ] as const;
 const vendor = JOURNEY_BY_ID['vendor-account']!;
 ---

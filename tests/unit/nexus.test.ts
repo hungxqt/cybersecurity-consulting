@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import en from '../../src/i18n/en.json';
 import vi from '../../src/i18n/vi.json';
 import {
-  AMBIENT_TYPES,
   BAND_CLEARANCE_PX,
   EDGES,
   MIN_STAGE_PX,
@@ -14,22 +13,17 @@ import {
   adjacency,
   bandRects,
   describeNode,
-  eventToEdge,
-  formatAmbientRows,
   isMirrored,
   neighbours,
-  nexusAmbient,
   nodesForLens,
   readingOrder,
   relations,
-  sampleAmbient,
   spatialNext,
   type Layout,
   type NexusNode,
   type NodeId,
   type Rect,
 } from '../../src/lib/nexus';
-import { ATTACK_TYPES, ORIGINS, type Outcome, type ThreatEvent } from '../../src/lib/threatSim';
 import { interpolate } from '../../src/lib/interpolate';
 
 const EN = en as Record<string, string>;
@@ -343,9 +337,6 @@ describe('copy', () => {
     'hero.cta.solutions',
     'nexus.groupLabel',
     'nexus.help',
-    'nexus.logLabel',
-    'nexus.pause',
-    'nexus.resume',
     'nexus.tableSummary',
     'nexus.table.caption',
     'nexus.table.system',
@@ -395,80 +386,6 @@ describe('copy', () => {
     expect(describeNode('phish', t, 'en')).toBe(
       'Threat, Internet zone. Leads to Staff laptops. Covered by Consulting and SOC.',
     );
-  });
-});
-
-// --- ambient ---------------------------------------------------------------------------------
-
-describe('ambient events', () => {
-  it('maps exactly the six ambient types to an attack edge', () => {
-    expect([...AMBIENT_TYPES]).toEqual([
-      'credential-stuffing',
-      'ssh-bruteforce',
-      'phishing-kit',
-      'sql-injection',
-      'ransomware-dropper',
-      'zero-day-probe',
-    ]);
-    const mapped = ATTACK_TYPES.filter((a) => eventToEdge(a.id) !== null).map((a) => a.id);
-    expect(mapped.sort()).toEqual([...AMBIENT_TYPES].sort());
-    for (const type of AMBIENT_TYPES) {
-      const edge = EDGES.find((e) => e.id === eventToEdge(type));
-      expect(edge?.kind, type).toBe('attack');
-    }
-    expect(eventToEdge('c2-beacon')).toBeNull();
-    expect(eventToEdge('ddos-syn-flood')).toBeNull();
-    expect(eventToEdge('supply-chain')).toBeNull();
-    expect(eventToEdge('credential-stuffing')).toBe('a3');
-    expect(eventToEdge('ssh-bruteforce')).toBe('a5');
-    expect(eventToEdge('phishing-kit')).toBe('a1');
-    expect(eventToEdge('sql-injection')).toBe('a4');
-    expect(eventToEdge('ransomware-dropper')).toBe('a6');
-    expect(eventToEdge('zero-day-probe')).toBe('a4');
-  });
-
-  it('never yields an unmapped type, and is deterministic', () => {
-    const a = nexusAmbient(7);
-    const b = nexusAmbient(7);
-    for (let i = 0; i < 400; i++) {
-      const ea = a.next();
-      expect(eventToEdge(ea.type), ea.type).not.toBeNull();
-      expect(b.next()).toEqual(ea);
-    }
-    expect(sampleAmbient(3)).toEqual(sampleAmbient(3));
-    expect(sampleAmbient(3)).toHaveLength(3);
-  });
-
-  it('formats two short rows that match the e2e patterns', () => {
-    const row1 = /^\d{2}:\d{2}:\d{2} · [a-z0-9-]+$/;
-    const row2 = /^[A-Z]{3} \u203A (blocked|contained|escalated) · \d+ms$/;
-    const outcomes: Outcome[] = ['blocked', 'contained', 'escalated'];
-    const maxLatency: Record<Outcome, number> = { blocked: 90, contained: 800, escalated: 4000 };
-    for (const type of AMBIENT_TYPES)
-      for (const outcome of outcomes)
-        for (const origin of ORIGINS) {
-          const event = {
-            id: 1,
-            type,
-            severity: 2,
-            origin,
-            target: origin,
-            outcome,
-            latencyMs: maxLatency[outcome],
-            delayMs: 1000,
-          } as ThreatEvent;
-          for (const clock of [0, 51071, 86399]) {
-            const [r1, r2] = formatAmbientRows(event, clock);
-            expect(r1).toMatch(row1);
-            expect(r2).toMatch(row2);
-            expect(r1.length).toBeLessThanOrEqual(30);
-            expect(r2.length).toBeLessThanOrEqual(24);
-          }
-        }
-    for (const [r1, r2] of sampleAmbient(6)) {
-      expect(r1).toMatch(row1);
-      expect(r2).toMatch(row2);
-    }
   });
 });
 

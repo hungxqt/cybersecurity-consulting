@@ -107,21 +107,6 @@ test('a filled honeypot never reaches the network but looks like success', async
   expect(called).toBe(false);
 });
 
-test('prefills from a scan result', async ({ page }) => {
-  await page.goto('/en/experience/#scan');
-  await page.getByLabel('Domain').fill('example.com');
-  await page.getByRole('button', { name: 'Run simulated scan' }).click();
-  await page
-    .getByRole('link', { name: 'Get these fixed with an analyst' })
-    .click({ timeout: 15_000 });
-  await expect(page).toHaveURL(/\/en\/contact\/\?domain=example\.com&scan=/);
-  await expect(page.getByLabel('Message', { exact: true })).toHaveValue(
-    /Simulated scan of example\.com: risk \d+\/100/,
-  );
-  await expect(page.getByLabel('What do you need?')).toHaveValue('audit');
-  await expect(page.locator('[data-notice]')).toContainText('summary of your simulated scan');
-});
-
 test('prefills from the maturity quiz', async ({ page }) => {
   await page.goto(
     '/en/contact/?quiz=' + encodeURIComponent('Security maturity quiz: overall 50/100 (defined).'),
@@ -130,19 +115,21 @@ test('prefills from the maturity quiz', async ({ page }) => {
   await expect(page.getByLabel('What do you need?')).toHaveValue('consulting');
 });
 
-test('careers apply pre-selects the role', async ({ page }) => {
-  await page.goto('/en/careers/penetration-tester/');
-  await page.getByRole('link', { name: 'Apply for this role' }).click();
+test('the careers page links to the contact form with the careers topic', async ({ page }) => {
+  await page.goto('/en/careers/');
+  const cta = page.getByRole('link', { name: 'Send us your details' });
+  await expect(cta).toHaveAttribute('href', '/en/contact/?topic=careers');
+  await cta.click();
   await expect(page.getByLabel('What do you need?')).toHaveValue('careers');
-  await expect(page.getByLabel('Role you are applying for')).toBeVisible();
-  await expect(page.getByLabel('Role you are applying for')).toHaveValue('penetration-tester');
+  await expect(page.locator('#c-role, [name="role"], [data-role-field]')).toHaveCount(0);
 });
 
-test('ignores a malicious role parameter', async ({ page }) => {
-  await page.goto('/en/contact/?role=%3Cscript%3Ealert(1)%3C/script%3E');
+test('ignores an unknown or malicious topic parameter', async ({ page }) => {
+  await page.goto('/en/contact/?topic=%3Cscript%3Ealert(1)%3C/script%3E');
+  await expect(page.getByLabel('What do you need?')).toHaveValue('');
+  await page.goto('/en/contact/?topic=nope');
   await expect(page.getByLabel('What do you need?')).toHaveValue('');
 });
-
 test('about page renders values and expertise', async ({ page }) => {
   await page.goto('/en/about/');
   await expect(page.getByRole('heading', { name: 'How we work' })).toBeVisible();

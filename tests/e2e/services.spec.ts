@@ -68,65 +68,21 @@ test('audit matrix filters by framework and updates the timeline', async ({ page
   expect((await axe(page)).violations.map((v) => v.id)).toEqual([]);
 });
 
-test('soc dashboard shows live alerts, triage states and KPIs', async ({ page }) => {
+test('soc page explains how an alert is handled, with no figures', async ({ page }) => {
   await page.goto('/en/solutions/soc/');
-  const soc = page.locator('[data-soc]');
-  await soc.scrollIntoViewIfNeeded();
-  await expect(soc.locator('tbody tr').first()).toBeVisible();
-  await expect(soc.locator('.chip[data-state="triaging"]').first()).toBeVisible({ timeout: 8000 });
-  await expect(
-    soc.locator('.chip[data-state="closed"], .chip[data-state="escalated"]').first(),
-  ).toBeVisible({ timeout: 10_000 });
-  const alerts = Number(await soc.locator('[data-kpi="alerts"]').innerText());
-  expect(alerts).toBeGreaterThan(0);
+  await expect(page.getByRole('heading', { name: 'How an alert is handled' })).toBeVisible();
+  const stages = page.locator('.flow__stage');
+  await expect(stages).toHaveCount(4);
+  await expect(stages.locator('.flow__name')).toHaveText(['Detect', 'Triage', 'Contain', 'Report']);
+  const text = await page.locator('.flow').innerText();
+  expect(text).not.toMatch(/\d+\s*(ms|min|%)|MTTD|MTTR/i);
+  await expect(page.getByRole('link', { name: /Put analysts on your alerts/ })).toHaveAttribute(
+    'href',
+    '/en/contact/?topic=soc',
+  );
+  await expect(page.locator('[data-hunt-spot="open-port"]')).toBeAttached();
   expect((await axe(page)).violations.map((v) => v.id)).toEqual([]);
 });
-
-test('soc pause button toggles aria-pressed and stops arrivals', async ({ page }) => {
-  await page.goto('/en/solutions/soc/');
-  const soc = page.locator('[data-soc]');
-  await soc.scrollIntoViewIfNeeded();
-  const pause = soc.locator('[data-soc-pause]');
-  await expect(pause).toHaveAttribute('aria-pressed', 'false');
-  await expect(soc.locator('[data-kpi="alerts"]')).not.toHaveText('8', { timeout: 8000 });
-  await pause.click();
-  await expect(pause).toHaveAttribute('aria-pressed', 'true');
-  await expect(pause).toHaveText('Resume simulation');
-  const frozen = await soc.locator('tbody tr').first().innerText();
-  const alerts = await soc.locator('[data-kpi="alerts"]').innerText();
-  await page.waitForTimeout(3500);
-  expect(await soc.locator('tbody tr').first().innerText()).toBe(frozen);
-  expect(await soc.locator('[data-kpi="alerts"]').innerText()).toBe(alerts);
-  await pause.click();
-  await expect(pause).toHaveAttribute('aria-pressed', 'false');
-  await expect(soc.locator('tbody tr').first()).not.toHaveText(frozen, { timeout: 8000 });
-});
-
-test('soc simulation waits until the panel is in view', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto('/en/solutions/soc/');
-  const first = page.locator('[data-soc] tbody tr').first();
-  const text = await first.innerText();
-  await page.waitForTimeout(2000);
-  expect(await first.innerText()).toBe(text);
-  await page.locator('[data-soc]').scrollIntoViewIfNeeded();
-  await expect(page.locator('[data-soc] tbody tr').first()).not.toHaveText(text, {
-    timeout: 8000,
-  });
-});
-
-test.describe('reduced motion', () => {
-  test.use({ reducedMotion: 'reduce' });
-  test('soc dashboard stays static with 8 settled alerts', async ({ page }) => {
-    await page.goto('/en/solutions/soc/');
-    await page.waitForTimeout(2500);
-    await expect(page.locator('[data-queue] tr')).toHaveCount(8);
-    await expect(page.locator('.chip[data-state="new"], .chip[data-state="triaging"]')).toHaveCount(
-      0,
-    );
-  });
-});
-
 for (const lang of ['en', 'vi']) {
   test(`solutions index in ${lang} has the atlas, method and three ledger rows`, async ({
     page,

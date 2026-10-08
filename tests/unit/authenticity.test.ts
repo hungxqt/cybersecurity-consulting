@@ -72,16 +72,40 @@ describe('authenticity: certification keys', () => {
   });
 });
 
-describe('authenticity: scenarios', () => {
-  const dir = 'src/content/cases/en';
-  for (const f of readdirSync(dir)) {
-    it(`${f}: illustrative title and description start with "Scenario:" and carry no metrics`, () => {
+describe('authenticity: cases', () => {
+  it('every case on disk (if any) is a verified reference', () => {
+    const dir = 'src/content/cases/en';
+    for (const f of readdirSync(dir).filter((n) => /\.mdx?$/.test(n))) {
       const raw = readFileSync(join(dir, f), 'utf8');
       const front = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/)![1]!;
-      if (/^illustrative:\s*false/m.test(front)) return;
-      expect(front).toMatch(/^title:\s*"Scenario:/m);
-      expect(front).toMatch(/^description:\s*"Scenario:/m);
-      expect(front).not.toMatch(/^metrics:/m);
-    });
+      expect(front, f).toMatch(/^verified:\s*true/m);
+    }
+  });
+});
+describe('no demo vocabulary in sources', () => {
+  // Visitor-facing English sources must not call the site's own content a sample, example,
+  // simulation or placeholder. Vietnamese files are excluded: they intentionally hold "[VI]"
+  // placeholders that are never rendered. No allowlist is needed today; add an entry (with a
+  // reason) only for an educational sentence that genuinely needs one of these words.
+  const BANNED =
+    /\bsample\b|illustrative|\bsimulat|\bdemo\b|\bplaceholder\b|lorem|coming soon|\bTBD\b|hungtran\.example/i;
+  const ALLOW: { file: RegExp; text: RegExp; why: string }[] = [];
+  const texts: [string, string][] = [];
+  const en = JSON.parse(readFileSync('src/i18n/en.json', 'utf8')) as Record<string, string>;
+  for (const [k, v] of Object.entries(en)) texts.push([`en.json:${k}`, v]);
+  const walk = (d: string): string[] =>
+    readdirSync(d, { withFileTypes: true }).flatMap((e) =>
+      e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)],
+    );
+  for (const f of walk('src/content')) {
+    if (/[\\/]vi[\\/]/.test(f) || !/\.(mdx?|json)$/.test(f)) continue;
+    texts.push([f, readFileSync(f, 'utf8')]);
   }
+  it('finds no banned wording', () => {
+    const hits = texts.filter(
+      ([where, text]) =>
+        BANNED.test(text) && !ALLOW.some((a) => a.file.test(where) && a.text.test(text)),
+    );
+    expect(hits.map(([w]) => w)).toEqual([]);
+  });
 });

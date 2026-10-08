@@ -12,12 +12,10 @@ const ROUTES = [
   'experience/',
   'experience/journeys/vendor-account/',
   'experience/journeys/before-launch/',
-  'experience/scenarios/logistics-soc-onboarding/',
   'blog/',
   'careers/',
   'resources/',
   'contact/',
-  'design/',
 ];
 
 for (const lang of ['en', 'vi'] as const) {
@@ -99,7 +97,12 @@ test('404 page renders', async ({ page }) => {
 });
 
 const viDict = JSON.parse(readFileSync('src/i18n/vi.json', 'utf8')) as Record<string, string>;
-const CONTACT_LABEL = { en: 'Contact', vi: viDict['nav.contact']! } as const;
+// Untranslated Vietnamese values fall back to English, so the label is whatever vi.json really holds.
+const viContact = viDict['nav.contact']!;
+const CONTACT_LABEL = {
+  en: 'Contact',
+  vi: viContact.startsWith('[VI]') ? 'Contact' : viContact,
+} as const;
 
 async function expectNoHeaderOverflow(page: Page) {
   const sizes = await page.locator('[data-site-header]').evaluate((header) => {

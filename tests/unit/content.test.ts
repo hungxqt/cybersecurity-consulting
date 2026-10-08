@@ -2,20 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  caseView,
   forLang,
+  isPlaceholderEntry,
   langOf,
   publishedCredentials,
   publishedTeam,
   readingMinutes,
   relatedByTags,
+  resolveForLang,
   slugOf,
   verifiedCases,
 } from '@/lib/content';
 import {
   caseSchema,
   certificationSchema,
-  jobSchema,
   postSchema,
   serviceSchema,
   teamSchema,
@@ -58,7 +58,7 @@ describe('content helpers', () => {
 
 /* ---- Real content on disk ---- */
 
-const COLLECTIONS = ['posts', 'cases', 'jobs'] as const;
+const COLLECTIONS = ['posts', 'cases'] as const;
 
 function frontmatter(file: string): Record<string, unknown> {
   const raw = readFileSync(file, 'utf8');
@@ -96,22 +96,23 @@ function frontmatter(file: string): Record<string, unknown> {
   return out;
 }
 
-const schemaFor = { posts: postSchema, cases: caseSchema, jobs: jobSchema } as const;
+const schemaFor = { posts: postSchema, cases: caseSchema } as const;
+const mdxIn = (dir: string) => readdirSync(dir).filter((n) => /\.mdx?$/.test(n));
 
 describe('content on disk', () => {
   for (const col of COLLECTIONS) {
     const base = join('src/content', col);
-    const en = readdirSync(join(base, 'en'));
-    const vi = readdirSync(join(base, 'vi'));
+    const en = mdxIn(join(base, 'en'));
+    const vi = mdxIn(join(base, 'vi'));
 
     it(`${col}: every English entry has a Vietnamese twin and vice versa`, () => {
       expect(vi.sort()).toEqual(en.sort());
     });
-    it(`${col}: at least three entries per language`, () => {
+    it.runIf(col === 'posts')(`${col}: at least three entries per language`, () => {
       expect(en.length).toBeGreaterThanOrEqual(3);
     });
     for (const lang of ['en', 'vi']) {
-      for (const file of readdirSync(join(base, lang))) {
+      for (const file of mdxIn(join(base, lang))) {
         it(`${col}/${lang}/${file} matches its schema`, () => {
           const result = schemaFor[col].safeParse(frontmatter(join(base, lang, file)));
           expect(result.error?.issues ?? []).toEqual([]);
@@ -179,17 +180,6 @@ describe('data collections', () => {
         tags: ['t'],
       }).success,
     ).toBe(false);
-    expect(
-      jobSchema.safeParse({
-        title: 'x',
-        description: 'x',
-        date: 'nope',
-        team: 'soc',
-        location: 'x',
-        type: 'full-time',
-        level: 'mid',
-      }).success,
-    ).toBe(false);
   });
 });
 
@@ -205,53 +195,70 @@ describe('case authenticity rules', () => {
     { value: '1', label: 'a' },
     { value: '2', label: 'b' },
   ];
-  it('defaults to illustrative and unverified', () => {
+  it('defaults to unverified without metrics', () => {
     const c = caseSchema.parse(base);
-    expect(c.illustrative).toBe(true);
     expect(c.verified).toBe(false);
     expect(c.metrics).toBeUndefined();
+    expect('illustrative' in c).toBe(false);
   });
-  it('rejects metrics on an illustrative or unverified case', () => {
+  it('rejects metrics on an unverified case', () => {
     expect(caseSchema.safeParse({ ...base, metrics }).success).toBe(false);
-    expect(caseSchema.safeParse({ ...base, metrics, illustrative: false }).success).toBe(false);
-    expect(caseSchema.safeParse({ ...base, metrics, verified: true }).success).toBe(false);
+    expect(caseSchema.safeParse({ ...base, metrics, verified: false }).success).toBe(false);
   });
-  it('rejects a non-illustrative case that is not verified', () => {
-    expect(caseSchema.safeParse({ ...base, illustrative: false }).success).toBe(false);
-    expect(caseSchema.safeParse({ ...base, illustrative: false, verified: false }).success).toBe(
-      false,
-    );
-  });
-  it('accepts a verified reference with metrics', () => {
+  it('accepts a verified reference with 2-4 metrics', () => {
+    expect(caseSchema.safeParse({ ...base, verified: true, metrics }).success).toBe(true);
     expect(
-      caseSchema.safeParse({ ...base, illustrative: false, verified: true, metrics }).success,
-    ).toBe(true);
+      caseSchema.safeParse({ ...base, verified: true, metrics: metrics.slice(0, 1) }).success,
+    ).toBe(false);
   });
-  it('caseView: illustrative shows the banner only', () => {
-    const entry = { data: caseSchema.parse(base) };
-    expect(caseView(entry)).toEqual({ banner: true, metrics: false, referenceLabel: null });
-    expect(verifiedCases([entry])).toEqual([]);
+  it('verifiedCases keeps only verified entries', () => {
+    const open = { data: caseSchema.parse(base) };
+    const ok = { data: caseSchema.parse({ ...base, verified: true, metrics }) };
+    expect(verifiedCases([open, ok])).toEqual([ok]);
+    expect(verifiedCases([open])).toEqual([]);
   });
-  it('caseView: verified reference shows label and metrics, no banner', () => {
-    const entry = {
-      data: caseSchema.parse({ ...base, illustrative: false, verified: true, metrics }),
-    };
-    expect(caseView(entry)).toEqual({
-      banner: false,
-      metrics: true,
-      referenceLabel: 'cases.reference',
-    });
-    expect(verifiedCases([entry])).toHaveLength(1);
-  });
-  it('every illustrative case on disk starts its title and description with "Scenario:"', () => {
+  it('every case on disk (if any) is verified', () => {
     for (const lang of ['en']) {
-      for (const f of readdirSync(join('src/content/cases', lang))) {
-        const fm = frontmatter(join('src/content/cases', lang, f));
-        if (fm.illustrative !== false) {
-          expect(String(fm.title), f).toMatch(/^Scenario:/);
-          expect(String(fm.description), f).toMatch(/^Scenario:/);
-        }
+      for (const f of mdxIn(join('src/content/cases', lang))) {
+        expect(frontmatter(join('src/content/cases', lang, f)).verified, f).toBe(true);
       }
     }
+  });
+});
+
+describe('resolveForLang', () => {
+  const post = (id: string, date: string, title: string, draft = false) => ({
+    id,
+    data: { date: d(date), title, draft },
+  });
+  const list = [
+    post('en/a', '2026-01-01', 'A'),
+    post('en/b', '2026-03-01', 'B'),
+    post('en/c', '2026-02-01', 'C'),
+    post('vi/a', '2026-01-01', '[VI] A'),
+    post('vi/b', '2026-03-01', 'B tiếng Việt'),
+    post('vi/c', '2026-02-01', '[VI] C', true),
+    post('vi/only', '2026-04-01', 'Chỉ có tiếng Việt'),
+  ];
+  it('detects placeholder titles', () => {
+    expect(isPlaceholderEntry(post('vi/a', '2026-01-01', '[VI] A'))).toBe(true);
+    expect(isPlaceholderEntry(post('vi/a', '2026-01-01', 'A'))).toBe(false);
+  });
+  it('falls back to the English entry for a placeholder, newest first', () => {
+    expect(resolveForLang(list, 'vi').map((x) => x.id)).toEqual([
+      'vi/only',
+      'vi/b',
+      'en/c',
+      'en/a',
+    ]);
+  });
+  it('never returns a placeholder or a draft', () => {
+    for (const x of resolveForLang(list, 'vi')) {
+      expect(x.data.title.startsWith('[VI]')).toBe(false);
+      expect(x.data.draft).toBe(false);
+    }
+  });
+  it('leaves English untouched', () => {
+    expect(resolveForLang(list, 'en').map((x) => x.id)).toEqual(['en/b', 'en/c', 'en/a']);
   });
 });

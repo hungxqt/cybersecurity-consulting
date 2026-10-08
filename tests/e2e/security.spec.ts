@@ -43,7 +43,7 @@ const PAGES = [
   '/en/blog/alert-queue-is-lying/',
   '/en/experience/',
   '/en/experience/journeys/vendor-account/',
-  '/en/careers/penetration-tester/',
+  '/en/careers/',
 ];
 
 test('every page works under the production CSP with no violations', async ({ page }) => {
@@ -67,9 +67,6 @@ test('interactive features still work under the CSP', async ({ page }) => {
   await page.goto('/en/');
   await expect(page.locator('[data-nexus][data-live]')).toHaveCount(1, { timeout: 15_000 });
   await page.goto('/en/experience/');
-  await page.getByLabel('Domain').fill('example.com');
-  await page.getByRole('button', { name: 'Run simulated scan' }).click();
-  await expect(page.locator('[data-report]')).toBeVisible({ timeout: 10_000 });
   await page.goto('/en/solutions/audit/');
   await page.getByLabel('PCI DSS').uncheck();
   await expect(page.locator('th[data-fw="pci"]')).toBeHidden();
@@ -91,17 +88,15 @@ test('no page ships inline scripts or style blocks', async ({ request }) => {
   }
 });
 
-test('sitemap excludes the design page; robots and security.txt are served', async ({
-  request,
-}) => {
+test('sitemap excludes legacy routes; robots and security.txt are served', async ({ request }) => {
   const sitemap = await (await request.get('/sitemap-0.xml')).text();
-  expect(sitemap).not.toContain('/design/');
   expect(sitemap).toContain('/en/solutions/soc/');
   expect(sitemap).not.toContain('/services/');
   expect(sitemap).not.toContain('/case-studies/');
   expect(sitemap).toContain('hreflang="vi"');
   const robots = await (await request.get('/robots.txt')).text();
   expect(robots).toContain('Sitemap:');
+  expect(robots).not.toContain('design');
   const sec = await request.get('/.well-known/security.txt');
   expect(sec.status()).toBe(200);
   expect(await sec.text()).toContain('Contact: mailto:');
@@ -125,11 +120,4 @@ test('pages carry canonical, OG image and structured data', async ({ page }) => 
   );
   expect(art['@type']).toBe('Article');
   expect(art.inLanguage).toBe('en');
-
-  await page.goto('/vi/careers/soc-analyst-tier-2/');
-  const job = JSON.parse(
-    (await page.locator('script[type="application/ld+json"]').first().textContent())!,
-  );
-  expect(job['@type']).toBe('JobPosting');
-  expect(job.employmentType).toBe('FULL_TIME');
 });

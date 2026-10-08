@@ -52,39 +52,6 @@ export function article(opts: {
   };
 }
 
-const EMPLOYMENT: Record<string, string> = {
-  'full-time': 'FULL_TIME',
-  'part-time': 'PART_TIME',
-  contract: 'CONTRACTOR',
-};
-
-export function jobPosting(opts: {
-  title: string;
-  description: string;
-  datePosted: Date;
-  type: string;
-  location: string;
-  organization: string;
-  url: string;
-  lang: Lang;
-}): Json {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'JobPosting',
-    title: opts.title,
-    description: opts.description,
-    datePosted: opts.datePosted.toISOString().slice(0, 10),
-    employmentType: EMPLOYMENT[opts.type] ?? 'OTHER',
-    hiringOrganization: { '@type': 'Organization', name: opts.organization },
-    jobLocation: {
-      '@type': 'Place',
-      address: { '@type': 'PostalAddress', addressLocality: opts.location, addressCountry: 'VN' },
-    },
-    url: opts.url,
-    inLanguage: opts.lang,
-  };
-}
-
 /** Serialise for embedding in a <script> tag: "<" is escaped so "</script>" can never appear. */
 export function serializeJsonLd(data: Json | Json[]): string {
   return JSON.stringify(data)

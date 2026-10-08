@@ -19,7 +19,9 @@ const { lang } = Astro.props;
 const t = useT(lang);
 const current = stripLocale(Astro.url.pathname);
 const other = LOCALES.find((l) => l !== lang) as Lang;
-const switchHref = switchLocalePath(Astro.url.pathname, other);
+// The 404 page has no per-language twin: its language link goes to the other home page.
+const isNotFound = /^\/404(\.html|\/)?$/.test(Astro.url.pathname);
+const switchHref = isNotFound ? localizedPath(other) : switchLocalePath(Astro.url.pathname, other);
 const switchLabel = t('lang.switchTo', { language: t(`lang.${other}`) });
 const solutionsActive = isCurrent(current, '/solutions/');
 ---

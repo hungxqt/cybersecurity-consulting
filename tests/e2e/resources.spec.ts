@@ -2,27 +2,13 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { ROUNDS } from '../../src/lib/phishGame';
 
-test('threat feed filters combine and can be cleared', async ({ page }) => {
+test('resources has the game and the glossary and nothing else', async ({ page }) => {
   await page.goto('/en/resources/');
-  const feed = page.locator('[data-feed]');
-  await expect(feed.locator('.adv:visible')).toHaveCount(12);
-  await expect(feed.locator('.feed__sim')).toContainText('Simulated');
-
-  await feed.getByLabel('Severity').selectOption('critical');
-  await expect(feed.locator('.adv:visible')).toHaveCount(3);
-  await expect(feed.locator('[data-count]')).toHaveText('Showing 3 of 12 advisories.');
-
-  await feed.getByLabel('Sector').selectOption('healthcare');
-  await expect(feed.locator('.adv:visible')).toHaveCount(1);
-
-  await feed.getByLabel('Month').selectOption('2026-08');
-  await expect(feed.locator('.adv:visible')).toHaveCount(0);
-  await expect(feed.getByText('No advisories match')).toBeVisible();
-
-  await feed.getByRole('button', { name: 'Clear filters' }).click();
-  await expect(feed.locator('.adv:visible')).toHaveCount(12);
+  await expect(page.locator('[data-game]')).toBeAttached();
+  await expect(page.locator('#glossary')).toBeAttached();
+  await expect(page.locator('[data-feed]')).toHaveCount(0);
+  await expect(page.locator('.jump a')).toHaveText(['Phish or Not?', 'Glossary']);
 });
-
 test('phish game: play all ten rounds and get a score', async ({ page }) => {
   await page.goto('/en/resources/');
   const game = page.locator('[data-game]');
