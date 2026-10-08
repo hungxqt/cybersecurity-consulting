@@ -1,0 +1,136 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import JourneyReel from '../../../components/JourneyReel.astro';
+import ScenarioRows from '../../../components/ScenarioRows.astro';
+import HuntSpot from '../../../components/HuntSpot.astro';
+import ScanConsole from '../../../components/ScanConsole.astro';
+import { forLang, verifiedCases } from '../../../lib/content';
+import { JOURNEYS } from '../../../lib/journeys';
+import { langStaticPaths } from '../../../lib/paths';
+import { localizedPath, useT, type Lang } from '../../../lib/i18n';
+
+export const getStaticPaths = langStaticPaths;
+const lang = Astro.params.lang as Lang;
+const t = useT(lang);
+const cases = forLang(await getCollection('cases'), lang);
+const references = verifiedCases(cases);
+const scenarios = cases.filter((c) => c.data.illustrative);
+---
+
+<BaseLayout lang={lang} title={t('nav.experience')} description={t('exp.lede')}>
+  <header class="container xh">
+    <div class="xh__main">
+      <p class="label xh__label">{t('nav.experience')}</p>
+      <h1>
+        <span class="h-dim">{t('exp.title.dim')}</span>{' '}
+        <span class="h-strong">{t('exp.title.strong')}</span>
+      </h1>
+      <p class="lede">{t('exp.lede')}</p>
+    </div>
+    <aside class="xh__note" aria-labelledby="note-h">
+      <p id="note-h" class="label">
+        {t('exp.note.label')}
+      </p>
+      <p>{t('exp.note')}</p>
+    </aside>
+  </header>
+
+  <section id="journeys" class="section" aria-labelledby="journeys-h">
+    <div class="container">
+      <h2 id="journeys-h" class="section__label">
+        {t('exp.journeys')}
+      </h2>
+      <div class="reels">
+        {JOURNEYS.map((j) => (
+          <JourneyReel
+            journey={j}
+            lang={lang}
+            href={localizedPath(lang, `/experience/journeys/${j.id}/`)}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <ScanConsole lang={lang} />
+
+  <section id="library" class="section" aria-labelledby="library-h">
+    <div class="container">
+      <h2 id="library-h" class="section__label">
+        {t('cases.title')}
+      </h2>
+      <ScenarioRows lang={lang} entries={scenarios} />
+      <p class="xl__spot">
+        <HuntSpot lang={lang} id="exposed-backup" />
+      </p>
+    </div>
+  </section>
+
+  {references.length > 0 && (
+    <section id="references" class="section" aria-labelledby="refs-h" data-references>
+      <div class="container">
+        <h2 id="refs-h" class="section__label">
+          {t('exp.references')}
+        </h2>
+        <ScenarioRows lang={lang} entries={references} />
+      </div>
+    </section>
+  )}
+</BaseLayout>
+
+<style>
+  .xh {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--s-6);
+    padding-block: var(--s-8) var(--s-7);
+  }
+  .xh__label {
+    margin: 0 0 var(--s-5);
+  }
+  .xh h1 {
+    max-inline-size: 14ch;
+    margin-bottom: var(--s-5);
+    font-size: var(--fs-display-l);
+  }
+  .xh__note {
+    padding: var(--s-5);
+    background: var(--surface-2);
+  }
+  .xh__note p {
+    margin: 0;
+  }
+  .xh__note .label {
+    margin-bottom: var(--s-2);
+  }
+  .reels {
+    border-bottom: 1px solid var(--rule);
+  }
+  .reels > :global(.reel:first-child) {
+    border-top: 0;
+    padding-block-start: 0;
+  }
+  .xl__spot {
+    margin: var(--s-3) 0 0;
+    text-align: end;
+    max-width: none;
+  }
+  @media (min-width: 1080px) {
+    .xh {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--gutter);
+      padding-block: var(--s-9) var(--s-8);
+      align-items: end;
+    }
+    .xh__main {
+      grid-column: 1 / span 8;
+    }
+    .xh__note {
+      grid-column: 9 / span 4;
+      padding: 0;
+      background: transparent;
+      padding-block-end: var(--s-2);
+    }
+  }
+</style>

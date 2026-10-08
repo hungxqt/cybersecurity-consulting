@@ -1,0 +1,232 @@
+---
+import Icon from './Icon.astro';
+import { actNumber, type Journey } from '../lib/journeys';
+import { useT, type Lang } from '../lib/i18n';
+
+/**
+ * One journey as a static row: title, solutions line, the scenario clock as a ruler of ticks (the
+ * decision tick carries a diamond), the beat count and the link in. Below 720 px the ruler
+ * collapses to first · decision · last. No script: the row is the same with or without JS.
+ */
+interface Props {
+  journey: Journey;
+  lang: Lang;
+  href: string;
+  /** Heading level for the title; the index uses h3 under its section label, the home band h3. */
+  level?: 'h2' | 'h3';
+}
+const { journey, lang, href, level = 'h3' } = Astro.props;
+const Heading = level;
+const t = useT(lang);
+const last = journey.beats.length - 1;
+const decisionIndex = journey.decision.afterBeat - 1;
+const title = t(`journey.${journey.id}.title`);
+let prevAct = '';
+const ticks = journey.beats.map((b, i) => {
+  const startsAct = b.act !== prevAct;
+  prevAct = b.act;
+  return {
+    clock: b.clock,
+    decision: i === decisionIndex,
+    keep: i === 0 || i === decisionIndex || i === last,
+    act: startsAct ? t(`journey.${journey.id}.act.${actNumber(journey, b)}`) : '',
+  };
+});
+---
+
+<article class="reel" data-reel={journey.id}>
+  <div class="reel__head">
+    <Heading class="reel__title">{title}</Heading>
+    <p class="reel__services">{t(`journey.${journey.id}.services`)}</p>
+  </div>
+  <ol class="reel__ticks" aria-label={t('journey.clockLabel')}>
+    {ticks.map((k) => (
+      <li
+        class="reel__tick"
+        data-keep={k.keep ? '' : undefined}
+        data-decision={k.decision ? '' : undefined}
+      >
+        {k.decision && <span class="reel__dia" aria-hidden="true" />}
+        <span class="reel__clock">
+          {k.clock}
+          {k.decision && <span class="sr-only"> ({t('journey.decision.label')})</span>}
+        </span>
+        {k.act && <span class="reel__act">{k.act}</span>}
+      </li>
+    ))}
+  </ol>
+  <p class="reel__meta">{t('exp.beats', { n: journey.beats.length })}</p>
+  <a class="reel__go" href={href}>
+    <span>
+      {t('exp.start')}
+      <span class="sr-only">: {title}</span>
+    </span>
+    <Icon name="arrow-right" />
+  </a>
+</article>
+
+<style>
+  .reel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--gutter);
+    row-gap: var(--s-5);
+    align-items: center;
+    padding-block: var(--s-7);
+    border-top: 1px solid var(--rule);
+  }
+  .reel__head {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-1) var(--gutter);
+  }
+  .reel__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-h2);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .reel__services {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-data);
+    color: var(--text-dim);
+  }
+
+  /* The ruler: each tick is a segment of one hairline with a square (or diamond) at its start. */
+  .reel__ticks {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1) var(--s-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-data);
+    font-variant-numeric: tabular-nums;
+  }
+  .reel__tick {
+    position: relative;
+    display: none;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  .reel__tick[data-keep] {
+    display: inline-flex;
+  }
+  .reel__tick[data-keep] + .reel__tick[data-keep]::before {
+    content: '·';
+    margin-inline-end: var(--s-1);
+    color: var(--text-dim);
+  }
+  .reel__dia {
+    inline-size: 9px;
+    block-size: 9px;
+    box-sizing: border-box;
+    border: 1.5px solid var(--threat);
+    rotate: 45deg;
+  }
+  .reel__clock {
+    color: var(--text);
+  }
+  .reel__act {
+    display: none;
+  }
+  .reel__meta {
+    grid-column: 1;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-data);
+    color: var(--text-dim);
+  }
+  .reel__go {
+    grid-column: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-block-size: 44px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--fs-button);
+    letter-spacing: 0.04em;
+    text-decoration-color: var(--accent);
+  }
+  .reel__go :global(.icon) {
+    color: var(--accent);
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  .reel__go:hover :global(.icon),
+  .reel__go:focus-visible :global(.icon) {
+    transform: translateX(4px);
+  }
+  @media (max-width: 719.98px) {
+    /* Narrow rows: the link spans the row, so it is a full-width target. */
+    .reel__meta {
+      grid-column: 1 / -1;
+    }
+    .reel__go {
+      grid-column: 1 / -1;
+      justify-content: space-between;
+      border-block: 1px solid var(--rule-ui);
+      padding-inline: var(--s-3);
+    }
+  }
+  @media (min-width: 720px) {
+    .reel__ticks {
+      flex-wrap: nowrap;
+      gap: 0;
+      align-items: flex-start;
+    }
+    .reel__tick,
+    .reel__tick[data-keep] {
+      display: grid;
+      flex: 1 1 0;
+      min-inline-size: 0;
+      align-content: start;
+      justify-items: start;
+      gap: var(--s-1);
+      padding-block-start: var(--s-3);
+      border-block-start: 1px solid var(--rule-ui);
+    }
+    .reel__tick[data-keep] + .reel__tick[data-keep]::before {
+      content: none;
+    }
+    .reel__tick::after {
+      content: '';
+      position: absolute;
+      inset-block-start: -4px;
+      inset-inline-start: 0;
+      inline-size: 7px;
+      block-size: 7px;
+      background: var(--text);
+    }
+    .reel__tick[data-decision]::after {
+      display: none;
+    }
+    .reel__dia {
+      position: absolute;
+      inset-block-start: -5px;
+      inset-inline-start: 0;
+      background: var(--bg);
+    }
+    .reel__act {
+      display: block;
+      max-inline-size: 100%;
+      overflow-wrap: anywhere;
+      font-size: var(--fs-label);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    :global(:lang(vi)) .reel__act {
+      text-transform: none;
+      letter-spacing: 0.02em;
+    }
+  }
+</style>

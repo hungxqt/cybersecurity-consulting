@@ -1,0 +1,28 @@
+---
+title: "Your SOC alert queue is lying to you"
+description: "Alert volume is the wrong scoreboard. Here is what to measure instead, and how to tune detections without going blind."
+date: 2026-08-12
+author: "HungTran team"
+tags: ["soc", "detection", "operations"]
+service: "soc"
+---
+
+Most teams measure a security operations centre by how many alerts it closes. That number goes up when detections get noisier, which means the metric rewards exactly the wrong behaviour.
+
+## What a closed alert does not tell you
+
+An alert closed in 90 seconds could be a correct dismissal or a missed intrusion. The queue cannot tell them apart, and neither can a dashboard that counts throughput.
+
+Three numbers tell a better story:
+
+- **Time to detect (MTTD).** From first malicious action to the first alert a human sees.
+- **Time to contain (MTTR).** From that alert to the attacker losing access.
+- **Escalation precision.** The share of escalated alerts that turned out to be real.
+
+## Tune by removing noise, not by raising thresholds
+
+Raising a threshold hides the weak signal along with the noise. Instead, work down your noisiest rule: add the context that separates benign from hostile (asset owner, expected scheduler, known scanner) and keep the rule sensitive.
+
+## A weekly habit that pays off
+
+Pick ten closed alerts at random each week and have a second analyst re-triage them cold. The disagreement rate is the most honest quality signal a SOC has.

@@ -1,0 +1,26 @@
+---
+/** Dev-only reminder for content the owner must supply. Renders nothing in production builds. */
+interface Props {
+  label: string;
+  file: string;
+}
+const { label, file } = Astro.props;
+---
+
+{import.meta.env.DEV && (
+  <div class="container">
+    <p class="owner-slot mono">
+      Owner content: {label} — edit {file}
+    </p>
+  </div>
+)}
+
+<style>
+  .owner-slot {
+    margin: var(--s-6) 0;
+    padding: var(--s-4);
+    border: 1px dashed var(--rule-ui);
+    color: var(--text-dim);
+    font-size: var(--fs-label);
+  }
+</style>

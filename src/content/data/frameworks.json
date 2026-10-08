@@ -1,0 +1,47 @@
+{
+  "iso27001": {
+    "weeks": { "gap": 3, "remediate": 14, "audit": 4 },
+    "areas": {
+      "risk": "core",
+      "access": "core",
+      "crypto": "core",
+      "logging": "core",
+      "incident": "core",
+      "vendor": "core",
+      "change": "core",
+      "continuity": "core",
+      "physical": "core",
+      "training": "core"
+    }
+  },
+  "soc2": {
+    "weeks": { "gap": 3, "remediate": 10, "audit": 8 },
+    "areas": {
+      "risk": "core",
+      "access": "core",
+      "crypto": "partial",
+      "logging": "core",
+      "incident": "core",
+      "vendor": "core",
+      "change": "core",
+      "continuity": "partial",
+      "physical": "light",
+      "training": "partial"
+    }
+  },
+  "pci": {
+    "weeks": { "gap": 4, "remediate": 12, "audit": 3 },
+    "areas": {
+      "risk": "partial",
+      "access": "core",
+      "crypto": "core",
+      "logging": "core",
+      "incident": "core",
+      "vendor": "partial",
+      "change": "core",
+      "continuity": "light",
+      "physical": "core",
+      "training": "partial"
+    }
+  }
+}

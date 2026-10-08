@@ -1,0 +1,469 @@
+---
+import { localizedPath, useT, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const keys = [
+  'scan.err.empty',
+  'scan.err.invalid',
+  'scan.err.ip',
+  'scan.err.too-long',
+  'scan.running',
+  'scan.done',
+  'scan.step.dns',
+  'scan.step.subdomains',
+  'scan.step.tls',
+  'scan.step.ports',
+  'scan.step.headers',
+  'scan.step.email',
+  'scan.step.score',
+  'scan.report.title',
+  'scan.report.risk',
+  'scan.report.tls',
+  'scan.report.services',
+  'scan.report.none',
+  'scan.report.headers',
+  'scan.report.email',
+  'scan.report.subdomains',
+  'scan.band.low',
+  'scan.band.medium',
+  'scan.band.high',
+  'scan.band.critical',
+  'scan.val.pass',
+  'scan.val.softfail',
+  'scan.val.missing',
+  'scan.val.reject',
+  'scan.val.quarantine',
+  'scan.val.none',
+  'scan.val.present',
+  'scan.report.cta',
+  'scan.report.again',
+  'scan.report.note',
+];
+const strings = Object.fromEntries(keys.map((k) => [k, t(k)]));
+---
+
+<section
+  class="section scan"
+  id="scan"
+  aria-labelledby="scan-label"
+  data-scan
+  data-contact={localizedPath(lang, '/contact/')}
+>
+  <div class="container">
+    <h2 id="scan-label" class="section__label">
+      {t('exp.scan')}
+    </h2>
+    <div class="scan__grid">
+      <div class="scan__intro">
+        <p class="label scan__eyebrow">{t('scan.eyebrow')}</p>
+        <h3 id="scan-title">{t('scan.title')}</h3>
+        <p class="lede">{t('scan.lede')}</p>
+
+        <form class="scan__form" data-form novalidate>
+          <label for="scan-domain">{t('scan.label')}</label>
+          <div class="scan__row">
+            <input
+              id="scan-domain"
+              name="domain"
+              type="text"
+              inputmode="url"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              maxlength="300"
+              placeholder={t('scan.placeholder')}
+              aria-describedby="scan-hint scan-err"
+              data-input
+            />
+            <button type="submit" class="btn btn--primary" data-run>
+              {t('scan.run')}
+            </button>
+          </div>
+          <p id="scan-err" class="scan__err" role="alert" data-error></p>
+          <p id="scan-hint" class="scan__hint">
+            {t('scan.disclosure')}
+          </p>
+        </form>
+      </div>
+
+      <div class="scan__output">
+        <div class="term" data-term hidden>
+          <p class="term__bar" aria-hidden="true">
+            hungtran-scan --simulate
+          </p>
+          <ol class="term__lines" data-lines aria-hidden="true"></ol>
+        </div>
+        <p class="sr-only" role="status" data-status></p>
+        <div class="report" data-report hidden tabindex="-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="scan-i18n" set:html={JSON.stringify(strings)} />
+</section>
+
+<style>
+  /* Quiet by design: this panel supports the journeys above it, it does not compete with them.
+     Graphite panel, Wire Strong border, Flare only on High and Critical findings. */
+  .scan__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-7);
+    align-items: start;
+  }
+  .scan__eyebrow {
+    margin: 0 0 var(--s-3);
+  }
+  .scan h3 {
+    font-family: var(--font-display);
+    font-size: var(--fs-h2);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--s-4);
+  }
+  .scan__form {
+    margin-top: var(--s-6);
+    display: grid;
+    gap: var(--s-2);
+  }
+  .scan__form label {
+    font: 500 var(--fs-label) var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  :global(:lang(vi)) .scan__form label {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .scan__row {
+    display: flex;
+    gap: var(--s-3);
+    flex-wrap: wrap;
+  }
+  input[type='text'] {
+    flex: 1 1 220px;
+    min-height: 48px;
+    padding: 0 var(--s-4);
+    border-radius: var(--radius);
+    border: 1px solid var(--rule-ui);
+    background: var(--surface);
+    color: var(--text);
+    font: 500 var(--fs-body) var(--font-mono);
+  }
+  input[type='text']::placeholder {
+    color: var(--text-dim);
+  }
+  input[aria-invalid='true'] {
+    border-color: var(--text);
+    border-width: 2px;
+  }
+  .scan__err {
+    min-height: 1.5em;
+    margin: 0;
+    color: var(--text);
+    font-size: var(--fs-small);
+  }
+  .scan__hint {
+    margin: 0;
+    font: var(--fs-data) / 1.6 var(--font-mono);
+    color: var(--text-dim);
+  }
+
+  .term {
+    border: 1px solid var(--rule-ui);
+    background: var(--surface);
+  }
+  .term__bar {
+    margin: 0;
+    padding: var(--s-2) var(--s-4);
+    border-bottom: 1px solid var(--rule);
+    font: var(--fs-label) var(--font-mono);
+    color: var(--text-dim);
+    max-width: none;
+  }
+  .term__lines {
+    list-style: none;
+    margin: 0;
+    padding: var(--s-4);
+    display: grid;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-data);
+    min-height: 14em;
+  }
+  .term__lines :global(li) {
+    display: flex;
+    gap: var(--s-3);
+  }
+  .term__lines :global(.t-prompt) {
+    color: var(--text-dim);
+  }
+  .term__lines :global(.t-detail) {
+    margin-left: auto;
+    color: var(--text-dim);
+  }
+
+  .report {
+    margin-top: var(--s-5);
+    padding: var(--s-6);
+    border: 1px solid var(--rule-ui);
+    background: var(--surface);
+    outline-offset: 4px;
+  }
+  .report :global(h3) {
+    font-family: var(--font-strong);
+    font-size: var(--fs-lead);
+    font-weight: 600;
+    letter-spacing: 0;
+    margin-bottom: var(--s-5);
+  }
+  .report :global(.report__top) {
+    display: flex;
+    gap: var(--s-6);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .report :global(.gauge) {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    flex: none;
+  }
+  .report :global(.gauge svg) {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .report :global(.gauge circle) {
+    fill: none;
+    stroke-width: 10;
+  }
+  .report :global(.gauge .g-track) {
+    stroke: var(--rule);
+  }
+  .report :global(.gauge .g-fill) {
+    stroke: var(--text-dim);
+    stroke-dasharray: 339.3;
+    stroke-dashoffset: 339.3;
+    transition: stroke-dashoffset 1.2s var(--ease);
+  }
+  .report :global([data-band='medium'] .g-fill) {
+    stroke: var(--text);
+  }
+  .report :global([data-band='high'] .g-fill),
+  .report :global([data-band='critical'] .g-fill) {
+    stroke: var(--threat);
+  }
+  .report :global(.gauge__num) {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    line-height: 1;
+  }
+  .report :global(.gauge__num small) {
+    font: 500 var(--fs-label) var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+  .report :global([data-band='high'] .gauge__num small),
+  .report :global([data-band='critical'] .gauge__num small) {
+    color: var(--threat);
+  }
+  .report :global(dl) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--s-2) var(--s-5);
+    margin: var(--s-5) 0 0;
+  }
+  .report :global(dt) {
+    color: var(--text-dim);
+    font-size: var(--fs-small);
+  }
+  .report :global(dd) {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-small);
+  }
+  .report :global(.report__actions) {
+    display: flex;
+    gap: var(--s-3);
+    flex-wrap: wrap;
+    margin-top: var(--s-6);
+  }
+  .report :global(.report__note) {
+    margin: var(--s-4) 0 0;
+    font: var(--fs-data) var(--font-mono);
+    color: var(--text-dim);
+  }
+
+  @media (min-width: 1080px) {
+    .scan__grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      column-gap: var(--gutter);
+    }
+  }
+</style>
+<script>
+  import { interpolate } from '../lib/interpolate';
+  import { SCAN_STEPS, parseDomain, runScan, summarize, type ScanReport } from '../lib/scanSim';
+
+  const el = <T extends Element>(root: ParentNode, sel: string) => root.querySelector<T>(sel)!;
+
+  function bootScan() {
+    const root = document.querySelector<HTMLElement>('[data-scan]');
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = '1';
+
+    const S = JSON.parse(document.getElementById('scan-i18n')!.textContent ?? '{}') as Record<
+      string,
+      string
+    >;
+    const form = el<HTMLFormElement>(root, '[data-form]');
+    const input = el<HTMLInputElement>(root, '[data-input]');
+    const runBtn = el<HTMLButtonElement>(root, '[data-run]');
+    const errEl = el<HTMLElement>(root, '[data-error]');
+    const term = el<HTMLElement>(root, '[data-term]');
+    const lines = el<HTMLOListElement>(root, '[data-lines]');
+    const status = el<HTMLElement>(root, '[data-status]');
+    const report = el<HTMLElement>(root, '[data-report]');
+    const contactBase = root.dataset.contact ?? '/en/contact/';
+    const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+    function details(r: ScanReport): string[] {
+      return [
+        'A · AAAA · MX · TXT',
+        `${r.subdomains}`,
+        r.tlsGrade,
+        `${r.exposedServices.length}`,
+        `${r.missingHeaders.length}`,
+        `SPF ${r.email.spf} · DMARC ${r.email.dmarc}`,
+        `${r.riskScore}/100`,
+      ];
+    }
+
+    function add(parent: HTMLElement, tag: string, text: string, cls?: string) {
+      const n = document.createElement(tag);
+      n.textContent = text;
+      if (cls) n.className = cls;
+      parent.append(n);
+      return n;
+    }
+
+    function buildReport(r: ScanReport) {
+      report.replaceChildren();
+      const h = add(report, 'h3', interpolate(S['scan.report.title']!, { domain: r.domain }));
+      h.id = 'scan-report-h';
+      report.setAttribute('aria-labelledby', h.id);
+
+      const top = add(report, 'div', '', 'report__top');
+      top.dataset.band = r.band;
+      const gauge = add(top, 'div', '', 'gauge');
+      gauge.innerHTML =
+        '<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><circle class="g-track" cx="60" cy="60" r="54"></circle><circle class="g-fill" cx="60" cy="60" r="54"></circle></svg>';
+      const num = add(gauge, 'div', '', 'gauge__num');
+      add(num, 'span', String(r.riskScore));
+      add(num, 'small', S[`scan.band.${r.band}`]!);
+      const risk = add(top, 'p', '', 'lede');
+      risk.textContent = S['scan.report.risk'] ?? '';
+
+      const dl = add(report, 'dl', '');
+      const row = (k: string, v: string) => {
+        add(dl, 'dt', k);
+        add(dl, 'dd', v);
+      };
+      row(S['scan.report.tls']!, r.tlsGrade);
+      row(
+        S['scan.report.services']!,
+        r.exposedServices.length
+          ? r.exposedServices.map((s) => `${s.port}/${s.service}`).join(', ')
+          : S['scan.report.none']!,
+      );
+      row(
+        S['scan.report.headers']!,
+        r.missingHeaders.length ? r.missingHeaders.join(', ') : S['scan.report.none']!,
+      );
+      row(
+        S['scan.report.email']!,
+        `SPF ${S[`scan.val.${r.email.spf}`]} · DMARC ${S[`scan.val.${r.email.dmarc}`]} · DKIM ${S[r.email.dkim ? 'scan.val.present' : 'scan.val.missing']}`,
+      );
+      row(S['scan.report.subdomains']!, String(r.subdomains));
+
+      const actions = add(report, 'div', '', 'report__actions');
+      const cta = add(actions, 'a', S['scan.report.cta']!, 'btn btn--primary') as HTMLAnchorElement;
+      cta.href = `${contactBase}?domain=${encodeURIComponent(r.domain)}&scan=${encodeURIComponent(summarize(r))}`;
+      const again = add(actions, 'button', S['scan.report.again']!, 'btn') as HTMLButtonElement;
+      again.type = 'button';
+      again.addEventListener('click', () => {
+        report.hidden = true;
+        term.hidden = true;
+        input.value = '';
+        input.focus();
+      });
+      add(report, 'p', S['scan.report.note']!, 'report__note');
+      report.hidden = false;
+      // Next frame so the gauge transition runs.
+      requestAnimationFrame(() => {
+        const fill = gauge.querySelector<SVGCircleElement>('.g-fill');
+        fill?.style.setProperty('stroke-dashoffset', String(339.3 * (1 - r.riskScore / 100)));
+      });
+    }
+
+    let running = false;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (running) return;
+      const parsed = parseDomain(input.value);
+      if (!parsed.ok) {
+        errEl.textContent = S[`scan.err.${parsed.reason}`] ?? '';
+        input.setAttribute('aria-invalid', 'true');
+        input.focus();
+        return;
+      }
+      errEl.textContent = '';
+      input.removeAttribute('aria-invalid');
+      running = true;
+      runBtn.disabled = true;
+      report.hidden = true;
+      lines.replaceChildren();
+      term.hidden = false;
+      status.textContent = interpolate(S['scan.running']!, { domain: parsed.domain });
+
+      const result = runScan(parsed.domain);
+      const det = details(result);
+      const delay = reduced() ? 0 : 340;
+      for (let i = 0; i < SCAN_STEPS.length; i++) {
+        const li = document.createElement('li');
+        add(li, 'span', '$', 't-prompt');
+        add(li, 'span', S[SCAN_STEPS[i]!]!);
+        lines.append(li);
+        if (delay) await sleep(delay);
+        add(li, 'span', det[i]!, 't-detail');
+      }
+      if (delay) await sleep(200);
+      buildReport(result);
+      status.textContent = interpolate(S['scan.done']!, {
+        score: result.riskScore,
+        band: S[`scan.band.${result.band}`]!,
+      });
+      report.focus({ preventScroll: false });
+      runBtn.disabled = false;
+      running = false;
+    });
+  }
+
+  document.addEventListener('astro:page-load', bootScan);
+</script>

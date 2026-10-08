@@ -1,0 +1,141 @@
+---
+import { useT, type Lang } from '../lib/i18n';
+
+/**
+ * Atlas page header (design §7.2): a two-tone title and lede on the left, a drawing-sheet title
+ * block on the right. `lite` (no `sheet`) drops the title block. The sheet numbers are real: the
+ * Solutions set has four sheets (index 1, consulting 2, audit 3, soc 4).
+ */
+interface Props {
+  lang: Lang;
+  label: string;
+  titleDim: string;
+  titleStrong: string;
+  lede?: string;
+  sheet?: number;
+  of?: number;
+  drawing?: string;
+  status?: string;
+}
+const { lang, label, titleDim, titleStrong, lede, sheet, of = 4, drawing, status } = Astro.props;
+const t = useT(lang);
+const lite = sheet === undefined;
+---
+
+<header class:list={['sheet-head', 'container', { 'sheet-head--lite': lite }]}>
+  <div class="sheet-head__copy">
+    <p class="label sheet-head__label">{label}</p>
+    <h1>
+      <span class="h-dim">{titleDim}</span> <span class="h-strong">{titleStrong}</span>
+    </h1>
+    {lede && <p class="lede">{lede}</p>}
+  </div>
+  {!lite && (
+    <dl class="sheet-head__block mono">
+      <div>
+        <dt>{t('sheet.sheet')}</dt>
+        <dd>
+          {sheet} {t('sheet.of')} {of}
+        </dd>
+      </div>
+      {drawing && (
+        <div>
+          <dt>{t('sheet.drawing')}</dt>
+          <dd>{drawing}</dd>
+        </div>
+      )}
+      {status && (
+        <div>
+          <dt>{t('sheet.status')}</dt>
+          <dd>{status}</dd>
+        </div>
+      )}
+      <div>
+        <dt>{t('sheet.by')}</dt>
+        <dd>{t('site.name')}</dd>
+      </div>
+    </dl>
+  )}
+</header>
+
+<style>
+  .sheet-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--s-6);
+    padding-block: var(--s-7) var(--s-7);
+  }
+  .sheet-head__label {
+    margin: 0 0 var(--s-4);
+  }
+  h1 {
+    max-inline-size: 18ch;
+    margin: 0 0 var(--s-5);
+  }
+  .lede {
+    margin: 0;
+  }
+  /* Title block: below 720 px a two-column mono list under the lede. */
+  .sheet-head__block {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+    border-top: 1px solid var(--rule-ui);
+    font-size: var(--fs-data);
+  }
+  .sheet-head__block div {
+    padding: var(--s-2) var(--s-3) var(--s-2) 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .sheet-head__block dt {
+    font-size: var(--fs-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  :global(html[lang='vi']) .sheet-head__block dt {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .sheet-head__block dd {
+    margin: 0;
+    color: var(--text);
+  }
+  @media (min-width: 720px) {
+    .sheet-head {
+      padding-block: var(--s-8);
+    }
+    .sheet-head__block {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1080px) {
+    .sheet-head {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--gutter);
+      align-items: end;
+      padding-block: var(--s-9) var(--s-8);
+    }
+    .sheet-head__copy {
+      grid-column: 1 / span 8;
+    }
+    .sheet-head--lite .sheet-head__copy {
+      grid-column: 1 / -1;
+    }
+    .sheet-head__block {
+      grid-column: 9 / -1;
+      grid-template-columns: minmax(0, 1fr);
+      border: 1px solid var(--rule-ui);
+      background: var(--surface);
+    }
+    .sheet-head__block div {
+      display: grid;
+      grid-template-columns: 6.5rem minmax(0, 1fr);
+      gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+    }
+    .sheet-head__block div:last-child {
+      border-bottom: 0;
+    }
+  }
+</style>

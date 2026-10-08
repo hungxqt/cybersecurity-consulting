@@ -1,0 +1,5 @@
+Contact: mailto:security@hungtran.example
+Expires: 2027-09-30T00:00:00.000Z
+Preferred-Languages: en, vi
+Canonical: https://hungtran.example/.well-known/security.txt
+Policy: https://hungtran.example/en/contact/

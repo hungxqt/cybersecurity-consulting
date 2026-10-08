@@ -1,0 +1,416 @@
+---
+import { QUESTIONS, DOMAINS } from '../lib/quizScore';
+import { localizedPath, useT, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const keys = [
+  ...QUESTIONS.map((q) => q.id),
+  ...[0, 1, 2, 3].map((n) => `quiz.opt.${n}`),
+  ...DOMAINS.map((d) => `quiz.domain.${d}`),
+  ...DOMAINS.map((d) => `quiz.rec.${d}`),
+  'quiz.rec.none',
+  'quiz.progress',
+  'quiz.next',
+  'quiz.back',
+  'quiz.finish',
+  'quiz.pick',
+  'quiz.level.initial',
+  'quiz.level.developing',
+  'quiz.level.defined',
+  'quiz.level.managed',
+  'quiz.result.title',
+  'quiz.result.overall',
+  'quiz.result.chart',
+  'quiz.result.recs',
+  'quiz.result.cta',
+  'quiz.retake',
+];
+const strings = Object.fromEntries(keys.map((k) => [k, t(k)]));
+---
+
+<section
+  class="section quiz"
+  id="quiz"
+  aria-labelledby="quiz-h"
+  data-quiz
+  data-contact={localizedPath(lang, '/contact/')}
+>
+  <div class="container">
+    <h2 id="quiz-h">{t('quiz.title')}</h2>
+    <p class="lede">{t('quiz.lede')}</p>
+
+    <form class="quiz__form" data-form novalidate>
+      <fieldset class="quiz__step" data-step>
+        <legend class="mono" data-progress></legend>
+        <div class="quiz__bar" aria-hidden="true">
+          <span data-bar></span>
+        </div>
+        <h3 class="quiz__q" data-question></h3>
+        <div class="quiz__opts" data-options></div>
+      </fieldset>
+      <p class="quiz__err" role="alert" data-err></p>
+      <div class="quiz__nav">
+        <button type="button" class="btn" data-back>
+          {t('quiz.back')}
+        </button>
+        <button type="submit" class="btn btn--primary" data-next>
+          {t('quiz.next')}
+        </button>
+      </div>
+    </form>
+
+    <div class="quiz__result" data-result hidden tabindex="-1"></div>
+  </div>
+  <script type="application/json" id="quiz-i18n" set:html={JSON.stringify(strings)} />
+</section>
+
+<style>
+  /* Sheet panel: square, hairline outline, white sheet on the drafting background. */
+  .quiz__form,
+  .quiz__result {
+    margin-top: var(--s-6);
+    padding: var(--s-5);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--rule-ui);
+    max-width: 760px;
+  }
+  @media (min-width: 720px) {
+    .quiz__form,
+    .quiz__result {
+      padding: var(--s-6);
+    }
+  }
+  .quiz__step {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-inline-size: 0;
+  }
+  .quiz__step legend {
+    float: none;
+    padding: 0;
+    margin-bottom: var(--s-2);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  :global(html[lang='vi']) .quiz__step legend {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  /* Progress: 2 px Cyanotype bar on a hairline track. */
+  .quiz__bar {
+    block-size: 2px;
+    margin-bottom: var(--s-5);
+    background: var(--rule);
+  }
+  .quiz__bar span {
+    display: block;
+    block-size: 100%;
+    inline-size: var(--p, 0%);
+    background: var(--accent);
+  }
+  .quiz__q {
+    margin: 0 0 var(--s-4);
+    font-size: var(--fs-lead);
+    line-height: 1.35;
+  }
+  /* Options: full-width hairline rows with a native radio drawn as a 16 px square. */
+  .quiz__opts {
+    display: grid;
+    border-bottom: 1px solid var(--rule);
+  }
+  .quiz__opts :global(label) {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-height: 48px;
+    padding: var(--s-2) var(--s-3);
+    border-top: 1px solid var(--rule);
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease);
+  }
+  .quiz__opts :global(label:hover) {
+    background: color-mix(in srgb, var(--accent-tint) 55%, transparent);
+  }
+  .quiz__opts :global(label:has(input:checked)) {
+    background: var(--accent-tint);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .quiz__opts :global(label:has(input:focus-visible)) {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+  .quiz__opts :global(input) {
+    appearance: none;
+    flex: none;
+    inline-size: 16px;
+    block-size: 16px;
+    margin: 0;
+    border: 1px solid var(--accent);
+    border-radius: 0;
+    background: var(--surface);
+  }
+  .quiz__opts :global(input:checked) {
+    background: var(--accent);
+    box-shadow: inset 0 0 0 2px var(--surface);
+  }
+  .quiz__err {
+    min-height: 1.5em;
+    margin: var(--s-3) 0 0;
+    color: var(--threat);
+    font-size: var(--fs-small);
+  }
+  .quiz__nav {
+    display: flex;
+    gap: var(--s-3);
+    justify-content: space-between;
+    margin-top: var(--s-4);
+  }
+  .quiz__result {
+    outline-offset: 4px;
+  }
+  .quiz__result :global(h3) {
+    font-size: var(--fs-h3);
+  }
+  .quiz__result :global(.q-scale) {
+    display: flex;
+    gap: 4px;
+    margin: 0 0 var(--s-5);
+  }
+  .quiz__result :global(.q-scale span) {
+    inline-size: 20px;
+    block-size: 20px;
+    border: 1px solid var(--accent);
+  }
+  .quiz__result :global(.q-scale span[data-on]) {
+    background: var(--accent);
+  }
+  .quiz__result :global(.q-top) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-6);
+    align-items: center;
+  }
+  .quiz__result :global(svg.radar) {
+    width: min(320px, 100%);
+    height: auto;
+    flex: none;
+  }
+  .quiz__result :global(.r-grid) {
+    fill: none;
+    stroke: var(--rule);
+  }
+  .quiz__result :global(.r-shape) {
+    fill: color-mix(in srgb, var(--accent-line) 28%, transparent);
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .quiz__result :global(.r-label) {
+    fill: var(--text);
+    font: 600 11px var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .quiz__result :global(dl) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--s-2) var(--s-5);
+    margin: 0;
+  }
+  .quiz__result :global(dd) {
+    margin: 0;
+    font-family: var(--font-mono);
+  }
+  .quiz__result :global(ul) {
+    padding-left: 1.2rem;
+  }
+  .quiz__result :global(.q-actions) {
+    display: flex;
+    gap: var(--s-3);
+    flex-wrap: wrap;
+    margin-top: var(--s-5);
+  }
+</style>
+
+<script>
+  import { interpolate } from '../lib/interpolate';
+  import { DOMAINS, QUESTIONS, radarPoints, scoreQuiz, summarizeQuiz } from '../lib/quizScore';
+
+  function boot() {
+    const root = document.querySelector<HTMLElement>('[data-quiz]');
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = '1';
+    const S = JSON.parse(document.getElementById('quiz-i18n')!.textContent ?? '{}') as Record<
+      string,
+      string
+    >;
+    const q = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+    const form = q<HTMLFormElement>('[data-form]');
+    const progress = q<HTMLElement>('[data-progress]');
+    const bar = q<HTMLElement>('[data-bar]');
+    const question = q<HTMLElement>('[data-question]');
+    const options = q<HTMLElement>('[data-options]');
+    const err = q<HTMLElement>('[data-err]');
+    const back = q<HTMLButtonElement>('[data-back]');
+    const next = q<HTMLButtonElement>('[data-next]');
+    const result = q<HTMLElement>('[data-result]');
+    const contact = root.dataset.contact ?? '/en/contact/';
+
+    const answers: (number | null)[] = QUESTIONS.map(() => null);
+    let i = 0;
+
+    function el(tag: string, text = '', cls = '') {
+      const n = document.createElement(tag);
+      if (text) n.textContent = text;
+      if (cls) n.className = cls;
+      return n;
+    }
+
+    function renderStep(focus: boolean) {
+      progress.textContent = interpolate(S['quiz.progress']!, { n: i + 1 });
+      bar.style.setProperty('--p', `${((i + 1) / QUESTIONS.length) * 100}%`);
+      question.textContent = S[QUESTIONS[i]!.id]!;
+      options.replaceChildren();
+      for (let v = 0; v < 4; v++) {
+        const label = el('label');
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'answer';
+        input.value = String(v);
+        input.checked = answers[i] === v;
+        label.append(input, S[`quiz.opt.${v}`]!);
+        options.append(label);
+      }
+      back.disabled = i === 0;
+      next.textContent = i === QUESTIONS.length - 1 ? S['quiz.finish']! : S['quiz.next']!;
+      err.textContent = '';
+      if (focus)
+        (
+          options.querySelector<HTMLInputElement>('input:checked') ??
+          options.querySelector<HTMLInputElement>('input')
+        )?.focus();
+    }
+
+    function showResult() {
+      const r = scoreQuiz(answers)!;
+      form.hidden = true;
+      result.replaceChildren();
+      const levelName = S[`quiz.level.${r.level}`]!;
+      result.append(el('h3', interpolate(S['quiz.result.title']!, { level: levelName })));
+      const scale = el('div', '', 'q-scale');
+      scale.setAttribute('aria-hidden', 'true');
+      const filled = Math.round(r.overall / 20);
+      for (let s = 0; s < 5; s++) {
+        const seg = el('span');
+        if (s < filled) seg.setAttribute('data-on', '');
+        scale.append(seg);
+      }
+      result.append(scale);
+      result.append(el('p', interpolate(S['quiz.result.overall']!, { score: r.overall })));
+
+      const top = el('div', '', 'q-top');
+      const ns = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 320 300');
+      svg.setAttribute('class', 'radar');
+      svg.setAttribute('role', 'img');
+      const dl = el('dl');
+      const values = DOMAINS.map((d) => r.perDomain[d]);
+      const summary = DOMAINS.map((d) => `${S[`quiz.domain.${d}`]} ${r.perDomain[d]}`).join(', ');
+      svg.setAttribute('aria-label', interpolate(S['quiz.result.chart']!, { summary }));
+      const cx = 160,
+        cy = 150,
+        R = 100;
+      for (const f of [0.25, 0.5, 0.75, 1]) {
+        const p = document.createElementNS(ns, 'polygon');
+        p.setAttribute('class', 'r-grid');
+        p.setAttribute(
+          'points',
+          radarPoints(
+            [100, 100, 100, 100].map((v) => v * f),
+            R,
+            cx,
+            cy,
+          ),
+        );
+        svg.append(p);
+      }
+      const shape = document.createElementNS(ns, 'polygon');
+      shape.setAttribute('class', 'r-shape');
+      shape.setAttribute('points', radarPoints(values, R, cx, cy));
+      svg.append(shape);
+      DOMAINS.forEach((d, k) => {
+        const angle = -Math.PI / 2 + (k * 2 * Math.PI) / DOMAINS.length;
+        const t = document.createElementNS(ns, 'text');
+        t.setAttribute('class', 'r-label');
+        t.setAttribute('x', String(cx + (R + 18) * Math.cos(angle)));
+        t.setAttribute('y', String(cy + (R + 18) * Math.sin(angle) + 4));
+        t.setAttribute(
+          'text-anchor',
+          Math.abs(Math.cos(angle)) < 0.2 ? 'middle' : Math.cos(angle) > 0 ? 'start' : 'end',
+        );
+        t.textContent = S[`quiz.domain.${d}`]!;
+        svg.append(t);
+        dl.append(el('dt', S[`quiz.domain.${d}`]), el('dd', `${r.perDomain[d]}/100`));
+      });
+      top.append(svg, dl);
+      result.append(top);
+
+      result.append(el('h4', S['quiz.result.recs']));
+      const ul = el('ul');
+      if (r.focus.length === 0) ul.append(el('li', S['quiz.rec.none']));
+      else for (const d of r.focus) ul.append(el('li', S[`quiz.rec.${d}`]));
+      result.append(ul);
+
+      const actions = el('div', '', 'q-actions');
+      const cta = el('a', S['quiz.result.cta'], 'btn btn--primary') as HTMLAnchorElement;
+      cta.href = `${contact}?quiz=${encodeURIComponent(summarizeQuiz(r))}`;
+      const retake = el('button', S['quiz.retake'], 'btn') as HTMLButtonElement;
+      retake.type = 'button';
+      retake.addEventListener('click', () => {
+        answers.fill(null);
+        i = 0;
+        result.hidden = true;
+        form.hidden = false;
+        renderStep(true);
+      });
+      actions.append(cta, retake);
+      result.append(actions);
+      result.hidden = false;
+      result.focus();
+    }
+
+    options.addEventListener('change', (e) => {
+      answers[i] = Number((e.target as HTMLInputElement).value);
+      err.textContent = '';
+    });
+    back.addEventListener('click', () => {
+      if (i > 0) {
+        i--;
+        renderStep(true);
+      }
+    });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (answers[i] === null) {
+        err.textContent = S['quiz.pick']!;
+        options.querySelector<HTMLInputElement>('input')?.focus();
+        return;
+      }
+      if (i < QUESTIONS.length - 1) {
+        i++;
+        renderStep(true);
+      } else showResult();
+    });
+    renderStep(false);
+  }
+  document.addEventListener('astro:page-load', boot);
+</script>

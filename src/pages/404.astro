@@ -1,0 +1,113 @@
+---
+// Cloudflare Pages serves /404.html for unknown routes. We cannot know the visitor's language
+// at build time, so this page renders both languages and picks one from the URL prefix.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { localizedPath, useT } from '../lib/i18n';
+
+const en = useT('en');
+const vi = useT('vi');
+const langs = [
+  { id: 'en', t: en },
+  { id: 'vi', t: vi },
+] as const;
+---
+
+<BaseLayout lang="en" title="404" path="/" noindex nextStep={false}>
+  <section class="section container nf">
+    <p class="label nf__label">
+      <span data-nf="en">{en('notfound.label')}</span>
+      <span data-nf="vi" hidden lang="vi">
+        {vi('notfound.label')}
+      </span>
+    </p>
+    <svg class="nf__art" viewBox="0 0 600 120" aria-hidden="true" focusable="false">
+      <rect class="nf__node" x="1" y="40" width="40" height="40" />
+      <line class="nf__edge" x1="41" y1="60" x2="219" y2="60" />
+      <rect class="nf__node" x="219" y="40" width="40" height="40" />
+      <line class="nf__edge nf__edge--dash" x1="259" y1="60" x2="520" y2="60" />
+      <rect class="nf__node nf__node--missing" x="520" y="40" width="40" height="40" />
+      <path class="nf__cross" d="M530 50l20 20M550 50l-20 20" />
+    </svg>
+    {langs.map(({ id, t }) => (
+      <div data-nf={id} hidden={id !== 'en'} lang={id === 'vi' ? 'vi' : undefined}>
+        <h1>{t('notfound.title')}</h1>
+        <p class="lede">{t('notfound.body')}</p>
+        <p class="nf__actions">
+          <a class="btn btn--primary" href={localizedPath(id)}>
+            {t('notfound.cta')}
+            <Icon name="arrow-right" />
+          </a>
+          <a href={localizedPath(id, '/solutions/')}>{t('nav.solutions')}</a>
+          <a href={localizedPath(id, '/contact/')}>{t('nav.contact')}</a>
+        </p>
+      </div>
+    ))}
+  </section>
+</BaseLayout>
+
+<script>
+  const lang = location.pathname.startsWith('/vi/') ? 'vi' : 'en';
+  document.querySelectorAll<HTMLElement>('[data-nf]').forEach((el) => {
+    el.hidden = el.dataset.nf !== lang;
+  });
+  document.documentElement.lang = lang;
+</script>
+
+<style>
+  .nf {
+    min-height: 55vh;
+    display: grid;
+    align-content: center;
+  }
+  .nf__label {
+    margin: 0 0 var(--s-5);
+  }
+  .nf__art {
+    display: block;
+    width: 100%;
+    max-width: 600px;
+    aspect-ratio: 600 / 120;
+    height: auto;
+    margin-bottom: var(--s-6);
+  }
+  .nf__node {
+    fill: var(--surface);
+    stroke: var(--rule-ui);
+    stroke-width: 2;
+  }
+  .nf__node--missing {
+    fill: none;
+    stroke: var(--threat);
+    stroke-dasharray: 6 4;
+  }
+  .nf__edge {
+    stroke: var(--rule-ui);
+    stroke-width: 2;
+  }
+  .nf__edge--dash {
+    stroke-dasharray: 6 6;
+  }
+  .nf__cross {
+    stroke: var(--threat);
+    stroke-width: 2;
+    fill: none;
+  }
+  .nf__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3) var(--s-5);
+  }
+  .nf__actions a:not(.btn) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  @media (max-width: 719px) {
+    .nf__actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>

@@ -1,0 +1,157 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../../components/Hero.astro';
+import HomeIndex from '../../components/HomeIndex.astro';
+import SolutionsLedger from '../../components/SolutionsLedger.astro';
+import HuntSpot from '../../components/HuntSpot.astro';
+import Credentials from '../../components/Credentials.astro';
+import JourneyReel from '../../components/JourneyReel.astro';
+import Icon from '../../components/Icon.astro';
+import { JOURNEY_BY_ID } from '../../lib/journeys';
+import { langStaticPaths } from '../../lib/paths';
+import { localizedHref, localizedPath, useT, type Lang } from '../../lib/i18n';
+import { organization } from '../../lib/jsonld';
+import { CONTACT_EMAIL } from '../../lib/site';
+
+export const getStaticPaths = langStaticPaths;
+const lang = Astro.params.lang as Lang;
+const t = useT(lang);
+const site = Astro.site ?? new URL('https://hungtran.example');
+const ld = organization({
+  name: t('site.name'),
+  url: site.href,
+  logo: new URL('/og/en.png', site).href,
+  description: t('site.description'),
+  email: CONTACT_EMAIL,
+});
+const tries = [
+  { id: 'quiz', path: '/solutions/consulting/#quiz' },
+  { id: 'matrix', path: '/solutions/audit/#matrix' },
+  { id: 'scan', path: '/experience/#scan' },
+] as const;
+const vendor = JOURNEY_BY_ID['vendor-account']!;
+---
+
+<BaseLayout lang={lang} title={t('site.name')} description={t('site.description')} jsonLd={ld}>
+  <Hero lang={lang} />
+  <HomeIndex lang={lang} />
+  <SolutionsLedger lang={lang} variant="columns" />
+  <section class="section" aria-labelledby="try-h">
+    <div class="container">
+      <h2 id="try-h" class="section__label">
+        {t('home.try.title')}
+      </h2>
+      <ul class="try">
+        {tries.map((r) => (
+          <li>
+            <a class="try__row" href={localizedHref(lang, r.path)}>
+              <span class="try__name">{t(`home.try.${r.id}`)}</span>
+              <span class="try__text">{t(`home.try.${r.id}.text`)}</span>
+              <span class="try__go" aria-hidden="true">
+                <Icon name="arrow-right" />
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="try__spot">
+        <HuntSpot lang={lang} id="debug-flag" />
+      </p>
+    </div>
+  </section>
+  <section class="section" aria-labelledby="breach-h">
+    <div class="container">
+      <h2 id="breach-h" class="section__label">
+        {t('home.breach.label')}
+      </h2>
+      <p class="breach__lede">{t('home.breach.lede')}</p>
+      <JourneyReel
+        journey={vendor}
+        lang={lang}
+        href={localizedPath(lang, '/experience/journeys/vendor-account/')}
+      />
+    </div>
+  </section>
+  <Credentials lang={lang} />
+</BaseLayout>
+
+<style>
+  .breach__lede {
+    max-inline-size: 22ch;
+    margin: 0 0 var(--s-6);
+    font-family: var(--font-display);
+    font-size: var(--fs-h2);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+  .try {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .try > li {
+    border-top: 1px solid var(--rule);
+  }
+  .try__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--gutter);
+    row-gap: var(--s-1);
+    align-items: center;
+    padding-block: var(--s-5);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .try__name {
+    grid-column: 1;
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    font-weight: 300;
+    line-height: 1.3;
+  }
+  .try__text {
+    grid-column: 1;
+    color: var(--text-dim);
+  }
+  .try__go {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    color: var(--accent);
+    font-size: 1.25rem;
+  }
+  .try__row:hover .try__name {
+    text-decoration: underline 1px var(--accent);
+    text-underline-offset: 0.2em;
+  }
+  .try__row :global(.icon) {
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  .try__row:hover :global(.icon),
+  .try__row:focus-visible :global(.icon) {
+    transform: translateX(4px);
+  }
+  .try__spot {
+    margin: var(--s-3) 0 0;
+    text-align: end;
+    max-width: none;
+  }
+  @media (min-width: 1080px) {
+    .try__row {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .try__name {
+      grid-column: 1 / span 5;
+    }
+    .try__text {
+      grid-column: 6 / span 6;
+      grid-row: 1;
+    }
+    .try__go {
+      grid-column: 12;
+      grid-row: 1;
+      justify-self: end;
+    }
+  }
+</style>

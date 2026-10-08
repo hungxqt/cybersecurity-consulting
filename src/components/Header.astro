@@ -1,0 +1,521 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import {
+  LOCALES,
+  localizedHref,
+  localizedPath,
+  stripLocale,
+  switchLocalePath,
+  useT,
+  type Lang,
+} from '../lib/i18n';
+import { PRIMARY, SOLUTIONS, METHOD, isCurrent } from '../lib/nav';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const current = stripLocale(Astro.url.pathname);
+const other = LOCALES.find((l) => l !== lang) as Lang;
+const switchHref = switchLocalePath(Astro.url.pathname, other);
+const switchLabel = t('lang.switchTo', { language: t(`lang.${other}`) });
+const solutionsActive = isCurrent(current, '/solutions/');
+---
+
+<header class="site-header" data-site-header>
+  <div class="container site-header__bar">
+    <Logo lang={lang} />
+
+    <nav class="primary-nav" aria-label={t('a11y.primaryNav')}>
+      <ul>
+        <li class="has-menu">
+          <button
+            type="button"
+            class="nav-link nav-link--button"
+            aria-expanded="false"
+            aria-controls="solutions-menu"
+            data-menu-button
+            aria-current={solutionsActive ? 'true' : undefined}
+          >
+            {t('nav.solutions')}
+            <Icon name="caret-down" class="nav-link__caret" />
+          </button>
+          <div class="mega" id="solutions-menu" hidden>
+            <ul>
+              {SOLUTIONS.map((s) => (
+                <li>
+                  <a
+                    href={localizedPath(lang, s.path)}
+                    aria-current={isCurrent(current, s.path) ? 'page' : undefined}
+                    data-educational={s.key === 'nav.audit' ? '' : undefined}
+                  >
+                    <strong>{t(s.key)}</strong>
+                    <span>{t(s.descKey as string)}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <div class="mega__links">
+              <a href={localizedHref(lang, METHOD.path)}>{t(METHOD.key)}</a>
+              <a class="mega__all" href={localizedPath(lang, '/solutions/')}>
+                {t('nav.allSolutions')}
+                <Icon name="arrow-right" />
+              </a>
+            </div>
+          </div>
+        </li>
+        {PRIMARY.map((item) => (
+          <li>
+            <a
+              class="nav-link"
+              href={localizedPath(lang, item.path)}
+              aria-current={isCurrent(current, item.path) ? 'page' : undefined}
+            >
+              {t(item.key)}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="site-header__actions">
+      <a
+        class="lang-switch lang-switch--bar mono"
+        href={switchHref}
+        hreflang={other}
+        lang={other}
+        aria-label={switchLabel}
+        data-astro-reload
+      >
+        {other.toUpperCase()}
+      </a>
+      <a class="btn btn--primary header-cta" href={localizedPath(lang, '/contact/')}>
+        {t('nav.contact')}
+        <Icon name="arrow-right" class="header-cta__icon" />
+      </a>
+      <button
+        type="button"
+        class="burger"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        data-burger
+        data-label-open={t('nav.openMenu')}
+        data-label-close={t('nav.closeMenu')}
+        aria-label={t('nav.openMenu')}
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <nav class="container" aria-label={t('a11y.primaryNav')}>
+      <ul>
+        <li class="mobile-menu__lang">
+          <a
+            class="lang-switch lang-switch--panel mono"
+            href={switchHref}
+            hreflang={other}
+            lang={other}
+            aria-label={switchLabel}
+            data-astro-reload
+          >
+            {other.toUpperCase()}
+          </a>
+        </li>
+        <li>
+          <a href={localizedPath(lang)}>{t('nav.home')}</a>
+        </li>
+        <li class="mobile-menu__group">{t('nav.solutions')}</li>
+        {SOLUTIONS.map((s) => (
+          <li class="mobile-menu__sub">
+            <a href={localizedPath(lang, s.path)}>{t(s.key)}</a>
+          </li>
+        ))}
+        {PRIMARY.map((item) => (
+          <li>
+            <a href={localizedPath(lang, item.path)}>{t(item.key)}</a>
+          </li>
+        ))}
+        <li>
+          <a class="btn btn--primary" href={localizedPath(lang, '/contact/')}>
+            {t('nav.cta')}
+            <Icon name="arrow-right" />
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    color: var(--text);
+    border-bottom: 1px solid var(--rule);
+  }
+  .site-header__bar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-height: 64px;
+  }
+  .primary-nav {
+    margin-left: auto;
+  }
+  .primary-nav > ul {
+    display: flex;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .has-menu {
+    position: relative;
+  }
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 0;
+    background: none;
+    color: var(--text-dim);
+    font-family: var(--font-body);
+    font-size: var(--fs-small);
+    font-weight: 400;
+    text-decoration: none;
+    text-underline-offset: 0.4em;
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease);
+  }
+  .nav-link:hover,
+  .nav-link[aria-expanded='true'] {
+    color: var(--text);
+  }
+  .nav-link[aria-current] {
+    color: var(--text);
+    text-decoration: underline 2px var(--accent);
+  }
+  .nav-link :global(.nav-link__caret) {
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  .nav-link[aria-expanded='true'] :global(.nav-link__caret) {
+    transform: rotate(180deg);
+  }
+
+  .mega {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    width: min(460px, 90vw);
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--rule-ui);
+  }
+  .mega ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .mega li + li {
+    border-top: 1px solid var(--rule);
+  }
+  .mega li a {
+    display: grid;
+    gap: 2px;
+    padding: var(--s-3) var(--s-4);
+    border-left: 2px solid transparent;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .mega li a strong {
+    font-size: var(--fs-small);
+  }
+  .mega li a:hover strong {
+    text-decoration: underline 1px var(--accent);
+    text-underline-offset: 0.2em;
+  }
+  .mega li a[aria-current] {
+    border-left-color: var(--accent);
+  }
+  .mega li a span {
+    color: var(--text-dim);
+    font-size: var(--fs-small);
+  }
+  .mega__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2) var(--s-4);
+    padding-inline: var(--s-4);
+    border-top: 1px solid var(--rule-ui);
+  }
+  .mega__links a {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  :global(html[lang='vi']) .mega__links a {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+
+  .site-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .lang-switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    color: var(--text);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+  .lang-switch:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .lang-switch--panel {
+    justify-content: flex-start;
+  }
+  .header-cta {
+    white-space: nowrap;
+  }
+
+  .burger {
+    display: none;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--rule-ui);
+    border-radius: var(--radius);
+    background: none;
+    cursor: pointer;
+    place-content: center;
+    gap: 5px;
+  }
+  .burger span {
+    display: block;
+    width: 18px;
+    height: 1.5px;
+    background: var(--text);
+    transition:
+      transform var(--dur-base) var(--ease),
+      opacity var(--dur-fast);
+  }
+  .burger[aria-expanded='true'] span:nth-child(1) {
+    transform: translateY(6.5px) rotate(45deg);
+  }
+  .burger[aria-expanded='true'] span:nth-child(2) {
+    opacity: 0;
+  }
+  .burger[aria-expanded='true'] span:nth-child(3) {
+    transform: translateY(-6.5px) rotate(-45deg);
+  }
+
+  .mobile-menu {
+    border-top: 1px solid var(--rule);
+    background: var(--surface);
+    max-height: calc(100dvh - 56px);
+    overflow-y: auto;
+  }
+  .mobile-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: var(--s-2) 0 var(--s-6);
+    display: grid;
+  }
+  .mobile-menu li + li:not(.mobile-menu__sub) {
+    border-top: 1px solid var(--rule);
+  }
+  .mobile-menu a:not(.btn) {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: var(--fs-lead);
+  }
+  .mobile-menu a:not(.btn):hover {
+    text-decoration: underline 1px var(--accent);
+    text-underline-offset: 0.2em;
+  }
+  .mobile-menu .lang-switch--panel {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+  }
+  .mobile-menu__group {
+    padding-top: var(--s-4);
+    font: 500 var(--fs-label) / 1.4 var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  :global(html[lang='vi']) .mobile-menu__group {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .mobile-menu__sub a {
+    padding-left: var(--s-4);
+    border-left: 1px solid var(--rule-ui);
+  }
+  .mobile-menu .btn {
+    margin-top: var(--s-4);
+  }
+  /* The panel copy of the language link only exists below 480 px (see below). */
+  .mobile-menu__lang {
+    display: none;
+  }
+
+  /* Collapse to the burger: below 1080 px in English, below 1280 px in Vietnamese
+     (VI strings run ~25 % longer). */
+  @media (max-width: 1079.98px) {
+    .primary-nav {
+      display: none;
+    }
+    .burger {
+      display: grid;
+    }
+    .site-header__bar {
+      min-height: 56px;
+    }
+    .site-header__actions {
+      margin-left: auto;
+    }
+  }
+  @media (max-width: 1279.98px) {
+    :global(html[lang='vi']) .primary-nav {
+      display: none;
+    }
+    :global(html[lang='vi']) .burger {
+      display: grid;
+    }
+    :global(html[lang='vi']) .site-header__bar {
+      min-height: 56px;
+    }
+    :global(html[lang='vi']) .site-header__actions {
+      margin-left: auto;
+    }
+  }
+  /* Narrow: tighter gaps and a compact Contact button without the icon (§7.0 width budget). */
+  @media (max-width: 719.98px) {
+    .site-header__bar,
+    .site-header__actions {
+      gap: 8px;
+    }
+    .header-cta {
+      min-height: 44px;
+      padding: 0 12px;
+    }
+    .header-cta :global(.header-cta__icon) {
+      display: none;
+    }
+  }
+  /* Below 480 px the language link moves into the burger panel as its first row. */
+  @media (max-width: 479.98px) {
+    .lang-switch--bar {
+      display: none;
+    }
+    .mobile-menu__lang {
+      display: block;
+    }
+  }
+</style>
+
+<script>
+  // Delegated handlers so they keep working across Astro view-transition navigations.
+  const w = window as unknown as { __htNav?: boolean };
+  if (!w.__htNav) {
+    w.__htNav = true;
+
+    const closeMega = (focusButton = false) => {
+      document.querySelectorAll<HTMLButtonElement>('[data-menu-button]').forEach((btn) => {
+        btn.setAttribute('aria-expanded', 'false');
+        const panel = document.getElementById(btn.getAttribute('aria-controls') ?? '');
+        if (panel) panel.hidden = true;
+        if (focusButton) btn.focus();
+      });
+    };
+    const closeMobile = (focusButton = false) => {
+      const burger = document.querySelector<HTMLButtonElement>('[data-burger]');
+      const panel = document.getElementById('mobile-menu');
+      if (!burger || !panel) return;
+      burger.setAttribute('aria-expanded', 'false');
+      burger.setAttribute('aria-label', burger.dataset.labelOpen ?? '');
+      panel.hidden = true;
+      if (focusButton) burger.focus();
+    };
+
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const menuBtn = target.closest<HTMLButtonElement>('[data-menu-button]');
+      if (menuBtn) {
+        const open = menuBtn.getAttribute('aria-expanded') === 'true';
+        closeMega();
+        if (!open) {
+          menuBtn.setAttribute('aria-expanded', 'true');
+          const panel = document.getElementById(menuBtn.getAttribute('aria-controls') ?? '');
+          if (panel) panel.hidden = false;
+        }
+        return;
+      }
+      const burger = target.closest<HTMLButtonElement>('[data-burger]');
+      if (burger) {
+        const open = burger.getAttribute('aria-expanded') === 'true';
+        if (open) closeMobile();
+        else {
+          burger.setAttribute('aria-expanded', 'true');
+          burger.setAttribute('aria-label', burger.dataset.labelClose ?? '');
+          const panel = document.getElementById('mobile-menu');
+          if (panel) panel.hidden = false;
+        }
+        return;
+      }
+      if (!target.closest('.has-menu')) closeMega();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      closeMega(true);
+      closeMobile(true);
+    });
+
+    // Close the panels after every client-side navigation.
+    document.addEventListener('astro:after-swap', () => {
+      closeMega();
+      closeMobile();
+    });
+    // Close the burger panel once the full nav returns; the collapse point depends on <html lang>.
+    const COLLAPSE: [string, string][] = [
+      ['en', '(min-width: 1080px)'],
+      ['vi', '(min-width: 1280px)'],
+    ];
+    for (const [lang, query] of COLLAPSE) {
+      window.matchMedia(query).addEventListener('change', (e) => {
+        const current = document.documentElement.lang === 'vi' ? 'vi' : 'en';
+        if (e.matches && current === lang) closeMobile();
+      });
+    }
+  }
+</script>

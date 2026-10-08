@@ -1,0 +1,98 @@
+---
+import Icon from './Icon.astro';
+import NexusGraph from './NexusGraph.astro';
+import { localizedPath, useT, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+---
+
+<section class="hero" aria-labelledby="hero-title" data-hero>
+  <div class="container hero__grid">
+    <div class="hero__copy">
+      <p class="eyebrow">{t('hero.eyebrow')}</p>
+      <h1 id="hero-title" class="display-xl">
+        <span class="h-dim">{t('hero.title.dim')}</span>{' '}
+        <span class="h-strong">{t('hero.title.strong')}</span>
+      </h1>
+      <p class="lede">{t('hero.sub')}</p>
+      <p class="hero__ctas">
+        <a class="btn btn--primary" href={localizedPath(lang, '/solutions/')}>
+          {t('hero.cta.solutions')}
+          <Icon name="arrow-right" />
+        </a>
+        <a class="btn" href={localizedPath(lang, '/contact/')}>
+          {t('hero.cta.talk')}
+          <Icon name="arrow-right" />
+        </a>
+      </p>
+    </div>
+    <div class="hero__visual">
+      <NexusGraph lang={lang} />
+    </div>
+  </div>
+</section>
+
+<style>
+  /* No entrance animation: the h1 is the LCP element and must paint with the first CSS. */
+  .hero {
+    padding-block: var(--s-6) var(--s-8);
+    background: var(--bg);
+  }
+  .hero__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--s-6);
+    align-items: start;
+  }
+  .hero h1 {
+    max-inline-size: 14ch;
+    margin: 0 0 var(--s-5);
+    font-size: var(--fs-display-xl);
+  }
+  .hero .lede {
+    margin: 0;
+  }
+  .hero__ctas {
+    display: grid;
+    gap: var(--s-2);
+    margin: var(--s-5) 0 0;
+    max-width: none;
+  }
+  .hero__ctas .btn {
+    justify-content: space-between;
+  }
+  @media (min-width: 720px) {
+    .hero {
+      padding-block: var(--s-8) var(--s-9);
+    }
+    .hero__ctas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-3);
+    }
+    .hero__ctas .btn {
+      justify-content: flex-start;
+    }
+  }
+  @media (min-width: 1080px) {
+    .hero {
+      padding-block: var(--s-9) var(--s-10);
+    }
+    .hero__grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--gutter);
+    }
+    .hero__copy {
+      grid-column: 1 / span 5;
+      position: sticky;
+      inset-block-start: 96px;
+    }
+    .hero__visual {
+      grid-column: 6 / span 7;
+    }
+  }
+</style>

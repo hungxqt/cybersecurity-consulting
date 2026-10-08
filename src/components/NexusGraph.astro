@@ -1,0 +1,1159 @@
+---
+import { localizedPath, useT, type Lang } from '../lib/i18n';
+import {
+  EDGES,
+  NODES,
+  ZONES,
+  VIEWBOX,
+  adjacency,
+  describeNode,
+  relations,
+  sampleAmbient,
+  type NexusNode,
+  type NodeId,
+} from '../lib/nexus';
+
+/**
+ * The attack-path graph (design §6.1): a simulated organisation drawn as 14 systems across four
+ * trust zones. Server-rendered and complete without JS; the script below adds preview/pin,
+ * the lens, keyboard movement and the labelled ambient simulation.
+ *
+ * Node anchor: the CSS `translate: -13px -50%` below must stay equal to NODE_ANCHOR_PX in
+ * src/lib/nexus.ts, and the crown-zone mirroring must match isMirrored() there.
+ */
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const pct = (v: number, total: number) => `${+((v / total) * 100).toFixed(3)}%`;
+const label = (id: NodeId) => t(`nexus.node.${id}.label`);
+const names = (ids: readonly NodeId[]) =>
+  ids.length ? ids.map(label).join(', ') : t('nexus.card.none');
+const adj = adjacency();
+const kindZone = (n: NexusNode) => `${t(`nexus.legend.${n.kind}`)} · ${t(`nexus.zone.${n.zone}`)}`;
+const coveredBy = (n: NexusNode) =>
+  n.services.map((s) => ({
+    href: localizedPath(lang, `/solutions/${s}/`),
+    text: t(`nexus.lens.${s}`),
+  }));
+
+const wideBox = VIEWBOX.wide;
+const tallBox = VIEWBOX.tall;
+const log = sampleAmbient(3).flat();
+const strings = JSON.stringify({ pause: t('nexus.pause'), resume: t('nexus.resume') });
+const lenses = ['all', 'consulting', 'audit', 'soc'] as const;
+const legendMarks = ['threat', 'asset', 'sensor'] as const;
+const nodeById = new Map(NODES.map((n) => [n.id, n]));
+---
+
+<div class="nexus" data-nexus data-ambient="off" data-strings={strings}>
+  <div
+    class="nexus__stage"
+    role="group"
+    aria-label={t('nexus.groupLabel')}
+    aria-describedby="nexus-help"
+  >
+    <svg
+      class="nexus__edges nexus__edges--wide"
+      viewBox={`0 0 ${wideBox.w} ${wideBox.h}`}
+      aria-hidden="true"
+      focusable="false"
+    >
+      {ZONES.slice(1).map((z) => (
+        <line class="nx-zone-line" x1={z.wide.x0} y1="0" x2={z.wide.x0} y2={wideBox.h} />
+      ))}
+      {EDGES.map((e) => {
+        const a = nodeById.get(e.from)!.wide;
+        const b = nodeById.get(e.to)!.wide;
+        return (
+          <line
+            class="nx-edge"
+            data-edge={e.id}
+            data-from={e.from}
+            data-to={e.to}
+            data-kind={e.kind}
+            x1={a.x}
+            y1={a.y}
+            x2={b.x}
+            y2={b.y}
+          />
+        );
+      })}
+    </svg>
+    <svg
+      class="nexus__edges nexus__edges--tall"
+      viewBox={`0 0 ${tallBox.w} ${tallBox.h}`}
+      aria-hidden="true"
+      focusable="false"
+    >
+      {ZONES.slice(1).map((z) => (
+        <line class="nx-zone-line" x1="0" y1={z.tall.y0} x2={tallBox.w} y2={z.tall.y0} />
+      ))}
+      {EDGES.map((e) => {
+        const a = nodeById.get(e.from)!.tall;
+        const b = nodeById.get(e.to)!.tall;
+        return (
+          <line
+            class="nx-edge"
+            data-edge={e.id}
+            data-from={e.from}
+            data-to={e.to}
+            data-kind={e.kind}
+            x1={a.x}
+            y1={a.y}
+            x2={b.x}
+            y2={b.y}
+          />
+        );
+      })}
+    </svg>
+
+    {ZONES.map((z) => (
+      <span
+        class="nx-zone"
+        data-zone={z.id}
+        aria-hidden="true"
+        style={`--x:${pct(z.wide.x0, wideBox.w)};--w:${pct(z.wide.x1 - z.wide.x0, wideBox.w)};--yt:${pct(z.tall.y0, tallBox.h)}`}
+      >
+        {t(`nexus.zone.${z.id}`)}
+      </span>
+    ))}
+
+    {NODES.map((n) => (
+      <button
+        type="button"
+        class="nx-node"
+        data-node={n.id}
+        data-kind={n.kind}
+        data-zone={n.zone}
+        data-svc={n.services.join(' ')}
+        data-wide={`${n.wide.x} ${n.wide.y}`}
+        data-tall={`${n.tall.x} ${n.tall.y}`}
+        data-adj={adj[n.id].join(' ')}
+        style={`--x:${pct(n.wide.x, wideBox.w)};--y:${pct(n.wide.y, wideBox.h)};--xt:${pct(n.tall.x, tallBox.w)};--yt:${pct(n.tall.y, tallBox.h)}`}
+        aria-pressed="false"
+        aria-describedby={`nx-d-${n.id}`}
+        tabindex={n.id === 'idp' ? 0 : -1}
+      >
+        <span class="nx-node__mark nx-mark" data-kind={n.kind} aria-hidden="true">
+          <i class="nx-tick"></i>
+        </span>
+        <span class="nx-node__label">{label(n.id)}</span>
+      </button>
+    ))}
+
+    <p id="nexus-help" class="sr-only">
+      {t('nexus.help')}
+    </p>
+    <div class="sr-only">
+      {NODES.map((n) => (
+        <span id={`nx-d-${n.id}`}>{describeNode(n.id, t, lang)}</span>
+      ))}
+    </div>
+  </div>
+
+  <fieldset class="nexus__lens">
+    <legend class="label">{t('nexus.lens.legend')}</legend>
+    {lenses.map((l) => (
+      <label class="nx-lens__opt">
+        <input type="radio" name="nexus-lens" value={l} checked={l === 'all'} />
+        <span>{t(`nexus.lens.${l}`)}</span>
+      </label>
+    ))}
+  </fieldset>
+
+  <div class="nexus__panel">
+    <article data-card="intro">
+      <p class="label">{t('nexus.intro.label')}</p>
+      <h2>{t('nexus.intro.title')}</h2>
+      <p class="nx-desc">{t('nexus.intro.body')}</p>
+      <dl class="nx-legend">
+        {legendMarks.map((k) => (
+          <div>
+            <dt aria-hidden="true">
+              <span class="nx-mark" data-kind={k}></span>
+            </dt>
+            <dd>{t(`nexus.legend.${k}`)}</dd>
+          </div>
+        ))}
+        <div>
+          <dt aria-hidden="true">
+            <span class="nx-line" data-kind="attack"></span>
+          </dt>
+          <dd>{t('nexus.legend.attack')}</dd>
+        </div>
+        <div>
+          <dt aria-hidden="true">
+            <span class="nx-line" data-kind="trust"></span>
+          </dt>
+          <dd>{t('nexus.legend.trust')}</dd>
+        </div>
+      </dl>
+    </article>
+    {NODES.map((n) => {
+      const rel = relations(n.id);
+      return (
+        <article data-card={n.id} hidden>
+          <p class="label">{kindZone(n)}</p>
+          <h2>{label(n.id)}</h2>
+          <p class="nx-desc">{t(`nexus.node.${n.id}.desc`)}</p>
+          <dl class="nx-rel">
+            <div>
+              <dt>{t('nexus.card.reachedFrom')}</dt>
+              <dd>{names(rel.reachedFrom)}</dd>
+            </div>
+            <div>
+              <dt>{t('nexus.card.leadsTo')}</dt>
+              <dd>{names(rel.leadsTo)}</dd>
+            </div>
+            <div>
+              <dt>{t('nexus.card.watchedBy')}</dt>
+              <dd>{names(rel.watchedBy)}</dd>
+            </div>
+          </dl>
+          <p class="nx-cover">
+            <span class="label">{t('nexus.card.coveredBy')}</span>
+            {coveredBy(n).map((c) => (
+              <a href={c.href}>{c.text}</a>
+            ))}
+          </p>
+        </article>
+      );
+    })}
+  </div>
+
+  <div class="nexus__log" aria-hidden="true">
+    <p class="label">{t('nexus.logLabel')}</p>
+    <ol data-log>
+      {log.map((row) => (
+        <li>{row}</li>
+      ))}
+    </ol>
+  </div>
+
+  <div class="nexus__controls">
+    <button type="button" class="btn" data-ambient-toggle aria-pressed="false">
+      {t('nexus.pause')}
+    </button>
+    <details class="nexus__table">
+      <summary>{t('nexus.tableSummary')}</summary>
+      <div
+        class="nexus__tablewrap"
+        tabindex="0"
+        role="region"
+        aria-label={t('nexus.table.caption')}
+      >
+        <table>
+          <caption class="sr-only">{t('nexus.table.caption')}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{t('nexus.table.system')}</th>
+              <th scope="col">{t('nexus.table.kind')}</th>
+              <th scope="col">{t('nexus.table.zone')}</th>
+              <th scope="col">{t('nexus.card.reachedFrom')}</th>
+              <th scope="col">{t('nexus.card.leadsTo')}</th>
+              <th scope="col">{t('nexus.card.watchedBy')}</th>
+              <th scope="col">{t('nexus.card.coveredBy')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {NODES.map((n) => {
+              const rel = relations(n.id);
+              return (
+                <tr>
+                  <th scope="row">{label(n.id)}</th>
+                  <td>{t(`nexus.legend.${n.kind}`)}</td>
+                  <td>{t(`nexus.zone.${n.zone}`)}</td>
+                  <td>{names(rel.reachedFrom)}</td>
+                  <td>{names(rel.leadsTo)}</td>
+                  <td>{names(rel.watchedBy)}</td>
+                  <td>
+                    {coveredBy(n).map((c, i) => (
+                      <>
+                        {i > 0 && ', '}
+                        <a href={c.href}>{c.text}</a>
+                      </>
+                    ))}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+</div>
+
+<style is:global>
+  .nexus {
+    display: grid;
+    min-inline-size: 0;
+  }
+
+  /* Stage: reserved geometry, independent of JS (CLS). */
+  .nexus__stage {
+    position: relative;
+    inline-size: 100%;
+    aspect-ratio: 1000 / 600;
+  }
+  .nexus__edges {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: visible;
+  }
+  .nexus__edges--tall {
+    display: none;
+  }
+  @media (max-width: 719.98px) {
+    .nexus__stage {
+      aspect-ratio: 600 / 1200;
+      inline-size: min(100%, 26rem);
+      margin-inline: auto;
+    }
+    .nexus__edges--wide {
+      display: none;
+    }
+    .nexus__edges--tall {
+      display: block;
+    }
+  }
+
+  .nx-zone-line {
+    stroke: var(--rule);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+  }
+  .nx-edge {
+    fill: none;
+    stroke: var(--rule-ui);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+    transition: stroke var(--dur-fast) var(--ease);
+  }
+  .nx-edge[data-kind='attack'] {
+    stroke: var(--threat);
+    stroke-width: 1.5px;
+    stroke-dasharray: 5 4;
+  }
+  .nx-edge[data-kind='telemetry'] {
+    stroke-dasharray: 1 4;
+    stroke-linecap: round;
+  }
+  .nx-edge[data-hot] {
+    stroke: var(--accent);
+    stroke-width: 1.5px;
+  }
+  .nx-edge[data-kind='attack'][data-hot] {
+    stroke: var(--threat);
+    stroke-dasharray: none;
+  }
+  .nx-dot {
+    fill: var(--threat);
+    display: none;
+  }
+  .nx-dot[data-on] {
+    display: inline;
+  }
+
+  .nx-zone {
+    position: absolute;
+    inset-inline-start: var(--x);
+    inset-block-start: 0;
+    inline-size: var(--w);
+    padding-inline-end: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .nx-zone::after {
+    content: '';
+  }
+  :lang(vi) .nx-zone {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 719.98px) {
+    .nx-zone {
+      inset-inline-start: 0;
+      inset-block-start: var(--yt);
+      inline-size: 100%;
+    }
+  }
+
+  /* Node: mark centre lands on the coordinate (NODE_ANCHOR_PX = 13 = 8 padding + 5 half-mark). */
+  .nx-node {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    translate: -13px -50%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    margin: 0;
+    padding: 4px 8px;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  @media (max-width: 719.98px) {
+    .nx-node {
+      left: var(--xt);
+      top: var(--yt);
+    }
+  }
+  @media (min-width: 720px) {
+    .nx-node[data-zone='crown'] {
+      translate: calc(-100% + 13px) -50%;
+      flex-direction: row-reverse;
+      text-align: end;
+    }
+  }
+  .nx-node__label {
+    max-inline-size: 12ch;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--bg);
+    transition: color var(--dur-fast) var(--ease);
+  }
+  :lang(vi) .nx-node__label {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+
+  /* Marks: shape and colour both carry the kind. */
+  .nx-mark {
+    position: relative;
+    display: inline-block;
+    flex: none;
+    inline-size: 10px;
+    block-size: 10px;
+    vertical-align: middle;
+  }
+  .nx-mark::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    border: 1px solid var(--text);
+    background: var(--bg);
+    transition: border-color var(--dur-fast) var(--ease);
+  }
+  .nx-mark[data-kind='sensor']::before {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .nx-mark[data-kind='threat']::before {
+    inset: 1.5px;
+    border-color: var(--threat);
+    rotate: 45deg;
+  }
+  .nx-tick {
+    position: absolute;
+    inset-block-start: -5px;
+    inset-inline-start: -5px;
+    inline-size: 4px;
+    block-size: 4px;
+    display: none;
+  }
+  .nx-node[data-tick='accent'] .nx-tick {
+    display: block;
+    background: var(--accent);
+  }
+  .nx-node[data-tick='threat'] .nx-tick {
+    display: block;
+    background: var(--threat);
+  }
+
+  /* Hot (previewed node + neighbours): others drop to Ash text and Wire Strong marks. */
+  .nexus__stage[data-active] .nx-node:not([data-hot]) .nx-node__label {
+    color: var(--text-dim);
+  }
+  .nexus__stage[data-active] .nx-node:not([data-hot]) .nx-mark[data-kind='asset']::before {
+    border-color: var(--rule-ui);
+  }
+  .nx-node[data-shown] .nx-mark {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+  }
+  .nx-node[aria-pressed='true'] .nx-mark::after {
+    content: '';
+    position: absolute;
+    inset-block-start: -6px;
+    inset-inline-end: -6px;
+    inline-size: 4px;
+    block-size: 4px;
+    background: var(--text);
+  }
+
+  /* Lens: in-scope systems keep Frost labels and gain a Cyanotype underline. */
+  .nexus__stage[data-lens='consulting'] .nx-node:not([data-svc~='consulting']) .nx-node__label,
+  .nexus__stage[data-lens='audit'] .nx-node:not([data-svc~='audit']) .nx-node__label,
+  .nexus__stage[data-lens='soc'] .nx-node:not([data-svc~='soc']) .nx-node__label {
+    color: var(--text-dim);
+  }
+  .nexus__stage[data-lens='consulting'] .nx-node[data-svc~='consulting'] .nx-node__label,
+  .nexus__stage[data-lens='audit'] .nx-node[data-svc~='audit'] .nx-node__label,
+  .nexus__stage[data-lens='soc'] .nx-node[data-svc~='soc'] .nx-node__label {
+    text-decoration: underline 1px var(--accent);
+    text-underline-offset: 0.25em;
+  }
+
+  /* Lens radios. */
+  .nexus__lens {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--s-4);
+    margin: var(--s-4) 0 0;
+    padding: var(--s-3) 0 0;
+    border: 0;
+    border-top: 1px solid var(--rule);
+    min-inline-size: 0;
+  }
+  .nexus__lens legend {
+    grid-column: 1 / -1;
+    padding: 0;
+    margin-block-end: var(--s-1);
+    float: none;
+  }
+  .nexus__lens > legend + * {
+    clear: none;
+  }
+  .nx-lens__opt {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-block-size: 44px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: var(--fs-button);
+    letter-spacing: 0.04em;
+  }
+  .nx-lens__opt input {
+    flex: none;
+    inline-size: 18px;
+    block-size: 18px;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+  @media (min-width: 720px) {
+    .nexus__lens {
+      grid-template-columns: repeat(4, max-content);
+      column-gap: var(--s-6);
+    }
+  }
+
+  /* Intelligence panel: fixed block-size so swapping cards never moves anything. */
+  .nexus__panel {
+    block-size: 23rem;
+    overflow: hidden;
+    padding-block: var(--s-4);
+    border-top: 1px solid var(--rule);
+  }
+  @media (min-width: 720px) {
+    .nexus__panel {
+      block-size: 18rem;
+    }
+  }
+  .nexus__panel > article {
+    display: grid;
+    gap: var(--s-2);
+    align-content: start;
+    min-inline-size: 0;
+  }
+  .nexus__panel > article[hidden] {
+    display: none;
+  }
+  .nexus__panel h2 {
+    margin: 0;
+    font-family: var(--font-strong);
+    font-weight: 600;
+    font-size: var(--fs-h3);
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+  }
+  .nexus__panel .label,
+  .nexus__panel p {
+    margin: 0;
+  }
+  .nx-desc {
+    font-size: var(--fs-body);
+    line-height: 1.6;
+    max-inline-size: none;
+  }
+  :lang(vi) .nx-desc {
+    line-height: 1.7;
+  }
+  .nx-rel {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: var(--s-4);
+    margin: 0;
+    font-size: var(--fs-data);
+    line-height: 1.5;
+  }
+  .nx-rel > div {
+    display: contents;
+  }
+  .nx-rel dt {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  :lang(vi) .nx-rel dt {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .nx-rel dd {
+    margin: 0;
+    min-inline-size: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-mono);
+  }
+  .nx-cover {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-4);
+    font-size: var(--fs-data);
+  }
+  .nx-cover a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 24px;
+    white-space: nowrap;
+  }
+  .nx-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    margin: var(--s-2) 0 0;
+    font-size: var(--fs-data);
+  }
+  .nx-legend > div {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  .nx-legend dt,
+  .nx-legend dd {
+    margin: 0;
+  }
+  .nx-legend dd {
+    font-family: var(--font-mono);
+  }
+  .nx-line {
+    display: inline-block;
+    inline-size: 20px;
+    vertical-align: middle;
+    border-top: 1px solid var(--rule-ui);
+  }
+  .nx-line[data-kind='attack'] {
+    border-top: 2px dashed var(--threat);
+  }
+
+  /* Event log: 6 fixed rows, never wraps. */
+  .nexus__log {
+    padding-block: var(--s-4);
+    border-top: 1px solid var(--rule);
+  }
+  .nexus__log .label {
+    margin: 0 0 var(--s-2);
+  }
+  .nexus__log ol {
+    display: grid;
+    grid-auto-rows: 1.5em;
+    block-size: 9em;
+    align-content: start;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-data);
+    font-variant-numeric: tabular-nums;
+  }
+  .nexus__log li {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .nexus__log li:nth-child(even) {
+    color: var(--text-dim);
+  }
+
+  /* Controls row: pause + table disclosure. */
+  .nexus__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--s-3) var(--s-5);
+    padding-block-start: var(--s-4);
+    border-top: 1px solid var(--rule);
+  }
+  .nexus:not([data-live]) [data-ambient-toggle] {
+    visibility: hidden;
+  }
+  [data-ambient-toggle][hidden] {
+    display: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-ambient-toggle] {
+      display: none;
+    }
+  }
+  .nexus__table {
+    flex: 1 1 14rem;
+    min-inline-size: 0;
+  }
+  .nexus__table summary {
+    display: flex;
+    align-items: center;
+    min-block-size: 48px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: var(--fs-button);
+    letter-spacing: 0.04em;
+  }
+  .nexus__tablewrap {
+    overflow-x: auto;
+    margin-block: var(--s-3);
+    border: 1px solid var(--rule-ui);
+  }
+  .nexus__tablewrap table {
+    inline-size: 100%;
+    min-inline-size: 760px;
+    border-collapse: collapse;
+    font-size: var(--fs-small);
+  }
+  .nexus__tablewrap th,
+  .nexus__tablewrap td {
+    padding: var(--s-2) var(--s-3);
+    text-align: start;
+    vertical-align: top;
+    border-bottom: 1px solid var(--rule);
+  }
+  .nexus__tablewrap thead th {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  :lang(vi) .nexus__tablewrap thead th {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .nexus__tablewrap tbody th {
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  import {
+    EDGES,
+    NODE_BY_ID,
+    eventToEdge,
+    formatAmbientRows,
+    isNodeId,
+    nexusAmbient,
+    readingOrder,
+    spatialNext,
+    VIEWBOX,
+    type Dir,
+    type Layout,
+    type NodeId,
+  } from '../lib/nexus';
+
+  const STORAGE_KEY = 'ht-nexus-ambient';
+  const LENSES = ['all', 'consulting', 'audit', 'soc'];
+  const KEY_DIR: Record<string, Dir> = {
+    ArrowLeft: 'left',
+    ArrowRight: 'right',
+    ArrowUp: 'up',
+    ArrowDown: 'down',
+  };
+  const EVENT_MS = 2400;
+  const TRAVEL_MS = 900;
+  const ONWARD_MS = 600;
+  const TICK_MS = 1200;
+
+  let teardown: (() => void) | null = null;
+
+  function readPaused(): boolean {
+    try {
+      return sessionStorage.getItem(STORAGE_KEY) === 'off';
+    } catch {
+      return false;
+    }
+  }
+  function writePaused(paused: boolean) {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, paused ? 'off' : 'on');
+    } catch {
+      /* private mode: preference simply is not persisted */
+    }
+  }
+
+  function init(root: HTMLElement): () => void {
+    const stage = root.querySelector<HTMLElement>('.nexus__stage')!;
+    const panel = root.querySelector<HTMLElement>('.nexus__panel')!;
+    const logEl = root.querySelector<HTMLElement>('[data-log]')!;
+    const toggle = root.querySelector<HTMLButtonElement>('[data-ambient-toggle]')!;
+    const strings = JSON.parse(root.dataset.strings ?? '{}') as { pause: string; resume: string };
+
+    const buttons = new Map<NodeId, HTMLButtonElement>();
+    for (const b of root.querySelectorAll<HTMLButtonElement>('[data-node]')) {
+      const id = b.dataset.node;
+      if (isNodeId(id)) buttons.set(id, b);
+    }
+    if (buttons.size !== 14) throw new Error('nodes missing');
+    const adjacent = new Map<NodeId, NodeId[]>();
+    for (const [id, b] of buttons)
+      adjacent.set(id, (b.dataset.adj ?? '').split(' ').filter(isNodeId));
+    const cards = new Map<string, HTMLElement>();
+    for (const c of panel.querySelectorAll<HTMLElement>('[data-card]'))
+      cards.set(c.dataset.card!, c);
+    const edgeEls = [...root.querySelectorAll<SVGLineElement>('[data-edge]')];
+
+    const wideMq = window.matchMedia('(min-width: 720px)');
+    const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const layout = (): Layout => (wideMq.matches ? 'wide' : 'tall');
+
+    const ac = new AbortController();
+    const opts = { signal: ac.signal };
+
+    let previewed: NodeId | null = null;
+    let pinned: NodeId | null = null;
+    let userPaused = readPaused();
+    let visible = false;
+
+    const shown = () => pinned ?? previewed;
+
+    // --- state -> DOM -------------------------------------------------------------------
+    function render() {
+      const s = shown();
+      for (const [id, card] of cards) card.hidden = id !== (s ?? 'intro');
+      const src = previewed ?? pinned;
+      const hot = new Set<NodeId>(src ? [src, ...(adjacent.get(src) ?? [])] : []);
+      stage.toggleAttribute('data-active', src !== null);
+      for (const [id, b] of buttons) {
+        b.toggleAttribute('data-hot', hot.has(id));
+        b.toggleAttribute('data-shown', id === s);
+        b.setAttribute('aria-pressed', String(id === pinned));
+      }
+      for (const e of edgeEls) {
+        e.toggleAttribute(
+          'data-hot',
+          src !== null && (e.dataset.from === src || e.dataset.to === src),
+        );
+      }
+      syncAmbient();
+    }
+
+    function setRoving(id: NodeId) {
+      for (const [nid, b] of buttons) b.tabIndex = nid === id ? 0 : -1;
+    }
+
+    // --- events -------------------------------------------------------------------------
+    for (const [id, b] of buttons) {
+      b.addEventListener(
+        'pointerenter',
+        () => {
+          previewed = id;
+          render();
+        },
+        opts,
+      );
+      b.addEventListener(
+        'focus',
+        () => {
+          setRoving(id);
+          previewed = id;
+          render();
+        },
+        opts,
+      );
+      b.addEventListener(
+        'click',
+        () => {
+          pinned = pinned === id ? null : id;
+          previewed = id;
+          render();
+        },
+        opts,
+      );
+    }
+
+    stage.addEventListener(
+      'keydown',
+      (ev) => {
+        const target = (ev.target as HTMLElement).closest<HTMLButtonElement>('[data-node]');
+        const id = target?.dataset.node;
+        if (!target || !isNodeId(id)) return;
+        const dir = KEY_DIR[ev.key];
+        let next: NodeId | null = null;
+        if (dir) next = spatialNext(id, dir, layout());
+        else if (ev.key === 'Home') next = readingOrder(layout())[0] ?? null;
+        else if (ev.key === 'End') next = readingOrder(layout()).at(-1) ?? null;
+        else return;
+        ev.preventDefault();
+        if (next) buttons.get(next)?.focus();
+      },
+      opts,
+    );
+
+    root.addEventListener(
+      'keydown',
+      (ev) => {
+        if (ev.key !== 'Escape') return;
+        const t = ev.target as HTMLElement;
+        if (!stage.contains(t) && !panel.contains(t)) return;
+        // Keep the header's document-level Escape handler from stealing focus.
+        ev.stopPropagation();
+        pinned = null;
+        previewed = null;
+        render();
+      },
+      opts,
+    );
+
+    for (const radio of root.querySelectorAll<HTMLInputElement>('input[name="nexus-lens"]')) {
+      radio.addEventListener(
+        'change',
+        () => {
+          if (!radio.checked || !LENSES.includes(radio.value)) return;
+          stage.dataset.lens = radio.value;
+          if (radio.value === 'all') previewed = null;
+          render();
+        },
+        opts,
+      );
+    }
+
+    // --- ambient simulation -------------------------------------------------------------
+    const stream = nexusAmbient(20260914);
+    let timer = 0;
+    let raf = 0;
+    let running = false;
+    const tickTimers = new Set<number>();
+    const dots = [...root.querySelectorAll<SVGElement>('.nexus__edges')].map((svg) => {
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('class', 'nx-dot');
+      dot.setAttribute('r', '3');
+      svg.append(dot);
+      return dot;
+    });
+
+    const canRun = () =>
+      visible && !document.hidden && !userPaused && !motionMq.matches && shown() === null;
+
+    function syncToggle() {
+      toggle.textContent = userPaused ? strings.resume : strings.pause;
+      toggle.setAttribute('aria-pressed', String(userPaused));
+      toggle.hidden = motionMq.matches;
+    }
+
+    function clearVisuals() {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      for (const d of dots) d.removeAttribute('data-on');
+      for (const id of tickTimers) clearTimeout(id);
+      tickTimers.clear();
+      for (const b of buttons.values()) b.removeAttribute('data-tick');
+    }
+
+    function coords(id: NodeId, l: Layout) {
+      return NODE_BY_ID[id][l];
+    }
+
+    function showTick(id: NodeId, kind: 'accent' | 'threat') {
+      const b = buttons.get(id);
+      if (!b) return;
+      b.dataset.tick = kind;
+      const h = window.setTimeout(() => {
+        b.removeAttribute('data-tick');
+        tickTimers.delete(h);
+      }, TICK_MS);
+      tickTimers.add(h);
+    }
+
+    function fire() {
+      timer = 0;
+      if (!running) return;
+      const e = stream.next();
+      const edgeId = eventToEdge(e.type);
+      const edge = EDGES.find((x) => x.id === edgeId);
+      if (!edge) {
+        schedule();
+        return;
+      }
+      const l = layout();
+      const dot = dots[l === 'wide' ? 0 : 1]!;
+      const a = coords(edge.from, l);
+      const b = coords(edge.to, l);
+      const sensorEdge =
+        e.outcome === 'blocked'
+          ? null
+          : (EDGES.find((x) => x.from === edge.to && x.kind === 'telemetry') ?? null);
+      const c = sensorEdge ? coords(sensorEdge.to, l) : null;
+      const stageW = stage.clientWidth || 1;
+      dot.setAttribute('r', String((3 * VIEWBOX[l].w) / stageW));
+
+      const now = new Date();
+      const rows = formatAmbientRows(
+        e,
+        now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds(),
+      );
+      const li = rows.map((text) => {
+        const el = document.createElement('li');
+        el.textContent = text;
+        return el;
+      });
+      logEl.prepend(...li);
+      while (logEl.children.length > 6) logEl.lastElementChild?.remove();
+
+      const start = performance.now();
+      const total = TRAVEL_MS + (c ? ONWARD_MS : 0);
+      let ticked = false;
+      const step = (t: number) => {
+        raf = 0;
+        if (!running) return;
+        const elapsed = t - start;
+        let x: number;
+        let y: number;
+        if (elapsed < TRAVEL_MS) {
+          const p = elapsed / TRAVEL_MS;
+          x = a.x + (b.x - a.x) * p;
+          y = a.y + (b.y - a.y) * p;
+        } else if (c) {
+          const p = Math.min(1, (elapsed - TRAVEL_MS) / ONWARD_MS);
+          x = b.x + (c.x - b.x) * p;
+          y = b.y + (c.y - b.y) * p;
+        } else {
+          x = b.x;
+          y = b.y;
+        }
+        dot.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+        dot.setAttribute('data-on', '');
+        if (elapsed >= total) {
+          if (!ticked) {
+            ticked = true;
+            if (sensorEdge)
+              showTick(sensorEdge.to, e.outcome === 'escalated' ? 'threat' : 'accent');
+            else showTick(edge.to, 'accent');
+            const h = window.setTimeout(() => {
+              dot.removeAttribute('data-on');
+              tickTimers.delete(h);
+            }, TICK_MS);
+            tickTimers.add(h);
+          }
+          return;
+        }
+        raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+      schedule();
+    }
+
+    function schedule() {
+      if (!running || timer) return;
+      timer = window.setTimeout(fire, EVENT_MS);
+    }
+
+    function syncAmbient() {
+      const should = canRun();
+      if (should && !running) {
+        running = true;
+        root.dataset.ambient = 'on';
+        schedule();
+      } else if (!should && running) {
+        running = false;
+        root.dataset.ambient = 'off';
+        clearTimeout(timer);
+        timer = 0;
+        clearVisuals();
+      }
+      syncToggle();
+    }
+
+    toggle.addEventListener(
+      'click',
+      () => {
+        userPaused = !userPaused;
+        writePaused(userPaused);
+        syncAmbient();
+      },
+      opts,
+    );
+    document.addEventListener('visibilitychange', syncAmbient, opts);
+    motionMq.addEventListener('change', syncAmbient, opts);
+    const io = new IntersectionObserver((entries) => {
+      visible = entries.some((en) => en.isIntersecting);
+      syncAmbient();
+    });
+    io.observe(root);
+
+    render();
+    root.setAttribute('data-live', '');
+
+    // Defer the first simulated event off the critical path.
+    const idle = (cb: () => void) =>
+      typeof window.requestIdleCallback === 'function'
+        ? window.requestIdleCallback(cb)
+        : window.setTimeout(cb, 200);
+    idle(syncAmbient);
+
+    return () => {
+      ac.abort();
+      io.disconnect();
+      running = false;
+      clearTimeout(timer);
+      clearVisuals();
+    };
+  }
+
+  function boot() {
+    teardown?.();
+    teardown = null;
+    const root = document.querySelector<HTMLElement>('[data-nexus]');
+    if (!root) return;
+    try {
+      teardown = init(root);
+    } catch (err) {
+      console.error('[nexus] init failed', err);
+    }
+  }
+
+  document.addEventListener('astro:page-load', boot);
+  document.addEventListener('astro:before-swap', () => {
+    teardown?.();
+    teardown = null;
+  });
+</script>

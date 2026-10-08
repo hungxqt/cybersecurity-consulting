@@ -1,0 +1,143 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SheetHeader from './SheetHeader.astro';
+import AtlasDiagram from './AtlasDiagram.astro';
+import MethodSteps from './MethodSteps.astro';
+import Deliverables from './Deliverables.astro';
+import ReportOutline from './ReportOutline.astro';
+import CtaStrip from './CtaStrip.astro';
+import { useT, type Lang } from '../lib/i18n';
+
+/**
+ * Solution sheet (design §7.2, sheets 2-4): scope, the Atlas fixed to this solution, the
+ * implementation process, deliverables, the interactive tool (slot) and technical documentation.
+ */
+interface Props {
+  lang: Lang;
+  service: 'consulting' | 'audit' | 'soc';
+}
+const { lang, service } = Astro.props;
+const t = useT(lang);
+const SHEET = { consulting: 2, audit: 3, soc: 4 } as const;
+const DELIVERABLES = { consulting: 4, audit: 5, soc: 5 } as const;
+const items = [1, 2, 3, 4].map((n) => t(`svc.${service}.i${n}`));
+---
+
+<BaseLayout
+  lang={lang}
+  theme="atlas"
+  title={t(`svc.${service}.title`)}
+  description={t(`svc.${service}.lede`)}
+  path={`/solutions/${service}/`}
+>
+  <SheetHeader
+    lang={lang}
+    label={t('nav.solutions')}
+    titleDim={t(`svc.${service}.h.dim`)}
+    titleStrong={t(`svc.${service}.h.strong`)}
+    lede={t(`svc.${service}.lede`)}
+    sheet={SHEET[service]}
+    drawing={t(`nav.${service}`)}
+    status={t('sheet.statusValue')}
+  />
+
+  <section class="section" aria-labelledby="scope-h">
+    <div class="container grid">
+      <h2 id="scope-h" class="section__label">
+        {t('sec.scope')}
+      </h2>
+      <ul class="scope">
+        {items.map((i) => (
+          <li>{i}</li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="arch-h">
+    <div class="container">
+      <h2 id="arch-h" class="section__label">
+        {t('sec.architecture')}
+      </h2>
+      <AtlasDiagram lang={lang} lens={service} />
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="method-h">
+    <div class="container grid">
+      <h2 id="method-h" class="section__label">
+        {t('sec.method')}
+      </h2>
+      <div class="rail-body">
+        <MethodSteps lang={lang} scope={service} />
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="deliv-h">
+    <div class="container grid">
+      <h2 id="deliv-h" class="section__label">
+        {t('sec.deliverables')}
+      </h2>
+      <div class="rail-body">
+        <Deliverables lang={lang} scope={service} count={DELIVERABLES[service]} />
+      </div>
+    </div>
+  </section>
+
+  <slot />
+
+  <section class="section" aria-labelledby="docs-h">
+    <div class="container grid">
+      <h2 id="docs-h" class="section__label">
+        {t('sec.docs')}
+      </h2>
+      <div class="rail-body">
+        <ReportOutline lang={lang} scope={service} />
+      </div>
+    </div>
+  </section>
+
+  <CtaStrip lang={lang} />
+</BaseLayout>
+
+<style>
+  .scope {
+    grid-column: 1 / -1;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule-ui);
+  }
+  .scope li {
+    padding-block: var(--s-4);
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: var(--fs-lead);
+    line-height: 1.4;
+  }
+  .rail-body {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+  @media (min-width: 720px) {
+    .scope {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--gutter);
+      border-top: 0;
+    }
+    .scope li {
+      border-top: 1px solid var(--rule-ui);
+    }
+  }
+  @media (min-width: 1080px) {
+    .scope {
+      grid-column: 4 / -1;
+    }
+    .rail-body {
+      grid-column: 4 / -1;
+    }
+  }
+</style>

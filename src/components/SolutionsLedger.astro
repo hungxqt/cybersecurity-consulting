@@ -1,0 +1,150 @@
+---
+import Icon from './Icon.astro';
+import { localizedPath, useT, type Lang } from '../lib/i18n';
+import { SOLUTIONS } from '../lib/nav';
+
+/**
+ * One purpose line and a few deliverables per solution, no cards: columns with hairline
+ * dividers (home) or stacked rows with a sheet link (Solutions index).
+ */
+interface Props {
+  lang: Lang;
+  variant?: 'columns' | 'rows';
+}
+const { lang, variant = 'columns' } = Astro.props;
+const t = useT(lang);
+const ids = ['consulting', 'audit', 'soc'] as const;
+---
+
+<section class="section" aria-labelledby="ledger-h">
+  <div class="container">
+    <h2 id="ledger-h" class="section__label">
+      {t('home.sol.title')}
+    </h2>
+    <ul class:list={['ledger', `ledger--${variant}`]}>
+      {SOLUTIONS.map((s, i) => {
+        const id = ids[i]!;
+        return (
+          <li>
+            <h3>{t(s.key)}</h3>
+            <p class="ledger__purpose">{t(`home.sol.${id}.purpose`)}</p>
+            <ul class="ledger__items">
+              {variant === 'rows' ? (
+                [1, 2, 3].map((n) => <li>{t(`deliv.${id}.d${n}.name`)}</li>)
+              ) : (
+                <>
+                  <li>{t(`home.sol.${id}.d1`)}</li>
+                  <li>{t(`home.sol.${id}.d2`)}</li>
+                </>
+              )}
+            </ul>
+            {variant === 'rows' ? (
+              <a class="ledger__go" href={localizedPath(lang, s.path)}>
+                <span>
+                  {t('sheet.go', { n: i + 2 })}
+                  <span class="sr-only">: {t(s.key)}</span>
+                </span>
+                <Icon name="arrow-right" />
+              </a>
+            ) : (
+              <a class="ledger__go" href={localizedPath(lang, s.path)}>
+                {t(`home.sol.${id}.cta`)}
+                <Icon name="arrow-right" />
+              </a>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .ledger {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    border-top: 1px solid var(--rule);
+  }
+  .ledger > li {
+    display: grid;
+    align-content: start;
+    gap: var(--s-3);
+    padding-block: var(--s-6);
+    border-bottom: 1px solid var(--rule);
+  }
+  .ledger h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-h2);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+  }
+  .ledger__purpose {
+    margin: 0;
+    color: var(--text-dim);
+  }
+  .ledger__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--s-1);
+    font-family: var(--font-mono);
+    font-size: var(--fs-data);
+  }
+  .ledger__items li::before {
+    content: '+ ';
+    color: var(--accent);
+  }
+  .ledger__go {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-block-size: 44px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-button);
+    letter-spacing: 0.04em;
+  }
+  .ledger__go :global(.icon) {
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  .ledger__go:hover :global(.icon),
+  .ledger__go:focus-visible :global(.icon) {
+    transform: translateX(4px);
+  }
+  @media (min-width: 1080px) {
+    .ledger--rows > li {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--gutter);
+      align-items: start;
+    }
+    .ledger--rows h3 {
+      grid-column: 1 / span 3;
+    }
+    .ledger--rows .ledger__purpose {
+      grid-column: 4 / span 4;
+    }
+    .ledger--rows .ledger__items {
+      grid-column: 8 / span 4;
+    }
+    .ledger--rows .ledger__go {
+      grid-column: 12;
+      justify-self: end;
+      white-space: nowrap;
+    }
+    .ledger--columns {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .ledger--columns > li {
+      padding-inline: var(--s-5);
+      border-bottom: 0;
+      border-inline-start: 1px solid var(--rule);
+    }
+    .ledger--columns > li:first-child {
+      padding-inline-start: 0;
+      border-inline-start: 0;
+    }
+  }
+</style>

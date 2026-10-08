@@ -1,0 +1,123 @@
+---
+import Icon from './Icon.astro';
+import { slugOf } from '../lib/content';
+import { localizedPath, useT, type Lang } from '../lib/i18n';
+
+/** Scenario library rows: SECTOR | title | solutions | Read the scenario. The title link covers the row. */
+interface Entry {
+  id: string;
+  data: { title: string; sector: string; services: string[] };
+}
+interface Props {
+  lang: Lang;
+  entries: Entry[];
+}
+const { lang, entries } = Astro.props;
+const t = useT(lang);
+---
+
+<ul class="lib">
+  {entries.map((c) => (
+    <li class="lib__row">
+      <p class="lib__sector label">{c.data.sector}</p>
+      <h3 class="lib__title">
+        <a href={localizedPath(lang, `/experience/scenarios/${slugOf(c.id)}/`)}>{c.data.title}</a>
+      </h3>
+      <p class="lib__svc">{c.data.services.map((s) => t(`nav.${s}`)).join(' · ')}</p>
+      <p class="lib__go" aria-hidden="true">
+        {t('exp.read')}
+        <Icon name="arrow-right" />
+      </p>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .lib {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .lib__row {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-2);
+    padding-block: var(--s-5);
+    border-top: 1px solid var(--rule);
+  }
+  .lib__row p {
+    margin: 0;
+    max-width: none;
+  }
+  .lib__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-lead);
+    font-weight: 300;
+    line-height: 1.35;
+  }
+  .lib__title a {
+    color: var(--text);
+    text-decoration: none;
+  }
+  /* The link's box covers the whole row, so the "Read the scenario" text is part of the target. */
+  .lib__title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .lib__title a:hover {
+    text-decoration: underline 1px var(--accent);
+    text-underline-offset: 0.2em;
+  }
+  .lib__title a:focus-visible {
+    outline: none;
+  }
+  .lib__row:has(a:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .lib__svc {
+    font-family: var(--font-mono);
+    font-size: var(--fs-data);
+    color: var(--text-dim);
+  }
+  .lib__go {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-button);
+    letter-spacing: 0.04em;
+    color: var(--accent);
+  }
+  .lib__row:hover .lib__go :global(.icon),
+  .lib__row:has(a:focus-visible) .lib__go :global(.icon) {
+    transform: translateX(4px);
+  }
+  .lib__go :global(.icon) {
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  @media (min-width: 1080px) {
+    .lib__row {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--gutter);
+      align-items: baseline;
+    }
+    .lib__sector {
+      grid-column: 1 / span 2;
+    }
+    .lib__title {
+      grid-column: 3 / span 5;
+    }
+    .lib__svc {
+      grid-column: 8 / span 2;
+    }
+    .lib__go {
+      grid-column: 10 / span 3;
+      justify-self: end;
+    }
+  }
+</style>

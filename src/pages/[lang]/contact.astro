@@ -1,0 +1,565 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHero from '../../components/SectionHero.astro';
+import Icon from '../../components/Icon.astro';
+import { forLang, slugOf } from '../../lib/content';
+import { TOPICS } from '../../lib/contactForm';
+import { langStaticPaths } from '../../lib/paths';
+import { useT, type Lang } from '../../lib/i18n';
+import { CONTACT_EMAIL, FORMSPREE_ENDPOINT, FORMSPREE_ID } from '../../lib/site';
+
+export const getStaticPaths = langStaticPaths;
+const lang = Astro.params.lang as Lang;
+const t = useT(lang);
+const jobs = forLang(await getCollection('jobs'), lang);
+
+const strings = Object.fromEntries(
+  [
+    'contact.err.name',
+    'contact.err.email',
+    'contact.err.topic',
+    'contact.err.message',
+    'contact.err.consent',
+    'contact.fix',
+    'contact.sending',
+    'contact.send',
+    'contact.ok.title',
+    'contact.ok.body',
+    'contact.fail.title',
+    'contact.fail.body',
+    'contact.fail.config',
+    'contact.prefill.scan',
+    'contact.prefill.quiz',
+    'contact.prefill.hunt',
+  ].map((k) => [k, t(k, { email: CONTACT_EMAIL, name: '{name}', n: '{n}' })]),
+);
+// The success text needs the visitor's own name and email, so keep those two tokens for the client.
+strings['contact.ok.body'] = t('contact.ok.body', { name: '{name}', email: '{email}' });
+---
+
+<BaseLayout lang={lang} title={t('nav.contact')} description={t('contact.lede')}>
+  <SectionHero
+    eyebrow={t('nav.contact')}
+    title={t('contact.title.dim')}
+    titleStrong={t('contact.title.strong')}
+    lede={t('contact.lede')}
+  />
+
+  <div class="container contact">
+    <div
+      class="contact__main"
+      data-contact
+      data-endpoint={FORMSPREE_ENDPOINT}
+      data-configured={FORMSPREE_ID !== 'REPLACE_ME' ? 'true' : 'false'}
+      data-roles={JSON.stringify(jobs.map((j) => slugOf(j.id)))}
+    >
+      <form class="form" data-form method="post" action={FORMSPREE_ENDPOINT} novalidate>
+        <p class="form__notice mono" role="status" data-notice hidden></p>
+
+        <div class="field">
+          <label for="c-name">{t('contact.name')}</label>
+          <input
+            id="c-name"
+            name="name"
+            type="text"
+            autocomplete="name"
+            maxlength="100"
+            required
+            aria-describedby="c-name-err"
+          />
+          <p class="field__err" id="c-name-err" data-err="name"></p>
+        </div>
+
+        <div class="field">
+          <label for="c-email">{t('contact.email')}</label>
+          <input
+            id="c-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            maxlength="254"
+            required
+            aria-describedby="c-email-err"
+          />
+          <p class="field__err" id="c-email-err" data-err="email"></p>
+        </div>
+
+        <div class="field">
+          <label for="c-company">
+            {t('contact.company')} <span class="opt">({t('contact.optional')})</span>
+          </label>
+          <input
+            id="c-company"
+            name="company"
+            type="text"
+            autocomplete="organization"
+            maxlength="120"
+          />
+        </div>
+
+        <div class="field">
+          <label for="c-topic">{t('contact.topic')}</label>
+          <select id="c-topic" name="topic" required aria-describedby="c-topic-err">
+            <option value="">{t('contact.topic.pick')}</option>
+            {TOPICS.map((tp) => (
+              <option value={tp}>{t(`contact.topic.${tp}`)}</option>
+            ))}
+          </select>
+          <p class="field__err" id="c-topic-err" data-err="topic"></p>
+        </div>
+
+        <div class="field" data-role-field hidden>
+          <label for="c-role">{t('contact.role')}</label>
+          <select id="c-role" name="role">
+            <option value="">{t('contact.role.none')}</option>
+            {jobs.map((j) => (
+              <option value={slugOf(j.id)}>{j.data.title}</option>
+            ))}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="c-message">{t('contact.message')}</label>
+          <textarea
+            id="c-message"
+            name="message"
+            rows="7"
+            maxlength="4000"
+            required
+            aria-describedby="c-message-hint c-message-err"
+          ></textarea>
+          <p class="field__hint" id="c-message-hint">
+            {t('contact.message.hint')}
+          </p>
+          <p class="field__err" id="c-message-err" data-err="message"></p>
+        </div>
+
+        <!-- Honeypot: hidden from people and assistive tech, bots fill it in. -->
+        <div class="hp" aria-hidden="true">
+          <label for="c-website">Website</label>
+          <input id="c-website" name="_gotcha" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+
+        <div class="field field--check">
+          <input id="c-consent" name="consent" type="checkbox" aria-describedby="c-consent-err" />
+          <label for="c-consent">{t('contact.consent')}</label>
+          <p class="field__err" id="c-consent-err" data-err="consent"></p>
+        </div>
+
+        <p class="form__summary" role="alert" data-summary></p>
+        <button type="submit" class="btn btn--primary" data-submit>
+          {t('contact.send')}
+        </button>
+      </form>
+
+      <div class="outcome" data-ok hidden tabindex="-1" role="status">
+        <h2 data-ok-title>{t('contact.ok.title')}</h2>
+        <p data-ok-body></p>
+        <button type="button" class="btn" data-again>
+          {t('contact.ok.again')}
+        </button>
+      </div>
+      <div class="outcome outcome--fail" data-fail hidden tabindex="-1" role="alert">
+        <h2>{t('contact.fail.title')}</h2>
+        <p data-fail-body></p>
+      </div>
+      <script type="application/json" id="contact-i18n" set:html={JSON.stringify(strings)} />
+    </div>
+
+    <aside class="contact__side">
+      <h2 class="label contact__h">{t('contact.next.title')}</h2>
+      <ol class="steps">
+        {[1, 2, 3].map((n) => (
+          <li>
+            <span class="steps__n mono" aria-hidden="true">
+              {n}
+            </span>
+            {t(`contact.next.${n}`)}
+          </li>
+        ))}
+      </ol>
+      <h2 class="label contact__h">{t('contact.direct')}</h2>
+      <dl>
+        <dt class="mono">{t('contact.side.email')}</dt>
+        <dd>
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+        </dd>
+        <dt class="mono">{t('contact.side.where')}</dt>
+        <dd>{t('contact.side.whereValue')}</dd>
+        <dt class="mono">{t('contact.security')}</dt>
+        <dd>
+          <a href="/.well-known/security.txt">
+            security.txt <Icon name="arrow-right" />
+          </a>
+        </dd>
+      </dl>
+    </aside>
+  </div>
+</BaseLayout>
+
+<style is:global>
+  .contact {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-8);
+    padding-bottom: var(--s-9);
+    align-items: start;
+  }
+  .contact__main {
+    padding: var(--s-5);
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+  .form {
+    display: grid;
+    gap: var(--s-5);
+    max-width: 640px;
+  }
+  .field label {
+    display: block;
+    margin-bottom: var(--s-2);
+    font-family: var(--font-strong);
+    font-weight: 600;
+    font-size: var(--fs-small);
+  }
+  .field .opt {
+    font-weight: 400;
+    color: var(--text-dim);
+  }
+  .field input[type='text'],
+  .field input[type='email'],
+  .field select,
+  .field textarea {
+    width: 100%;
+    min-height: 48px;
+    padding: var(--s-3) var(--s-4);
+    border: 1px solid var(--rule-ui);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font: var(--fs-body) var(--font-body);
+  }
+  .field textarea {
+    resize: vertical;
+    min-height: 140px;
+  }
+  .field [aria-invalid='true'] {
+    border-color: var(--threat);
+    border-width: 2px;
+  }
+  .field--check {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    column-gap: var(--s-3);
+    align-items: start;
+  }
+  .field--check input {
+    width: 22px;
+    height: 22px;
+    margin-top: 2px;
+    accent-color: var(--accent);
+  }
+  .field--check label {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 400;
+  }
+  .field--check .field__err {
+    grid-column: 2;
+  }
+  .field__hint {
+    margin: var(--s-1) 0 0;
+    font-size: var(--fs-small);
+    color: var(--text-dim);
+  }
+  /* Errors: Flare text plus a triangle icon, never colour alone. */
+  .field__err,
+  .form__summary {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    color: var(--threat);
+  }
+  .field__err::before,
+  .form__summary::before {
+    content: '';
+    flex: none;
+    width: 10px;
+    height: 9px;
+    background: currentColor;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+  .field__err {
+    margin: var(--s-1) 0 0;
+    font-size: var(--fs-small);
+  }
+  .field__err:empty,
+  .form__summary:empty {
+    display: none;
+  }
+  .form__summary {
+    margin: 0;
+    font-weight: 600;
+  }
+  .form__notice {
+    margin: 0;
+    padding: var(--s-3) var(--s-4);
+    border: 1px dashed var(--accent-line);
+    border-radius: var(--radius);
+    font-size: var(--fs-data);
+    line-height: 1.5;
+    color: var(--accent);
+    max-width: none;
+  }
+  .form [hidden],
+  .outcome[hidden],
+  .field[hidden] {
+    display: none !important;
+  }
+  .hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .outcome {
+    max-width: 640px;
+    padding: var(--s-5);
+    border: 1px solid var(--accent-line);
+    background: var(--surface-2);
+  }
+  .outcome--fail {
+    border-color: var(--threat);
+    background: var(--threat-tint);
+  }
+  .outcome h2 {
+    font-family: var(--font-strong);
+    font-weight: 600;
+    font-size: var(--fs-h3);
+  }
+  .contact__h {
+    margin: 0 0 var(--s-4);
+  }
+  .steps {
+    list-style: none;
+    margin: 0 0 var(--s-7);
+    padding: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .steps li {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    padding-block: var(--s-4);
+    border-top: 1px solid var(--rule);
+  }
+  .steps__n {
+    color: var(--text-dim);
+  }
+  .contact__side dl {
+    margin: 0;
+  }
+  .contact__side dt {
+    font-size: var(--fs-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: var(--s-4);
+  }
+  :lang(vi) .contact__side dt {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .contact__side dt:first-child {
+    margin-top: 0;
+  }
+  .contact__side dd {
+    margin: var(--s-1) 0 0;
+  }
+  .contact__main .btn[type='submit'] {
+    justify-content: center;
+    width: 100%;
+  }
+  @media (min-width: 720px) {
+    .contact__main {
+      padding: var(--s-6);
+    }
+    .contact__main .btn[type='submit'] {
+      width: auto;
+    }
+  }
+  @media (min-width: 1080px) {
+    .contact {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--gutter);
+    }
+    .contact__main {
+      grid-column: 1 / span 7;
+    }
+    .contact__side {
+      grid-column: 9 / span 4;
+    }
+  }
+</style>
+
+<script>
+  import { interpolate } from '../../lib/interpolate';
+  import { prefillFromQuery, validateContact, type ContactValues } from '../../lib/contactForm';
+
+  function boot() {
+    const root = document.querySelector<HTMLElement>('[data-contact]');
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = '1';
+    const S = JSON.parse(document.getElementById('contact-i18n')!.textContent ?? '{}') as Record<
+      string,
+      string
+    >;
+    const q = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+    const form = q<HTMLFormElement>('[data-form]');
+    const submit = q<HTMLButtonElement>('[data-submit]');
+    const summary = q<HTMLElement>('[data-summary]');
+    const notice = q<HTMLElement>('[data-notice]');
+    const okBox = q<HTMLElement>('[data-ok]');
+    const failBox = q<HTMLElement>('[data-fail]');
+    const roleField = q<HTMLElement>('[data-role-field]');
+    const field = (name: string) =>
+      form.elements.namedItem(name) as HTMLInputElement & HTMLSelectElement & HTMLTextAreaElement;
+    const endpoint = root.dataset.endpoint ?? '';
+    const configured = root.dataset.configured === 'true';
+    const roles = JSON.parse(root.dataset.roles ?? '[]') as string[];
+
+    const syncRole = () => {
+      roleField.hidden = field('topic').value !== 'careers';
+    };
+    field('topic').addEventListener('change', syncRole);
+
+    // Prefill from ?role= / ?scan= / ?quiz= / ?hunt=
+    const pre = prefillFromQuery(location.search);
+    if (pre.topic) field('topic').value = pre.topic;
+    if (pre.role && roles.includes(pre.role)) field('role').value = pre.role;
+    if (pre.message) {
+      field('message').value = pre.message;
+      notice.textContent = S[`contact.prefill.${pre.source}`] ?? '';
+      notice.hidden = false;
+    }
+    syncRole();
+
+    const values = (): ContactValues => ({
+      name: field('name').value,
+      email: field('email').value,
+      company: field('company').value,
+      topic: field('topic').value,
+      role: field('role').value,
+      message: field('message').value,
+      consent: field('consent').checked,
+      website: field('_gotcha').value,
+    });
+
+    function showErrors(errors: Partial<Record<string, string>>) {
+      const keys = ['name', 'email', 'topic', 'message', 'consent'];
+      let first: HTMLElement | null = null;
+      for (const k of keys) {
+        const el = field(k);
+        const out = root!.querySelector<HTMLElement>(`[data-err="${k}"]`)!;
+        if (errors[k]) {
+          out.textContent = S[`contact.${errors[k]}`] ?? '';
+          el.setAttribute('aria-invalid', 'true');
+          first ??= el;
+        } else {
+          out.textContent = '';
+          el.removeAttribute('aria-invalid');
+        }
+      }
+      const n = Object.keys(errors).length;
+      summary.textContent = n ? interpolate(S['contact.fix']!, { n }) : '';
+      first?.focus();
+    }
+
+    function clearOnInput(e: Event) {
+      const el = e.target as HTMLElement;
+      const name = (el as HTMLInputElement).name;
+      const out = root!.querySelector<HTMLElement>(`[data-err="${name}"]`);
+      if (out && out.textContent) {
+        out.textContent = '';
+        el.removeAttribute('aria-invalid');
+      }
+    }
+    form.addEventListener('input', clearOnInput);
+    form.addEventListener('change', clearOnInput);
+
+    let busy = false;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (busy) return;
+      failBox.hidden = true;
+      const v = values();
+      const res = validateContact(v);
+      if (res.bot) {
+        // Pretend success so bots learn nothing.
+        showOk(v);
+        return;
+      }
+      showErrors(res.errors);
+      if (!res.ok) return;
+
+      if (!configured) {
+        showFail(S['contact.fail.config']!);
+        return;
+      }
+      busy = true;
+      submit.disabled = true;
+      submit.textContent = S['contact.sending']!;
+      try {
+        const body = {
+          name: v.name.trim(),
+          email: v.email.trim(),
+          company: v.company.trim(),
+          topic: v.topic,
+          role: v.topic === 'careers' ? v.role : '',
+          message: v.message.trim(),
+          _subject: `HungTran website: ${v.topic}`,
+          _gotcha: '',
+        };
+        const r = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!r.ok) throw new Error(String(r.status));
+        showOk(v);
+      } catch {
+        showFail(S['contact.fail.body']!);
+      } finally {
+        busy = false;
+        submit.disabled = false;
+        submit.textContent = S['contact.send']!;
+      }
+    });
+
+    function showOk(v: ContactValues) {
+      form.hidden = true;
+      failBox.hidden = true;
+      q<HTMLElement>('[data-ok-body]').textContent = interpolate(S['contact.ok.body']!, {
+        name: v.name.trim(),
+        email: v.email.trim(),
+      });
+      okBox.hidden = false;
+      okBox.focus();
+    }
+    function showFail(text: string) {
+      q<HTMLElement>('[data-fail-body]').textContent = text;
+      failBox.hidden = false;
+      failBox.focus();
+    }
+    q<HTMLButtonElement>('[data-again]').addEventListener('click', () => {
+      form.reset();
+      notice.hidden = true;
+      syncRole();
+      okBox.hidden = true;
+      form.hidden = false;
+      field('name').focus();
+    });
+  }
+  document.addEventListener('astro:page-load', boot);
+</script>

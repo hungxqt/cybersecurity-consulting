@@ -1,0 +1,134 @@
+---
+import Icon from './Icon.astro';
+import { localizedHref, localizedPath, useT, type Lang } from '../lib/i18n';
+import { SOLUTIONS } from '../lib/nav';
+
+/** Home INDEX: one hairline row per place a B2B buyer looks first (design §7.1). */
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const rows = [
+  { id: 'method', path: '/solutions/#method' },
+  { id: 'expertise', path: '/about/#expertise' },
+  { id: 'scenarios', path: '/experience/' },
+  { id: 'contact', path: '/contact/' },
+] as const;
+---
+
+<section class="section" aria-labelledby="index-h">
+  <div class="container">
+    <h2 id="index-h" class="section__label">
+      {t('home.index.title')}
+    </h2>
+    <ul class="hx">
+      <li class="hx__row">
+        <span class="hx__label label">{t('home.row.solutions.label')}</span>
+        <span class="hx__text hx__solutions">
+          {SOLUTIONS.map((s) => (
+            <a href={localizedPath(lang, s.path)}>{t(s.key)}</a>
+          ))}
+        </span>
+        <a
+          class="hx__go"
+          href={localizedPath(lang, '/solutions/')}
+          aria-label={t('nav.allSolutions')}
+        >
+          <Icon name="arrow-right" />
+        </a>
+      </li>
+      {rows.map((r) => (
+        <li>
+          <a class="hx__row" href={localizedHref(lang, r.path)}>
+            <span class="hx__label label">{t(`home.row.${r.id}.label`)}</span>
+            <span class="hx__text">{t(`home.row.${r.id}.text`)}</span>
+            <span class="hx__go" aria-hidden="true">
+              <Icon name="arrow-right" />
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .hx {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hx > li {
+    border-top: 1px solid var(--rule);
+  }
+  .hx__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--gutter);
+    row-gap: var(--s-1);
+    align-items: center;
+    padding-block: var(--s-4);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .hx__label {
+    grid-column: 1 / -1;
+  }
+  .hx__text {
+    grid-column: 1;
+    font-family: var(--font-display);
+    font-size: var(--fs-lead);
+    font-weight: 300;
+    line-height: 1.4;
+  }
+  .hx__go {
+    grid-column: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    color: var(--accent);
+    font-size: 1.25rem;
+  }
+  .hx__solutions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1) var(--s-5);
+  }
+  .hx__solutions a {
+    color: var(--text);
+    text-decoration-color: var(--rule-ui);
+  }
+  .hx__solutions a:hover {
+    text-decoration-color: var(--accent);
+  }
+  a.hx__row:hover .hx__text {
+    text-decoration: underline 1px var(--accent);
+    text-underline-offset: 0.2em;
+  }
+  .hx__row :global(.icon) {
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  a.hx__row:hover :global(.icon),
+  a.hx__row:focus-visible :global(.icon) {
+    transform: translateX(4px);
+  }
+  @media (min-width: 1080px) {
+    .hx__row {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .hx__label {
+      grid-column: 1 / span 3;
+    }
+    .hx__text {
+      grid-column: 4 / span 7;
+    }
+    .hx__go {
+      grid-column: 12;
+      justify-self: end;
+    }
+  }
+</style>

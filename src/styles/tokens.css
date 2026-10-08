@@ -1,0 +1,167 @@
+/* Nexus / Atlas design tokens. Every colour, size and duration on the site derives from here.
+   Hex values mirror src/lib/palette.ts (kept in sync by tests/unit/tokens-sync.test.ts). */
+
+/* Metric-matched fallback faces (design §3.2): fallback text wraps like Be Vietnam Pro / JetBrains
+   Mono, so the web-font swap does not shift layout. */
+@font-face {
+  font-family: 'BVP Light Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('Roboto');
+  size-adjust: 108.7%;
+  ascent-override: 92%;
+  descent-override: 24.4%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'BVP Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('Roboto');
+  size-adjust: 110.3%;
+  ascent-override: 90.7%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'BVP Strong Fallback';
+  src: local('Arial Bold'), local('Arial'), local('Roboto');
+  font-weight: 600;
+  size-adjust: 112.9%;
+  ascent-override: 88.6%;
+  descent-override: 23.5%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Mono Fallback';
+  src: local('Courier New'), local('Menlo'), local('Roboto Mono');
+  size-adjust: 100%;
+  ascent-override: 102%;
+  descent-override: 30%;
+  line-gap-override: 0%;
+}
+
+:root {
+  /* Raw palette: Nexus (dark) */
+  --c-carbon: #0D0F11;
+  --c-graphite: #16191D;
+  --c-slate: #1E2228;
+  --c-wire: #2C323A;
+  --c-wire-strong: #68737F;
+  --c-ash: #98A2AC;
+  --c-frost: #E8ECEF;
+  --c-cyan-300: #86B8E8;
+  --c-cyan-700: #0F4C81;
+  --c-flare-400: #FF6A3D;
+  --c-flare-950: #2A1610;
+
+  /* Raw palette: Atlas (light) */
+  --c-drafting: #F2F4F5;
+  --c-sheet: #FFFFFF;
+  --c-grid: #CBD3DA;
+  --c-rule: #6E7C89;
+  --c-graphite-600: #4A5662;
+  --c-ink: #0F1A24;
+  --c-cyan-50: #DCE7F2;
+  --c-cyan-500: #2F6FAE;
+  --c-flare-700: #B8381A;
+  --c-flare-50: #FBEAE5;
+
+  /* Type families (§3.2) */
+  --font-display: 'Be Vietnam Pro', 'BVP Light Fallback', system-ui, sans-serif;
+  --font-body: 'Be Vietnam Pro', 'BVP Fallback', system-ui, sans-serif;
+  --font-strong: 'Be Vietnam Pro', 'BVP Strong Fallback', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'Mono Fallback', ui-monospace, monospace;
+
+  /* Type scale (§3.3), fluid between 360 px and 1440 px */
+  --fs-display-xl: clamp(2.75rem, 1.6rem + 4.9vw, 6rem);
+  --fs-display-l: clamp(2.25rem, 1.5rem + 3.2vw, 4.25rem);
+  --fs-h2: clamp(1.75rem, 1.35rem + 1.7vw, 2.75rem);
+  --fs-h3: clamp(1.1875rem, 1.1rem + 0.35vw, 1.375rem);
+  --fs-lead: clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem);
+  --fs-body: 1.0625rem;
+  --fs-small: 0.875rem;
+  --fs-label: 0.75rem;
+  --fs-data: 0.8125rem;
+  --fs-button: 0.8125rem;
+  --measure: 64ch;
+
+  /* Grid (§4): 4 columns below 720 px, 8 up to 1079 px, 12 from 1080 px */
+  --container: 1360px;
+  --margin: clamp(1rem, 5vw, 4rem);
+  --cols: 4;
+  --gutter: 16px;
+
+  /* Spacing, 8 px rhythm */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+  --s-9: 6rem;
+  --s-10: 8rem;
+
+  /* Shape: buttons, inputs and tags only; surfaces are square */
+  --radius: 2px;
+
+  /* Motion (§5) */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 120ms;
+  --dur-base: 240ms;
+  --dur-slow: 600ms;
+}
+
+@media (min-width: 720px) {
+  :root {
+    --cols: 8;
+    --gutter: 20px;
+  }
+}
+@media (min-width: 1080px) {
+  :root {
+    --cols: 12;
+    --gutter: 24px;
+  }
+}
+
+/* Semantic scopes (§2.5). Nested scopes (footer, SOC console, HUD) re-resolve these. */
+:root,
+[data-theme='nexus'] {
+  color-scheme: dark;
+  --bg: var(--c-carbon);
+  --surface: var(--c-graphite);
+  --surface-2: var(--c-slate);
+  --rule: var(--c-wire);
+  --rule-ui: var(--c-wire-strong);
+  --text: var(--c-frost);
+  --text-dim: var(--c-ash);
+  --accent: var(--c-cyan-300);
+  --accent-line: var(--c-cyan-300);
+  --accent-tint: var(--c-slate);
+  --threat: var(--c-flare-400);
+  --threat-tint: var(--c-flare-950);
+  --btn-bg: var(--c-frost);
+  --btn-text: var(--c-carbon);
+  --focus: var(--c-cyan-300);
+  --selection-bg: var(--c-cyan-700);
+  --selection-text: var(--c-frost);
+}
+[data-theme='atlas'] {
+  color-scheme: light;
+  --bg: var(--c-drafting);
+  --surface: var(--c-sheet);
+  --surface-2: var(--c-cyan-50);
+  --rule: var(--c-grid);
+  --rule-ui: var(--c-rule);
+  --text: var(--c-ink);
+  --text-dim: var(--c-graphite-600);
+  --accent: var(--c-cyan-700);
+  --accent-line: var(--c-cyan-500);
+  --accent-tint: var(--c-cyan-50);
+  --threat: var(--c-flare-700);
+  --threat-tint: var(--c-flare-50);
+  --btn-bg: var(--c-ink);
+  --btn-text: var(--c-drafting);
+  --focus: var(--c-cyan-700);
+  --selection-bg: var(--c-cyan-50);
+  --selection-text: var(--c-ink);
+}

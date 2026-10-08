@@ -1,0 +1,148 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SheetHeader from '../../../components/SheetHeader.astro';
+import AtlasDiagram from '../../../components/AtlasDiagram.astro';
+import MethodSteps from '../../../components/MethodSteps.astro';
+import SolutionsLedger from '../../../components/SolutionsLedger.astro';
+import CtaStrip from '../../../components/CtaStrip.astro';
+import { langStaticPaths } from '../../../lib/paths';
+import { useT, type Lang } from '../../../lib/i18n';
+
+export const getStaticPaths = langStaticPaths;
+const lang = Astro.params.lang as Lang;
+const t = useT(lang);
+const docs = ['scope', 'report', 'runbook'] as const;
+---
+
+<BaseLayout lang={lang} theme="atlas" title={t('nav.solutions')} description={t('svc.index.lede')}>
+  <SheetHeader
+    lang={lang}
+    label={t('nav.solutions')}
+    titleDim={t('svc.index.title.dim')}
+    titleStrong={t('svc.index.title.strong')}
+    lede={t('svc.index.lede')}
+    sheet={1}
+    drawing={t('sheet.index.drawing')}
+    status={t('sheet.statusValue')}
+  />
+
+  <section class="section" aria-labelledby="arch-h">
+    <div class="container">
+      <h2 id="arch-h" class="section__label">
+        {t('sec.architecture')}
+      </h2>
+      <AtlasDiagram lang={lang} />
+    </div>
+  </section>
+
+  <section class="section" id="method" aria-labelledby="method-h">
+    <div class="container">
+      <h2 id="method-h" class="section__label">
+        {t('method.title')}
+      </h2>
+      <MethodSteps lang={lang} scope="index" />
+    </div>
+  </section>
+
+  <SolutionsLedger lang={lang} variant="rows" />
+
+  <section class="section" aria-labelledby="docs-h">
+    <div class="container">
+      <h2 id="docs-h" class="section__label">
+        {t('sec.documents')}
+      </h2>
+      <table class="docs">
+        <caption class="sr-only">{t('sec.documents')}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{t('doc.col.name')}</th>
+            <th scope="col">{t('doc.col.contains')}</th>
+            <th scope="col">{t('doc.col.format')}</th>
+            <th scope="col">{t('doc.col.avail')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {docs.map((d) => (
+            <tr>
+              <th scope="row">{t(`doc.${d}.name`)}</th>
+              <td data-label={t('doc.col.contains')}>{t(`doc.${d}.contains`)}</td>
+              <td data-label={t('doc.col.format')}>{t(`doc.${d}.format`)}</td>
+              <td data-label={t('doc.col.avail')}>{t('doc.avail')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <CtaStrip lang={lang} />
+</BaseLayout>
+
+<style>
+  .docs {
+    inline-size: 100%;
+    border-collapse: collapse;
+    border-top: 1px solid var(--rule-ui);
+  }
+  .docs th,
+  .docs td {
+    padding: var(--s-4) var(--s-4) var(--s-4) 0;
+    text-align: start;
+    vertical-align: top;
+    border-bottom: 1px solid var(--rule);
+    font-size: var(--fs-small);
+    line-height: 1.5;
+  }
+  .docs thead th {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  :global(html[lang='vi']) .docs thead th {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .docs tbody th {
+    font-family: var(--font-strong);
+    font-weight: 600;
+    font-size: var(--fs-body);
+  }
+  /* Below 720 px each document becomes a stacked block. */
+  @media (max-width: 719.98px) {
+    .docs thead {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    .docs,
+    .docs tbody,
+    .docs tr,
+    .docs th,
+    .docs td {
+      display: block;
+    }
+    .docs tr {
+      padding-block: var(--s-4);
+      border-bottom: 1px solid var(--rule);
+    }
+    .docs th,
+    .docs td {
+      padding: 0 0 var(--s-2);
+      border: 0;
+    }
+    .docs td::before {
+      content: attr(data-label);
+      display: block;
+      font-family: var(--font-mono);
+      font-size: var(--fs-label);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+  }
+</style>

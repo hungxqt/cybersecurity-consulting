@@ -1,0 +1,12 @@
+---
+import SolutionPage from '../../../components/SolutionPage.astro';
+import ComplianceMatrix from '../../../components/ComplianceMatrix.astro';
+import { langStaticPaths } from '../../../lib/paths';
+import type { Lang } from '../../../lib/i18n';
+export const getStaticPaths = langStaticPaths;
+const lang = Astro.params.lang as Lang;
+---
+
+<SolutionPage lang={lang} service="audit">
+  <ComplianceMatrix lang={lang} />
+</SolutionPage>

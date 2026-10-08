@@ -1,0 +1,188 @@
+---
+import { TERM_IDS, searchTerms, type Term } from '../lib/glossary';
+import HuntSpot from './HuntSpot.astro';
+import { useT, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const terms: Term[] = TERM_IDS.map((id) => ({
+  id,
+  term: t(`gloss.${id}.term`),
+  def: t(`gloss.${id}.def`),
+}));
+const sorted = searchTerms(terms, '');
+// A-Z index letters: first letter of each term (ignoring the [VI] placeholder marker and accents).
+const letterOf = (s: string) =>
+  s
+    .replace(/^\[VI\]\s*/, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .charAt(0)
+    .toUpperCase();
+const firstOf = new Map<string, string>();
+for (const x of sorted) if (!firstOf.has(letterOf(x.term))) firstOf.set(letterOf(x.term), x.id);
+const strings = { empty: t('gloss.empty', { q: '{q}' }), count: t('gloss.count', { n: '{n}' }) };
+---
+
+<section
+  class="gloss container section"
+  id="glossary"
+  aria-labelledby="gloss-h"
+  data-gloss
+  data-empty-text={strings.empty}
+  data-count-text={strings.count}
+>
+  <h2 id="gloss-h">{t('gloss.title')}</h2>
+  <p class="lede">{t('gloss.lede')}</p>
+
+  <div class="gloss__search">
+    <label for="gloss-q">{t('gloss.search')}</label>
+    <input
+      id="gloss-q"
+      type="search"
+      placeholder={t('gloss.placeholder')}
+      autocomplete="off"
+      data-q
+    />
+  </div>
+  <nav class="gloss__index" aria-label={t('gloss.index')} tabindex="0">
+    {[...firstOf].map(([letter, id]) => (
+      <a href={`#gloss-${id}`}>{letter}</a>
+    ))}
+  </nav>
+  <p class="mono gloss__count" role="status" data-status>
+    {t('gloss.count', { n: sorted.length })}
+  </p>
+
+  <p class="gloss__spot">
+    <HuntSpot lang={lang} id="default-creds" />
+  </p>
+  <dl class="gloss__list" data-list>
+    {sorted.map((x) => (
+      <div class="gloss__item" id={`gloss-${x.id}`} data-id={x.id} data-hay={`${x.term} ${x.def}`}>
+        <dt>{x.term}</dt>
+        <dd>{x.def}</dd>
+      </div>
+    ))}
+  </dl>
+  <script type="application/json" id="gloss-data" set:html={JSON.stringify(sorted)} />
+</section>
+
+<style is:global>
+  .gloss__search {
+    margin-top: var(--s-5);
+  }
+  .gloss__search label {
+    display: block;
+    margin-bottom: var(--s-1);
+    font: 500 var(--fs-label) var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  :lang(vi) .gloss__search label {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .gloss__search input {
+    width: min(100%, 420px);
+    min-height: 48px;
+    padding: 0 var(--s-4);
+    border-radius: var(--radius);
+    border: 1px solid var(--rule-ui);
+    background: var(--surface);
+    color: var(--text);
+    font: var(--fs-body) var(--font-body);
+  }
+  .gloss__search input::placeholder {
+    color: var(--text-dim);
+  }
+  .gloss__index {
+    display: flex;
+    gap: var(--s-1);
+    margin-top: var(--s-4);
+    overflow-x: auto;
+  }
+  .gloss__index a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-width: 44px;
+    min-height: 44px;
+    border: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: var(--fs-data);
+    text-decoration: none;
+    color: var(--text);
+  }
+  .gloss__index a:hover {
+    border-color: var(--accent);
+  }
+  .gloss__count {
+    margin-top: var(--s-4);
+    font-size: var(--fs-data);
+    color: var(--text-dim);
+  }
+  .gloss__list {
+    margin: var(--s-4) 0 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    border-bottom: 1px solid var(--rule);
+  }
+  .gloss__item {
+    padding: var(--s-4) 0;
+    border-top: 1px solid var(--rule);
+  }
+  .gloss__item[hidden] {
+    display: none;
+  }
+  .gloss__item dt {
+    font-family: var(--font-strong);
+    font-weight: 600;
+    margin-bottom: var(--s-1);
+  }
+  .gloss__item dd {
+    margin: 0;
+    color: var(--text-dim);
+  }
+  @media (min-width: 1080px) {
+    .gloss__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--gutter);
+    }
+    .gloss__index {
+      overflow-x: visible;
+      flex-wrap: wrap;
+    }
+  }
+</style>
+
+<script>
+  import { searchTerms, type Term } from '../lib/glossary';
+
+  function boot() {
+    const root = document.querySelector<HTMLElement>('[data-gloss]');
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = '1';
+    const terms = JSON.parse(document.getElementById('gloss-data')!.textContent ?? '[]') as Term[];
+    const input = root.querySelector<HTMLInputElement>('[data-q]')!;
+    const status = root.querySelector<HTMLElement>('[data-status]')!;
+    const items = [...root.querySelectorAll<HTMLElement>('.gloss__item')];
+    const emptyText = root.dataset.emptyText ?? '';
+    const countText = root.dataset.countText ?? '';
+
+    input.addEventListener('input', () => {
+      const q = input.value;
+      const hits = new Set(searchTerms(terms, q).map((t) => t.id));
+      for (const li of items) li.hidden = !hits.has(li.dataset.id ?? '');
+      status.textContent = hits.size
+        ? countText.replace('{n}', String(hits.size))
+        : emptyText.replace('{q}', q.trim());
+    });
+  }
+  document.addEventListener('astro:page-load', boot);
+</script>

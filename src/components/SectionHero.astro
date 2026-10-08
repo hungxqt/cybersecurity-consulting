@@ -1,0 +1,44 @@
+---
+interface Props {
+  /** Mono label naming the page or section (rendered with the .label style). */
+  eyebrow: string;
+  /** Dim first part of the two-tone h1 (or the whole h1 when titleStrong is omitted). */
+  title: string;
+  titleStrong?: string;
+  lede?: string;
+}
+const { eyebrow, title, titleStrong, lede } = Astro.props;
+---
+
+<header class="section-hero container">
+  <p class="label section-hero__label">{eyebrow}</p>
+  <h1>
+    {titleStrong ? (
+      <>
+        <span class="h-dim">{title}</span> <span class="h-strong">{titleStrong}</span>
+      </>
+    ) : (
+      title
+    )}
+  </h1>
+  {lede && <p class="lede">{lede}</p>}
+  <slot />
+</header>
+
+<style>
+  .section-hero {
+    padding-block: var(--s-8) var(--s-7);
+  }
+  @media (min-width: 1080px) {
+    .section-hero {
+      padding-block: var(--s-9) var(--s-8);
+    }
+  }
+  .section-hero__label {
+    margin: 0 0 var(--s-5);
+  }
+  h1 {
+    max-width: 18ch;
+    margin-bottom: var(--s-5);
+  }
+</style>

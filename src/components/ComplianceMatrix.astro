@@ -1,0 +1,370 @@
+---
+import { AREAS, FRAMEWORKS, PHASES, applicableAreas, isShared, timeline } from '../lib/compliance';
+import { localizedPath, useT, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const rows = applicableAreas([...FRAMEWORKS]);
+const tl = timeline([...FRAMEWORKS]);
+
+const keys = [
+  ...AREAS.map((a) => `audit.area.${a}`),
+  ...['core', 'partial', 'light'].map((l) => `audit.level.${l}`),
+  ...PHASES.map((p) => `audit.phase.${p}`),
+  'audit.summary',
+  'audit.empty',
+  'audit.weeks',
+  'audit.timeline.total',
+  'audit.shared',
+];
+const strings = Object.fromEntries(keys.map((k) => [k, t(k)]));
+---
+
+<section
+  class="section matrix"
+  id="matrix"
+  aria-labelledby="matrix-h"
+  data-matrix
+  data-contact={localizedPath(lang, '/contact/')}
+>
+  <div class="container">
+    <h2 id="matrix-h">{t('audit.tool.title')}</h2>
+    <p class="lede">{t('audit.tool.lede')}</p>
+
+    <fieldset class="matrix__fw">
+      <legend class="label">{t('audit.fw.legend')}</legend>
+      {FRAMEWORKS.map((f) => (
+        <label>
+          <input type="checkbox" name="fw" value={f} checked />
+          {t(`audit.fw.${f}`)}
+        </label>
+      ))}
+    </fieldset>
+
+    <p class="matrix__summary mono" role="status" data-summary>
+      {t('audit.summary', { count: rows.length })}
+    </p>
+
+    <div class="matrix__scroll">
+      <table>
+        <caption class="sr-only">{t('audit.matrix.caption')}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{t('audit.matrix.area')}</th>
+            {FRAMEWORKS.map((f) => (
+              <th scope="col" data-fw={f}>
+                {t(`audit.fw.${f}`)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody data-body>
+          {rows.map((r) => (
+            <tr>
+              <th scope="row">{t(`audit.area.${r.area}`)}</th>
+              {FRAMEWORKS.map((f) => (
+                <td data-fw={f} data-level={r.byFramework[f]}>
+                  {t(`audit.level.${r.byFramework[f]}`)}
+                  {isShared(r, f, FRAMEWORKS) && (
+                    <span class="shared" data-shared>
+                      {t('audit.shared')}
+                    </span>
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="matrix__legend mono">{t('audit.shared.note')}</p>
+
+    <div class="tl" data-timeline>
+      <h3>{t('audit.timeline.title')}</h3>
+      <ol class="tl__bar" data-bar>
+        {PHASES.map((p) => (
+          <li style={`flex:${tl.phases[p]}`} data-phase={p}>
+            <span>{t(`audit.phase.${p}`)}</span>
+            <strong class="mono">{t('audit.weeks', { n: tl.phases[p] })}</strong>
+          </li>
+        ))}
+      </ol>
+      <p class="mono tl__total" data-total>
+        {t('audit.timeline.total', { n: tl.total })}
+      </p>
+      <p class="tl__note">{t('audit.timeline.note')}</p>
+      <a class="btn btn--primary" href={localizedPath(lang, '/contact/')}>
+        {t('audit.cta')}
+      </a>
+    </div>
+  </div>
+  <script type="application/json" id="matrix-i18n" set:html={JSON.stringify(strings)} />
+</section>
+
+<style is:global>
+  /* Framework toggles: square, hairline, a 16 px square indicator. */
+  .matrix__fw {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    border: 0;
+    margin: var(--s-6) 0 var(--s-4);
+    padding: 0;
+    min-inline-size: 0;
+  }
+  .matrix__fw legend {
+    float: none;
+    inline-size: 100%;
+    padding: 0;
+    margin-bottom: var(--s-1);
+  }
+  .matrix__fw label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-height: 44px;
+    padding: 0 var(--s-4);
+    border: 1px solid var(--rule-ui);
+    background: var(--surface);
+    cursor: pointer;
+  }
+  .matrix__fw label:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-tint);
+  }
+  .matrix__fw label:has(input:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .matrix__fw input {
+    appearance: none;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border: 1px solid var(--accent);
+    border-radius: 0;
+    background: var(--surface);
+  }
+  .matrix__fw input:checked {
+    background: var(--accent);
+    box-shadow: inset 0 0 0 2px var(--surface);
+  }
+  .matrix__summary {
+    font-size: var(--fs-label);
+    color: var(--text-dim);
+  }
+  .matrix__legend {
+    margin: var(--s-3) 0 0;
+    max-width: none;
+    font-size: var(--fs-label);
+    line-height: 1.5;
+    color: var(--text-dim);
+  }
+
+  /* Sheet table: a rule under the header, Grid lines between rows. */
+  .matrix__scroll {
+    overflow-x: auto;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--rule-ui);
+  }
+  .matrix table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 480px;
+  }
+  .matrix th,
+  .matrix td {
+    padding: var(--s-3) var(--s-4);
+    text-align: left;
+    border-bottom: 1px solid var(--rule);
+  }
+  .matrix thead th {
+    font: 500 var(--fs-label) var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--rule-ui);
+  }
+  :lang(vi) .matrix thead th {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .matrix tbody th {
+    font-weight: 600;
+  }
+  .matrix tbody tr:last-child > * {
+    border-bottom: 0;
+  }
+  .matrix td {
+    font-family: var(--font-mono);
+    font-size: var(--fs-small);
+  }
+  .matrix td[data-level='core'] {
+    color: var(--text);
+    font-weight: 700;
+  }
+  .matrix td[data-level='partial'] {
+    color: var(--text);
+  }
+  .matrix td[data-level='light'] {
+    color: var(--text-dim);
+  }
+  /* Overlap: a filled 8 px square plus the word, so it never relies on colour. */
+  .matrix .shared {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin-top: 2px;
+    font-size: var(--fs-label);
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .matrix .shared::before {
+    content: '';
+    flex: none;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+  }
+  .matrix [hidden] {
+    display: none !important;
+  }
+
+  .tl {
+    margin-top: var(--s-7);
+  }
+  .matrix .tl h3 {
+    font-size: var(--fs-h3);
+  }
+  .tl__bar {
+    list-style: none;
+    margin: var(--s-4) 0;
+    padding: 0;
+    display: flex;
+    gap: 4px;
+  }
+  .tl__bar li {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    padding: var(--s-3) var(--s-4);
+    background: var(--accent-tint);
+    box-shadow: inset 0 4px 0 var(--accent-line);
+    padding-top: calc(var(--s-3) + 4px);
+    font-size: var(--fs-small);
+    transition: flex var(--dur-slow) var(--ease);
+  }
+  .tl__bar li strong {
+    font-weight: 500;
+    font-size: var(--fs-data);
+  }
+  .tl__total {
+    font-size: var(--fs-small);
+    color: var(--text);
+    margin-bottom: var(--s-2);
+  }
+  .tl__note {
+    color: var(--text-dim);
+    font-size: var(--fs-small);
+  }
+  @media (max-width: 600px) {
+    .tl__bar {
+      flex-direction: column;
+    }
+    .tl__bar li {
+      flex: none !important;
+    }
+  }
+</style>
+
+<script>
+  import { interpolate } from '../lib/interpolate';
+  import {
+    FRAMEWORKS,
+    PHASES,
+    applicableAreas,
+    isShared,
+    timeline,
+    type FrameworkId,
+  } from '../lib/compliance';
+
+  function boot() {
+    const root = document.querySelector<HTMLElement>('[data-matrix]');
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = '1';
+    const S = JSON.parse(document.getElementById('matrix-i18n')!.textContent ?? '{}') as Record<
+      string,
+      string
+    >;
+    const body = root.querySelector<HTMLElement>('[data-body]')!;
+    const summary = root.querySelector<HTMLElement>('[data-summary]')!;
+    const bar = root.querySelector<HTMLElement>('[data-bar]')!;
+    const total = root.querySelector<HTMLElement>('[data-total]')!;
+    const table = root.querySelector<HTMLTableElement>('table')!;
+    const boxes = [...root.querySelectorAll<HTMLInputElement>('input[name="fw"]')];
+
+    function update() {
+      const selected = boxes.filter((b) => b.checked).map((b) => b.value as FrameworkId);
+      for (const f of FRAMEWORKS) {
+        table
+          .querySelectorAll<HTMLElement>(`[data-fw="${f}"]`)
+          .forEach((c) => (c.hidden = !selected.includes(f)));
+      }
+      const rows = applicableAreas(selected);
+      body.replaceChildren();
+      for (const r of rows) {
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.scope = 'row';
+        th.textContent = S[`audit.area.${r.area}`]!;
+        tr.append(th);
+        for (const f of FRAMEWORKS) {
+          const td = document.createElement('td');
+          td.dataset.fw = f;
+          const lvl = r.byFramework[f];
+          if (lvl) {
+            td.dataset.level = lvl;
+            td.textContent = S[`audit.level.${lvl}`]!;
+            if (isShared(r, f, selected)) {
+              const tag = document.createElement('span');
+              tag.className = 'shared';
+              tag.dataset.shared = '';
+              tag.textContent = S['audit.shared']!;
+              td.append(tag);
+            }
+          }
+          td.hidden = !selected.includes(f);
+          tr.append(td);
+        }
+        body.append(tr);
+      }
+      summary.textContent = rows.length
+        ? interpolate(S['audit.summary']!, { count: rows.length })
+        : S['audit.empty']!;
+
+      const tl = timeline(selected);
+      bar.replaceChildren();
+      for (const p of PHASES) {
+        const li = document.createElement('li');
+        li.dataset.phase = p;
+        li.style.flex = String(Math.max(tl.phases[p], 0.0001));
+        const span = document.createElement('span');
+        span.textContent = S[`audit.phase.${p}`]!;
+        const strong = document.createElement('strong');
+        strong.className = 'mono';
+        strong.textContent = interpolate(S['audit.weeks']!, { n: tl.phases[p] });
+        li.append(span, strong);
+        bar.append(li);
+      }
+      total.textContent = tl.total ? interpolate(S['audit.timeline.total']!, { n: tl.total }) : '';
+      bar.hidden = tl.total === 0;
+    }
+    boxes.forEach((b) => b.addEventListener('change', update));
+  }
+  document.addEventListener('astro:page-load', boot);
+</script>

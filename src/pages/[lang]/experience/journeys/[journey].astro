@@ -1,0 +1,32 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import BreachJourney from '../../../../components/BreachJourney.astro';
+import { slugOf } from '../../../../lib/content';
+import { JOURNEYS } from '../../../../lib/journeys';
+import { LOCALES, useT, type Lang } from '../../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const slugs = new Set((await getCollection('cases')).map((c) => slugOf(c.id)));
+  for (const j of JOURNEYS) {
+    if (slugs.has(j.id)) throw new Error(`Journey id "${j.id}" collides with a scenario slug`);
+  }
+  return LOCALES.flatMap((lang) =>
+    JOURNEYS.map((journey) => ({ params: { lang, journey: journey.id }, props: { journey } })),
+  );
+}
+
+const lang = Astro.params.lang as Lang;
+const { journey } = Astro.props;
+const t = useT(lang);
+const title = t(`journey.${journey.id}.title`);
+---
+
+<BaseLayout
+  lang={lang}
+  title={title}
+  description={t(`journey.${journey.id}.coldOpen`)}
+  path={`/experience/journeys/${journey.id}/`}
+>
+  <BreachJourney journey={journey} lang={lang} />
+</BaseLayout>

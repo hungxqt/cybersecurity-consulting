@@ -1,0 +1,290 @@
+---
+import { FEED, SECTORS, SEVERITIES, monthsOf } from '../lib/feed';
+import { useT, type Lang } from '../lib/i18n';
+import { formatDate } from '../lib/content';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const months = monthsOf(FEED);
+const monthLabel = (m: string) =>
+  new Intl.DateTimeFormat(lang === 'vi' ? 'vi-VN' : 'en-GB', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(`${m}-01T00:00:00Z`));
+const strings = {
+  count: t('feed.count', { shown: '{shown}', total: '{total}' }),
+};
+---
+
+<section class="feed container section" id="feed" aria-labelledby="feed-h" data-feed>
+  <h2 id="feed-h">{t('feed.title')}</h2>
+  <p class="lede">{t('feed.lede')}</p>
+  <p class="feed__sim mono">{t('feed.sim')}</p>
+
+  <form class="feed__filters" data-filters>
+    <div>
+      <label for="f-sev">{t('feed.filter.severity')}</label>
+      <select id="f-sev" name="severity">
+        <option value="all">{t('feed.filter.all')}</option>
+        {SEVERITIES.map((s) => (
+          <option value={s}>{t(`feed.sev.${s}`)}</option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="f-sec">{t('feed.filter.sector')}</label>
+      <select id="f-sec" name="sector">
+        <option value="all">{t('feed.filter.all')}</option>
+        {SECTORS.map((s) => (
+          <option value={s}>{t(`feed.sector.${s}`)}</option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="f-mon">{t('feed.filter.month')}</label>
+      <select id="f-mon" name="month">
+        <option value="all">{t('feed.filter.all')}</option>
+        {months.map((m) => (
+          <option value={m}>{monthLabel(m)}</option>
+        ))}
+      </select>
+    </div>
+    <button type="reset" class="btn">
+      {t('feed.reset')}
+    </button>
+  </form>
+
+  <p class="feed__count mono" role="status" data-count data-template={strings.count}>
+    {t('feed.count', { shown: FEED.length, total: FEED.length })}
+  </p>
+
+  <ul class="feed__list" data-list>
+    {FEED.map((e) => (
+      <li
+        class="adv"
+        data-sev={e.severity}
+        data-sectors={e.sectors.join(' ')}
+        data-month={e.date.slice(0, 7)}
+      >
+        <div class="adv__meta mono">
+          <span class="adv__id">
+            HT-SIM-{e.date.slice(0, 4)}-{String(e.id).padStart(4, '0')}
+          </span>
+          <span class="adv__sev" data-sev={e.severity}>
+            {t(`feed.sev.${e.severity}`)}
+          </span>
+          <span>{t('feed.score', { score: e.score.toFixed(1) })}</span>
+          <time datetime={e.date}>{formatDate(new Date(e.date), lang)}</time>
+        </div>
+        <h3>{t(`feed.${e.id}.title`)}</h3>
+        <p>{t(`feed.${e.id}.summary`)}</p>
+        <p class="adv__tags mono">{e.sectors.map((s) => t(`feed.sector.${s}`)).join(' · ')}</p>
+      </li>
+    ))}
+  </ul>
+  <p class="feed__empty" data-empty hidden>
+    {t('feed.empty')}
+  </p>
+</section>
+
+<style is:global>
+  .feed__sim {
+    margin-top: var(--s-3);
+    font-size: var(--fs-data);
+    color: var(--threat);
+    max-width: none;
+  }
+  .feed__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-4);
+    align-items: end;
+    margin: var(--s-5) 0;
+  }
+  .feed__filters label {
+    display: block;
+    margin-bottom: var(--s-1);
+    font: 500 var(--fs-label) var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  :lang(vi) .feed__filters label {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .feed__filters select {
+    min-height: 44px;
+    min-width: 160px;
+    padding: 0 var(--s-4);
+    border-radius: var(--radius);
+    border: 1px solid var(--rule-ui);
+    background: var(--surface);
+    color: var(--text);
+    font: var(--fs-small) var(--font-body);
+  }
+  .feed__count {
+    font-size: var(--fs-data);
+    color: var(--text-dim);
+  }
+  .feed__list {
+    list-style: none;
+    margin: var(--s-4) 0 0;
+    padding: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .adv {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: var(--s-5);
+    border-top: 1px solid var(--rule);
+  }
+  .adv[hidden] {
+    display: none;
+  }
+  .adv__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-4);
+    align-items: center;
+    font-size: var(--fs-data);
+    color: var(--text-dim);
+  }
+  /* Severity is text plus a shape: filled/outlined diamond (threat) and square (other). */
+  .adv__sev {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text);
+  }
+  :lang(vi) .adv__sev {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .adv__sev::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border: 1.5px solid currentColor;
+    flex: none;
+  }
+  .adv__sev[data-sev='critical'] {
+    padding: 2px var(--s-2);
+    background: var(--threat);
+    color: var(--c-carbon);
+  }
+  .adv__sev[data-sev='critical']::before {
+    background: currentColor;
+    transform: rotate(45deg);
+  }
+  .adv__sev[data-sev='high'] {
+    color: var(--threat);
+  }
+  .adv__sev[data-sev='high']::before {
+    transform: rotate(45deg);
+  }
+  .adv__sev[data-sev='medium'] {
+    color: var(--accent);
+  }
+  .adv__sev[data-sev='medium']::before {
+    background: currentColor;
+  }
+  .adv__sev[data-sev='low'] {
+    color: var(--text-dim);
+  }
+  .adv h3 {
+    margin: var(--s-3) 0 var(--s-2);
+  }
+  .adv p {
+    margin: 0 0 var(--s-2);
+    color: var(--text-dim);
+  }
+  .adv__tags {
+    margin: var(--s-2) 0 0;
+    font-size: var(--fs-data);
+  }
+  @media (min-width: 1080px) {
+    .adv {
+      grid-template-columns: 10rem minmax(0, 1fr) 7rem 8rem;
+      column-gap: var(--gutter);
+      align-items: baseline;
+    }
+    .adv__meta {
+      display: contents;
+    }
+    .adv__sev {
+      grid-column: 1;
+      grid-row: 1;
+      justify-self: start;
+    }
+    .adv__id {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    .adv h3 {
+      grid-column: 2;
+      grid-row: 1;
+      margin: 0;
+    }
+    .adv > p:not(.adv__tags) {
+      grid-column: 2;
+      grid-row: 2;
+    }
+    .adv__tags {
+      grid-column: 2;
+      grid-row: 3;
+    }
+    .adv__meta > span:nth-child(3) {
+      grid-column: 3;
+      grid-row: 1;
+    }
+    .adv__meta > time {
+      grid-column: 4;
+      grid-row: 1;
+      justify-self: end;
+    }
+  }
+</style>
+
+<script>
+  function boot() {
+    const root = document.querySelector<HTMLElement>('[data-feed]');
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = '1';
+    const form = root.querySelector<HTMLFormElement>('[data-filters]')!;
+    const items = [...root.querySelectorAll<HTMLElement>('.adv')];
+    const count = root.querySelector<HTMLElement>('[data-count]')!;
+    const empty = root.querySelector<HTMLElement>('[data-empty]')!;
+    const template = count.dataset.template ?? '';
+
+    function apply() {
+      const data = new FormData(form);
+      const sev = String(data.get('severity') ?? 'all');
+      const sec = String(data.get('sector') ?? 'all');
+      const mon = String(data.get('month') ?? 'all');
+      let shown = 0;
+      for (const li of items) {
+        const ok =
+          (sev === 'all' || li.dataset.sev === sev) &&
+          (sec === 'all' || (li.dataset.sectors ?? '').split(' ').includes(sec)) &&
+          (mon === 'all' || li.dataset.month === mon);
+        li.hidden = !ok;
+        if (ok) shown++;
+      }
+      count.textContent = template
+        .replace('{shown}', String(shown))
+        .replace('{total}', String(items.length));
+      empty.hidden = shown !== 0;
+    }
+    form.addEventListener('change', apply);
+    form.addEventListener('reset', () => setTimeout(apply));
+  }
+  document.addEventListener('astro:page-load', boot);
+</script>

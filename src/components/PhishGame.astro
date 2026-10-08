@@ -1,0 +1,295 @@
+---
+import { ROUNDS } from '../lib/phishGame';
+import { localizedPath, useT, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+
+const strings: Record<string, string> = {};
+for (const r of ROUNDS) {
+  for (const f of ['sender', 'subject', 'body', 'why'])
+    strings[`phish.${r.id}.${f}`] = t(`phish.${r.id}.${f}`);
+}
+for (const k of [
+  'phish.progress',
+  'phish.from',
+  'phish.subject',
+  'phish.channel.email',
+  'phish.channel.sms',
+  'phish.right',
+  'phish.wrong',
+  'phish.isPhish',
+  'phish.isLegit',
+  'phish.next',
+  'phish.finish',
+  'phish.score',
+  'phish.verdict.high',
+  'phish.verdict.mid',
+  'phish.verdict.low',
+  'phish.again',
+  'phish.cta',
+])
+  strings[k] = t(k);
+---
+
+<section
+  class="game container section"
+  id="game"
+  aria-labelledby="game-h"
+  data-game
+  data-contact={localizedPath(lang, '/contact/')}
+>
+  <h2 id="game-h">{t('phish.title')}</h2>
+  <p class="lede">{t('phish.lede')}</p>
+
+  <div class="game__card" data-card>
+    <p class="game__progress mono" data-progress>
+      {t('phish.progress', { n: 1 })}
+    </p>
+    <article class="msg" data-msg aria-live="off"></article>
+    <div class="game__choices" data-choices>
+      <button type="button" class="btn" data-guess="phish">
+        {t('phish.btn.phish')}
+      </button>
+      <button type="button" class="btn" data-guess="legit">
+        {t('phish.btn.legit')}
+      </button>
+    </div>
+    <div class="game__feedback" role="status" data-feedback></div>
+    <button type="button" class="btn btn--primary" data-next hidden>
+      {t('phish.next')}
+    </button>
+  </div>
+  <div class="game__card game__end" data-end hidden tabindex="-1"></div>
+  <script type="application/json" id="game-i18n" set:html={JSON.stringify(strings)} />
+</section>
+
+<style is:global>
+  .game__card {
+    margin-top: var(--s-6);
+    max-width: 760px;
+    padding: var(--s-5);
+    border: 1px solid var(--rule-ui);
+    border-radius: 0;
+    background: var(--surface);
+  }
+  .game__card[hidden] {
+    display: none;
+  }
+  .game__progress {
+    margin: 0 0 var(--s-4);
+    font-size: var(--fs-data);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  :lang(vi) .game__progress {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  /* The message sits in a mail-client frame: Slate chrome strip, Carbon reading pane. */
+  .msg {
+    padding: var(--s-4) var(--s-5);
+    background: var(--bg);
+    border: 1px solid var(--rule);
+  }
+  .msg dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--s-1) var(--s-4);
+    margin: 0 0 var(--s-3);
+    padding-bottom: var(--s-3);
+    border-bottom: 1px solid var(--rule);
+    font-size: var(--fs-small);
+  }
+  .msg dt {
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  :lang(vi) .msg dt {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .msg dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .msg p {
+    margin: 0;
+  }
+  .msg__channel {
+    display: block;
+    margin: calc(-1 * var(--s-4)) calc(-1 * var(--s-5)) var(--s-3);
+    padding: var(--s-2) var(--s-5);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--rule);
+    font: 500 var(--fs-label) var(--font-mono);
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  :lang(vi) .msg__channel {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .game__choices {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    margin-top: var(--s-5);
+  }
+  .game__choices .btn {
+    flex: 1;
+    justify-content: center;
+  }
+  .game__choices .btn[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--surface-2);
+  }
+  .game__feedback {
+    margin: var(--s-4) 0;
+    min-height: 1.5em;
+  }
+  .game__feedback strong {
+    display: block;
+    margin-bottom: var(--s-1);
+  }
+  .game__feedback [data-ok='true'] {
+    color: var(--accent);
+  }
+  .game__feedback [data-ok='false'] {
+    color: var(--threat);
+  }
+  .game__end h3 {
+    font-size: var(--fs-h3);
+  }
+  .game__end .row {
+    display: flex;
+    gap: var(--s-3);
+    flex-wrap: wrap;
+    margin-top: var(--s-5);
+  }
+  @media (min-width: 720px) {
+    .game__choices {
+      flex-direction: row;
+    }
+  }
+</style>
+
+<script>
+  import { interpolate } from '../lib/interpolate';
+  import { ROUNDS, isCorrect, scoreGame, verdictFor } from '../lib/phishGame';
+
+  function boot() {
+    const root = document.querySelector<HTMLElement>('[data-game]');
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = '1';
+    const S = JSON.parse(document.getElementById('game-i18n')!.textContent ?? '{}') as Record<
+      string,
+      string
+    >;
+    const q = <T extends Element>(s: string) => root.querySelector<T>(s)!;
+    const card = q<HTMLElement>('[data-card]');
+    const progress = q<HTMLElement>('[data-progress]');
+    const msg = q<HTMLElement>('[data-msg]');
+    const choices = q<HTMLElement>('[data-choices]');
+    const buttons = [...choices.querySelectorAll<HTMLButtonElement>('[data-guess]')];
+    const feedback = q<HTMLElement>('[data-feedback]');
+    const next = q<HTMLButtonElement>('[data-next]');
+    const end = q<HTMLElement>('[data-end]');
+    const contact = root.dataset.contact ?? '/en/contact/';
+
+    const guesses: (boolean | null)[] = ROUNDS.map(() => null);
+    let i = 0;
+
+    const el = (tag: string, text = '', cls = '') => {
+      const n = document.createElement(tag);
+      if (text) n.textContent = text;
+      if (cls) n.className = cls;
+      return n;
+    };
+
+    function show() {
+      const r = ROUNDS[i]!;
+      progress.textContent = interpolate(S['phish.progress']!, { n: i + 1 });
+      msg.replaceChildren();
+      msg.append(el('span', S[`phish.channel.${r.channel}`], 'msg__channel'));
+      const dl = el('dl');
+      dl.append(el('dt', S['phish.from']), el('dd', S[`phish.${r.id}.sender`]));
+      if (r.channel === 'email')
+        dl.append(el('dt', S['phish.subject']), el('dd', S[`phish.${r.id}.subject`]));
+      msg.append(dl, el('p', S[`phish.${r.id}.body`]));
+      feedback.replaceChildren();
+      buttons.forEach((b) => {
+        b.disabled = false;
+        b.removeAttribute('aria-pressed');
+      });
+      next.hidden = true;
+    }
+
+    function guess(isPhish: boolean) {
+      const r = ROUNDS[i]!;
+      if (guesses[i] !== null) return;
+      guesses[i] = isPhish;
+      const ok = isCorrect(r, isPhish);
+      buttons.forEach((b) => {
+        b.disabled = true;
+        if ((b.dataset.guess === 'phish') === isPhish) b.setAttribute('aria-pressed', 'true');
+      });
+      feedback.replaceChildren();
+      const head = el(
+        'strong',
+        `${S[ok ? 'phish.right' : 'phish.wrong']} ${S[r.phish ? 'phish.isPhish' : 'phish.isLegit']}`,
+      );
+      head.dataset.ok = String(ok);
+      feedback.append(head, el('span', S[`phish.${r.id}.why`]));
+      next.textContent = i === ROUNDS.length - 1 ? S['phish.finish']! : S['phish.next']!;
+      next.hidden = false;
+      next.focus();
+    }
+
+    function finish() {
+      const score = scoreGame(guesses);
+      card.hidden = true;
+      end.replaceChildren();
+      end.append(
+        el('h3', interpolate(S['phish.score']!, { score })),
+        el('p', S[`phish.verdict.${verdictFor(score)}`]),
+      );
+      const row = el('div', '', 'row');
+      const again = el('button', S['phish.again'], 'btn') as HTMLButtonElement;
+      again.type = 'button';
+      again.addEventListener('click', () => {
+        guesses.fill(null);
+        i = 0;
+        end.hidden = true;
+        card.hidden = false;
+        show();
+        buttons[0]?.focus();
+      });
+      const cta = el('a', S['phish.cta'], 'btn btn--primary') as HTMLAnchorElement;
+      cta.href = contact;
+      row.append(cta, again);
+      end.append(row);
+      end.hidden = false;
+      end.focus();
+    }
+
+    buttons.forEach((b) => b.addEventListener('click', () => guess(b.dataset.guess === 'phish')));
+    next.addEventListener('click', () => {
+      if (i < ROUNDS.length - 1) {
+        i++;
+        show();
+        buttons[0]?.focus();
+      } else finish();
+    });
+    show();
+  }
+  document.addEventListener('astro:page-load', boot);
+</script>

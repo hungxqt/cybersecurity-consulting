@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHero from '../../components/SectionHero.astro';
+import ThreatFeed from '../../components/ThreatFeed.astro';
+import PhishGame from '../../components/PhishGame.astro';
+import Glossary from '../../components/Glossary.astro';
+import { langStaticPaths } from '../../lib/paths';
+import { useT, type Lang } from '../../lib/i18n';
+
+export const getStaticPaths = langStaticPaths;
+const lang = Astro.params.lang as Lang;
+const t = useT(lang);
+---
+
+<BaseLayout lang={lang} title={t('nav.resources')} description={t('res.lede')}>
+  <SectionHero
+    eyebrow={t('nav.resources')}
+    title={t('res.title.dim')}
+    titleStrong={t('res.title.strong')}
+    lede={t('res.lede')}
+  >
+    <nav class="jump" aria-label={t('res.nav.label')}>
+      <a href="#feed">{t('res.nav.feed')}</a>
+      <a href="#game">{t('res.nav.game')}</a>
+      <a href="#glossary">{t('res.nav.glossary')}</a>
+    </nav>
+  </SectionHero>
+  <ThreatFeed lang={lang} />
+  <PhishGame lang={lang} />
+  <Glossary lang={lang} />
+</BaseLayout>
+
+<style>
+  .jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    margin-top: var(--s-6);
+    border-top: 1px solid var(--rule);
+  }
+  .jump a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--text);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-button);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+  }
+  :global(html[lang='vi']) .jump a {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .jump a:hover {
+    border-bottom-color: var(--accent);
+  }
+</style>

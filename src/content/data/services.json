@@ -1,0 +1,20 @@
+[
+  {
+    "id": "consulting",
+    "order": 1,
+    "nameKey": "nav.consulting",
+    "summaryKey": "nav.consulting.desc"
+  },
+  {
+    "id": "audit",
+    "order": 2,
+    "nameKey": "nav.audit",
+    "summaryKey": "nav.audit.desc"
+  },
+  {
+    "id": "soc",
+    "order": 3,
+    "nameKey": "nav.soc",
+    "summaryKey": "nav.soc.desc"
+  }
+]

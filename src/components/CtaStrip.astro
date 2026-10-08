@@ -1,0 +1,48 @@
+---
+import Icon from './Icon.astro';
+import { localizedPath, useT, type Lang } from '../lib/i18n';
+
+/** Closing strip of the Solutions pages: one sentence and one button, no card. */
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+---
+
+<section class="section cta" aria-labelledby="cta-h">
+  <div class="container cta__row">
+    <div>
+      <h2 id="cta-h" class="cta__h">
+        {t('svc.cta.title')}
+      </h2>
+      <p>{t('svc.cta.body')}</p>
+    </div>
+    <a class="btn btn--primary" href={localizedPath(lang, '/contact/')}>
+      {t('nav.cta')}
+      <Icon name="arrow-right" />
+    </a>
+  </div>
+</section>
+
+<style>
+  .cta__row {
+    display: grid;
+    gap: var(--s-5);
+    align-items: end;
+  }
+  .cta__h {
+    max-inline-size: 22ch;
+    margin-block-end: var(--s-3);
+  }
+  .cta p {
+    margin: 0;
+    color: var(--text-dim);
+  }
+  @media (min-width: 720px) {
+    .cta__row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: var(--s-7);
+    }
+  }
+</style>

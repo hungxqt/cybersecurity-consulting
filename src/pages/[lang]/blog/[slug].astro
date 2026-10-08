@@ -1,0 +1,219 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Icon from '../../../components/Icon.astro';
+import { forLang, formatDate, readingMinutes, relatedByTags, slugOf } from '../../../lib/content';
+import { LOCALES, localizedPath, useT, type Lang } from '../../../lib/i18n';
+import { article } from '../../../lib/jsonld';
+
+export async function getStaticPaths() {
+  const all = await getCollection('posts');
+  return LOCALES.flatMap((lang) =>
+    forLang(all, lang).map((entry) => ({
+      params: { lang, slug: slugOf(entry.id) },
+      props: { entry, related: relatedByTags(entry, forLang(all, lang), 2) },
+    })),
+  );
+}
+
+const lang = Astro.params.lang as Lang;
+const { entry, related } = Astro.props;
+const t = useT(lang);
+const { Content } = await render(entry);
+const minutes = readingMinutes(entry.body ?? '');
+const site = Astro.site ?? new URL('https://hungtran.example');
+const ld = article({
+  headline: entry.data.title,
+  description: entry.data.description,
+  datePublished: entry.data.date,
+  author: entry.data.author,
+  url: new URL(localizedPath(lang, `/blog/${slugOf(entry.id)}/`), site).href,
+  lang,
+  publisher: t('site.name'),
+  image: new URL(`/og/${lang}.png`, site).href,
+});
+---
+
+<BaseLayout
+  lang={lang}
+  theme="atlas"
+  title={entry.data.title}
+  description={entry.data.description}
+  path={`/blog/${slugOf(entry.id)}/`}
+  jsonLd={ld}
+>
+  <div
+    class="progress"
+    role="progressbar"
+    aria-label={t('blog.progress')}
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="0"
+    data-progress
+  >
+    <span></span>
+  </div>
+
+  <article class="container post">
+    <aside class="rail">
+      <a class="back" href={localizedPath(lang, '/blog/')}>
+        <Icon name="arrow-left" />
+        {t('blog.back')}
+      </a>
+      <ul class="rail__meta mono">
+        <li>{t('blog.by', { author: entry.data.author })}</li>
+        <li>
+          <time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, lang)}</time>
+        </li>
+        <li>{t('blog.minRead', { n: minutes })}</li>
+      </ul>
+    </aside>
+    <div class="post__main">
+      <p class="label post__tags">{entry.data.tags.join(' · ')}</p>
+      <h1>{entry.data.title}</h1>
+      <p class="lede">{entry.data.description}</p>
+      <div class="prose" data-prose>
+        <Content />
+      </div>
+    </div>
+  </article>
+
+  {related.length > 0 && (
+    <aside class="section related" aria-labelledby="related-h">
+      <div class="container">
+        <h2 id="related-h" class="section__label">
+          {t('blog.related')}
+        </h2>
+        <ul class="related__list">
+          {related.map((p) => (
+            <li>
+              <a href={localizedPath(lang, `/blog/${slugOf(p.id)}/`)}>{p.data.title}</a>
+              <span class="label">{formatDate(p.data.date, lang)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </aside>
+  )}
+</BaseLayout>
+<script>
+  let handler: (() => void) | null = null;
+  function bindProgress() {
+    if (handler) window.removeEventListener('scroll', handler);
+    handler = null;
+    const bar = document.querySelector<HTMLElement>('[data-progress]');
+    const prose = document.querySelector<HTMLElement>('[data-prose]');
+    if (!bar || !prose) return;
+    const fill = bar.firstElementChild as HTMLElement;
+    const update = () => {
+      const rect = prose.getBoundingClientRect();
+      const total = rect.height - window.innerHeight * 0.6;
+      const done = Math.min(
+        1,
+        Math.max(0, (window.innerHeight * 0.4 - rect.top) / Math.max(total, 1)),
+      );
+      fill.style.transform = `scaleX(${done})`;
+      bar.setAttribute('aria-valuenow', String(Math.round(done * 100)));
+    };
+    handler = update;
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+  document.addEventListener('astro:page-load', bindProgress);
+</script>
+
+<style>
+  .progress {
+    position: fixed;
+    inset: 56px 0 auto 0;
+    height: 2px;
+    z-index: 90;
+    background: transparent;
+  }
+  @media (min-width: 720px) {
+    .progress {
+      inset-block-start: 64px;
+    }
+  }
+  .progress span {
+    display: block;
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left;
+    background: var(--accent);
+  }
+  .post {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--s-5);
+    padding-block: var(--s-7) var(--s-8);
+  }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-data);
+  }
+  .rail__meta {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1) var(--s-3);
+    font-size: var(--fs-data);
+    color: var(--text-dim);
+  }
+  .post__tags {
+    margin: 0 0 var(--s-4);
+  }
+  .post h1 {
+    max-width: 22ch;
+  }
+  .post .prose {
+    margin-top: var(--s-7);
+  }
+  .related__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .related__list li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-2) var(--s-5);
+    padding-block: var(--s-4);
+    border-top: 1px solid var(--rule);
+  }
+  .related__list a {
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: var(--fs-lead);
+  }
+  @media (min-width: 1080px) {
+    .post {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--gutter);
+      align-items: start;
+    }
+    .rail {
+      grid-column: 1 / span 3;
+      position: sticky;
+      top: 96px;
+    }
+    .rail__meta {
+      display: grid;
+      margin-top: var(--s-5);
+      padding-top: var(--s-4);
+      border-top: 1px solid var(--rule-ui);
+    }
+    .post__main {
+      grid-column: 4 / span 7;
+    }
+  }
+</style>

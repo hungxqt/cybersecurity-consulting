@@ -1,0 +1,188 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { caseView, forLang, formatDate, slugOf } from '../../../../lib/content';
+import { LOCALES, localizedPath, useT, type Lang } from '../../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const all = await getCollection('cases');
+  return LOCALES.flatMap((lang) =>
+    forLang(all, lang).map((entry) => ({
+      params: { lang, slug: slugOf(entry.id) },
+      props: { entry },
+    })),
+  );
+}
+
+const lang = Astro.params.lang as Lang;
+const { entry } = Astro.props;
+const t = useT(lang);
+const { Content } = await render(entry);
+const view = caseView(entry);
+---
+
+<BaseLayout
+  lang={lang}
+  title={entry.data.title}
+  description={entry.data.description}
+  path={`/experience/scenarios/${slugOf(entry.id)}/`}
+>
+  <article class="case">
+    <div class="container">
+      <a class="back mono" href={localizedPath(lang, '/experience/#library')}>
+        ← {t('cases.back')}
+      </a>
+    </div>
+    {view.banner && (
+      <div class="banner" role="note" data-banner>
+        <div class="container">
+          <p class="banner__label mono">{t('cases.illustrative')}</p>
+          <p class="banner__text">{t('cases.illustrativeNote')}</p>
+        </div>
+      </div>
+    )}
+    <div class="container case__body">
+      <aside class="rail" aria-label={t('cases.services')}>
+        <dl>
+          <dt class="label">{t('cases.sector')}</dt>
+          <dd>{entry.data.sector}</dd>
+          <dt class="label">{t('cases.services')}</dt>
+          <dd>
+            <ul>
+              {entry.data.services.map((s) => (
+                <li>
+                  <a href={localizedPath(lang, `/solutions/${s}/`)}>{t(`nav.${s}`)}</a>
+                </li>
+              ))}
+            </ul>
+          </dd>
+          <dt class="label">{t('cases.published')}</dt>
+          <dd>
+            <time datetime={entry.data.date.toISOString()}>
+              {formatDate(entry.data.date, lang)}
+            </time>
+          </dd>
+        </dl>
+      </aside>
+      <div class="case__main">
+        {view.referenceLabel && <p class="label">{t(view.referenceLabel)}</p>}
+        <h1>{entry.data.title}</h1>
+        <p class="lede">{entry.data.description}</p>
+        <div class="prose">
+          <Content />
+          {view.metrics && entry.data.metrics && (
+            <section aria-labelledby="results-h" data-metrics>
+              <h2 id="results-h">{t('cases.results')}</h2>
+              <ul class="metrics">
+                {entry.data.metrics.map((m) => (
+                  <li>
+                    <span class="metrics__value">{m.value}</span>
+                    <span class="metrics__label">{m.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .case {
+    padding-block: var(--s-6) var(--s-6);
+  }
+  .back {
+    display: inline-block;
+    margin-bottom: var(--s-5);
+    font-size: var(--fs-label);
+    padding-block: 0.6rem;
+  }
+  /* Disclosure band: neutral Slate, not a warning colour. */
+  .banner {
+    padding-block: var(--s-4);
+    margin-bottom: var(--s-6);
+    background: var(--surface-2);
+    border-block: 1px solid var(--rule);
+  }
+  .banner__label {
+    margin: 0 0 var(--s-1);
+    color: var(--text-dim);
+    font-size: var(--fs-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  :global(html[lang='vi']) .banner__label {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .banner__text {
+    margin: 0;
+    max-width: var(--measure);
+    color: var(--text);
+  }
+  .case__main {
+    order: -1;
+  }
+  .case__main h1 {
+    max-width: 24ch;
+    font-size: var(--fs-display-l);
+  }
+  .case__main .lede {
+    margin-bottom: var(--s-7);
+  }
+  .case__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-6);
+    padding-top: var(--s-6);
+    align-items: start;
+  }
+  .rail {
+    border-top: 1px solid var(--rule);
+    padding-top: var(--s-4);
+  }
+  .rail dd {
+    margin: var(--s-1) 0 var(--s-4);
+  }
+  .rail ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .metrics {
+    list-style: none;
+    margin: var(--s-5) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--s-4);
+  }
+  .metrics li {
+    display: grid;
+    gap: var(--s-1);
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--rule);
+  }
+  .metrics__value {
+    font-size: var(--fs-h3);
+  }
+  .metrics__label {
+    color: var(--text-dim);
+  }
+  @media (min-width: 1080px) {
+    .case__body {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--gutter);
+    }
+    .rail {
+      grid-column: 1 / span 3;
+      position: sticky;
+      top: 96px;
+    }
+    .case__main {
+      order: 0;
+      grid-column: 4 / span 7;
+    }
+  }
+</style>

@@ -1,0 +1,52 @@
+---
+import { useT, type Lang } from '../lib/i18n';
+import type { HuntItem } from '../lib/hunt';
+
+interface Props {
+  lang: Lang;
+  id: HuntItem;
+}
+const { lang, id } = Astro.props;
+const t = useT(lang);
+const label = t(`hunt.spot.${id}`);
+---
+
+<button
+  type="button"
+  class="spot mono"
+  data-hunt-spot={id}
+  aria-label={t('hunt.spot.aria', { label })}
+>
+  {label}
+</button>
+
+<style is:global>
+  /* Square mono tag; Flare on hover (it is a vulnerability), Cyanotype once reported. */
+  .spot {
+    display: inline-block;
+    margin: 0;
+    padding: 2px 6px;
+    min-height: 24px;
+    border: 1px dashed transparent;
+    border-radius: var(--radius);
+    background: none;
+    color: var(--text-dim);
+    font-size: var(--fs-label);
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease);
+  }
+  .spot:hover,
+  .spot:focus-visible {
+    color: var(--threat);
+    border-color: var(--threat);
+  }
+  .spot[data-found] {
+    color: var(--accent);
+    border-style: solid;
+    border-color: var(--accent);
+    text-decoration: line-through;
+  }
+</style>

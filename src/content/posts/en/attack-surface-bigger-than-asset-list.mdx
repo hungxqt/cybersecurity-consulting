@@ -1,0 +1,27 @@
+---
+title: "Your attack surface is bigger than your asset list"
+description: "Forgotten subdomains, test environments and third-party scripts are where intrusions start. A practical way to find them first."
+date: 2026-05-21
+author: "HungTran team"
+tags: ["consulting", "attack-surface", "recon"]
+service: "consulting"
+---
+
+Attackers do not read your CMDB. They start with certificates, DNS records and search engines, and they find things your team has long since forgotten.
+
+## The usual suspects
+
+- A staging site left on the public internet after a launch.
+- A subdomain pointing at a cloud service that was deleted months ago, ready to be claimed by anyone.
+- A marketing script from a vendor you stopped paying, still running on your checkout page.
+
+## A first pass in an afternoon
+
+1. List every domain you own, including the ones bought for campaigns.
+2. Pull certificate transparency logs for each to enumerate subdomains.
+3. Check which still resolve, which return a cloud provider's "not found" page, and which expose admin panels.
+4. Assign every survivor an owner. Anything without one is a candidate for removal.
+
+## Make it continuous
+
+A one-off list decays within weeks. Schedule the same checks to run weekly and send new findings to the team that owns the domain, not to a shared inbox.

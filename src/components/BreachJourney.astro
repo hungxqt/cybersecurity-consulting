@@ -1,0 +1,1012 @@
+---
+import Icon from './Icon.astro';
+import SituationBoard from './SituationBoard.astro';
+import { actNumber, JOURNEYS, type Journey } from '../lib/journeys';
+import { localizedPath, useT, type Lang } from '../lib/i18n';
+
+/**
+ * Breach to Resilience journey page body (design §7.3, §12.4): cold open, sticky scenario clock,
+ * situation board, beats with an Attacker and a Defender track, one decision and a resilience
+ * report. Everything is server-rendered; the script below only adds the active-beat state, the
+ * mobile prev/next buttons, the decision and (lazily, motion allowed) the GSAP scrub.
+ */
+interface Props {
+  journey: Journey;
+  lang: Lang;
+}
+const { journey, lang } = Astro.props;
+const t = useT(lang);
+const id = journey.id;
+const total = journey.beats.length;
+const other = JOURNEYS.find((j) => j.id !== id)!;
+const decisionAfter = journey.decision.afterBeat;
+const beats = journey.beats.map((b, i) => {
+  const n = i + 1;
+  const act = actNumber(journey, b);
+  return {
+    n,
+    act,
+    actName: t(`journey.${id}.act.${act}`),
+    clock: b.clock,
+    attacker: t(b.attackerKey),
+    defender: t(b.defenderKey),
+    related: b.relatedService,
+    board: b.board,
+    decision: n === decisionAfter,
+  };
+});
+const first = beats[0]!;
+const strings = {
+  strip: t('journey.strip'),
+  count: t('journey.count'),
+};
+---
+
+<article
+  class="bj"
+  data-journey={id}
+  data-mode={journey.attackerMode}
+  data-strings={JSON.stringify(strings)}
+>
+  <header class="bj__open" data-open>
+    <div class="container">
+      <p class="label bj__kicker">
+        {t('journey.illustrative')} · {t(`journey.${id}.title`)}
+      </p>
+      <h1 class="bj__headline" data-headline>
+        {t(`journey.${id}.coldOpen`)}
+      </h1>
+      <p class="bj__skipRow">
+        <a class="bj__skip" href="#decision">
+          {t('journey.skip')}
+        </a>
+      </p>
+    </div>
+  </header>
+
+  <nav class="bj__clock" aria-label={t('journey.clockLabel')} data-clock>
+    <div class="container bj__clockIn">
+      <ol class="bj__ticks">
+        {beats.map((b) => (
+          <li>
+            <a
+              class="bj__tick"
+              href={`#beat-${b.n}`}
+              data-tick
+              aria-current={b.n === 1 ? 'step' : undefined}
+            >
+              {b.decision && <span class="bj__dia" aria-hidden="true" />}
+              <span>{b.clock}</span>
+              {b.decision && <span class="sr-only"> ({t('journey.decision.label')})</span>}
+            </a>
+          </li>
+        ))}
+      </ol>
+      <div class="bj__strip">
+        <button type="button" class="bj__step" data-prev disabled>
+          <Icon name="arrow-left" />
+          <span class="sr-only">{t('journey.prev')}</span>
+        </button>
+        <p class="bj__stripText">
+          <span class="label" data-strip>
+            {t('journey.strip', { n: first.act, clock: first.clock })}
+          </span>
+          <span class="bj__count" data-count>
+            {t('journey.count', { n: 1, total })}
+          </span>
+        </p>
+        <button type="button" class="bj__step" data-next disabled>
+          <Icon name="arrow-right" />
+          <span class="sr-only">{t('journey.next')}</span>
+        </button>
+      </div>
+      <div class="bj__bar" aria-hidden="true">
+        <span class="bj__fill" data-fill></span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container bj__grid">
+    <aside class="bj__board">
+      <SituationBoard journey={journey} lang={lang} />
+    </aside>
+
+    <div class="bj__main">
+      <h2 class="sr-only">{t('journey.timeline')}</h2>
+      <ol class="bj__beats" data-beats>
+        {beats.map((b) => (
+          <Fragment>
+            <li
+              class="beat"
+              id={`beat-${b.n}`}
+              data-beat={b.n}
+              data-act={b.act}
+              data-clock-text={b.clock}
+              data-attacker={b.board.attackerAt ?? ''}
+              data-compromised={b.board.compromised.join(' ')}
+              data-contained={b.board.contained.join(' ')}
+            >
+              <div class="beat__head">
+                <h3 tabindex="-1">{t('journey.act', { n: b.act, name: b.actName })}</h3>
+                <p class="beat__clock">{b.clock}</p>
+              </div>
+              <div class="beat__tracks">
+                <section class="track track--attacker" aria-label={t('journey.attacker')}>
+                  <p class="label track__h" aria-hidden="true">
+                    {t('journey.attacker')}
+                  </p>
+                  <p>{b.attacker}</p>
+                </section>
+                <section class="track track--defender" aria-label={t('journey.defender')}>
+                  <p class="label track__h" aria-hidden="true">
+                    {t('journey.defender')}
+                  </p>
+                  <p>{b.defender}</p>
+                </section>
+              </div>
+              {b.related && (
+                <p class="beat__rel">
+                  <span class="label">{t('journey.related')}</span>
+                  <a href={localizedPath(lang, `/solutions/${b.related}/`)}>
+                    {t(`nav.${b.related}`)}
+                    <Icon name="arrow-right" />
+                  </a>
+                </p>
+              )}
+            </li>
+            {b.decision && (
+              <li class="decision">
+                <p class="label decision__at">{t('journey.decision.at', { clock: b.clock })}</p>
+                <fieldset id="decision" class="decision__set" tabindex="-1" data-decision>
+                  <legend class="decision__q">{t(`journey.${id}.decision.question`)}</legend>
+                  {journey.decision.options.map((o) => (
+                    <label class="opt">
+                      <input type="radio" name="decision" value={o.id} />
+                      <span>{t(o.key)}</span>
+                    </label>
+                  ))}
+                </fieldset>
+                <p class="decision__err" id="decision-err" role="alert" hidden data-error>
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="16"
+                    height="16"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M8 2 15 14H1Z M8 6.5v3.5 M8 11.5v1" />
+                  </svg>
+                  <span>{t('journey.choose')}</span>
+                </p>
+                <button type="button" class="btn btn--primary" data-commit>
+                  {t('journey.commit')}
+                  <Icon name="arrow-right" />
+                </button>
+                {journey.decision.options.map((o) => (
+                  <section
+                    class="outcome"
+                    data-outcome={o.id}
+                    tabindex="-1"
+                    hidden
+                    aria-labelledby={`outcome-${o.id}`}
+                  >
+                    <p class="label">
+                      {t(o.recommended ? 'journey.outcome.recommended' : 'journey.outcome.other')}
+                    </p>
+                    <h3 id={`outcome-${o.id}`}>
+                      {t('journey.outcome.chosen')}: {t(o.key)}
+                    </h3>
+                    <p>{t(o.outcomeKey)}</p>
+                    <p class="outcome__playbook">{t(`journey.${id}.decision.playbook`)}</p>
+                    <button type="button" class="btn" data-retry>
+                      {t('journey.retry')}
+                    </button>
+                  </section>
+                ))}
+              </li>
+            )}
+          </Fragment>
+        ))}
+      </ol>
+    </div>
+  </div>
+
+  <section class="bj__report" aria-labelledby="report-h">
+    <div class="container bj__reportIn">
+      <h2 id="report-h" class="section__label">
+        {t('journey.report.title')}
+      </h2>
+      <div class="bj__reportBody">
+        <div>
+          <p class="label">{t('journey.report.changed')}</p>
+          <ul class="bj__changes">
+            {[1, 2, 3, 4].map((n) => (
+              <li>{t(`journey.${id}.report.${n}`)}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <p class="label">{t('journey.report.services')}</p>
+          <ul class="bj__svc">
+            {journey.services.map((s) => (
+              <li>
+                <a href={localizedPath(lang, `/solutions/${s}/`)}>{t(`nav.${s}`)}</a>
+              </li>
+            ))}
+          </ul>
+          <a class="btn btn--primary" href={localizedPath(lang, '/contact/')}>
+            {t('journey.report.cta')}
+            <Icon name="arrow-right" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="bj__other" aria-label={t('journey.other')}>
+    <div class="container bj__otherIn">
+      <p class="label">{t('journey.other')}</p>
+      <a href={localizedPath(lang, `/experience/journeys/${other.id}/`)}>
+        {t(`journey.${other.id}.title`)}
+        <Icon name="arrow-right" />
+      </a>
+    </div>
+  </nav>
+</article>
+
+<style is:global>
+  /* Header (64 px) + sticky clock (48 px) = 112 px of chrome, plus 16 px of air (design §7.3). */
+  html:has([data-journey]) {
+    scroll-padding-top: 128px;
+  }
+  [data-journey] .beat h3 {
+    scroll-margin-top: 0;
+  }
+</style>
+
+<style>
+  /* Cold open */
+  .bj__open {
+    display: flex;
+    align-items: flex-end;
+    padding-block: var(--s-8) var(--s-7);
+  }
+  .bj__open > .container {
+    width: min(100% - 2 * var(--margin), var(--container));
+  }
+  .bj__kicker {
+    margin: 0 0 var(--s-5);
+  }
+  .bj__headline {
+    max-inline-size: 18ch;
+    margin: 0 0 var(--s-6);
+    font-size: var(--fs-display-l);
+  }
+  .bj__skipRow {
+    margin: 0;
+  }
+  .bj__skip {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-button);
+    letter-spacing: 0.04em;
+  }
+  @media (min-width: 720px) {
+    .bj__open {
+      min-block-size: 70svh;
+      padding-block: var(--s-9) var(--s-8);
+    }
+  }
+
+  /* Sticky scenario clock */
+  .bj__clock {
+    position: sticky;
+    inset-block-start: 56px;
+    z-index: 90;
+    background: var(--bg);
+    border-block: 1px solid var(--rule);
+  }
+  .bj__clockIn {
+    position: relative;
+  }
+  .bj__ticks {
+    display: none;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .bj__tick {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
+    inline-size: 100%;
+    min-block-size: 48px;
+    padding-inline: var(--s-1);
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-variant-numeric: tabular-nums;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .bj__tick:hover {
+    color: var(--text);
+  }
+  .bj__tick[aria-current='step'] {
+    color: var(--text);
+  }
+  .bj__tick[aria-current='step']::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 0;
+    block-size: 2px;
+    background: var(--accent);
+  }
+  .bj__dia {
+    inline-size: 8px;
+    block-size: 8px;
+    box-sizing: border-box;
+    border: 1.5px solid var(--threat);
+    rotate: 45deg;
+  }
+  .bj__bar {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -1px;
+    block-size: 2px;
+    background: var(--rule);
+    overflow: hidden;
+  }
+  .bj__fill {
+    display: block;
+    block-size: 100%;
+    background: var(--accent);
+    transform-origin: 0 50%;
+    transform: scaleX(var(--p, 0.0625));
+  }
+
+  /* Mobile strip: ACT n · clock, n of N, prev / next */
+  .bj__strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2);
+    min-block-size: 44px;
+  }
+  .bj__stripText {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0 var(--s-3);
+    margin: 0;
+    max-inline-size: none;
+  }
+  .bj__stripText .label {
+    color: var(--text);
+  }
+  .bj__count {
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    color: var(--text-dim);
+  }
+  .bj__step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 44px;
+    block-size: 44px;
+    padding: 0;
+    border: 1px solid var(--rule-ui);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .bj__step:disabled {
+    color: var(--text-dim);
+    border-color: var(--rule);
+    cursor: default;
+  }
+  .bj__step :global(.icon) {
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+
+  @media (min-width: 720px) {
+    .bj__clock {
+      inset-block-start: 64px;
+    }
+    .bj__ticks {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+    }
+    .bj__strip {
+      display: none;
+    }
+  }
+
+  /* Grid: situation board (sticky, >= 1080 px) and beats */
+  .bj__grid {
+    display: block;
+    padding-block: var(--s-7) var(--s-8);
+  }
+  .bj__board {
+    display: none;
+  }
+  .bj__beats {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .beat {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--s-5);
+    min-block-size: max(62svh, 24rem);
+    padding-block: var(--s-6);
+    border-block-end: 1px solid var(--rule);
+  }
+  .beat__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-1) var(--s-5);
+  }
+  .beat__head h3 {
+    margin: 0;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  :global(:lang(vi)) .beat__head h3 {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .beat__head h3:focus-visible {
+    outline-offset: 4px;
+  }
+  .beat__clock {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-h2);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .beat__tracks {
+    display: grid;
+    gap: var(--s-5);
+  }
+  .track {
+    padding-block: var(--s-1);
+  }
+  .track p {
+    margin: 0;
+  }
+  .track__h {
+    margin-block-end: var(--s-2) !important;
+  }
+  .track--attacker {
+    padding-inline-start: var(--s-4);
+    border-inline-start: 2px solid var(--threat);
+  }
+  .track--defender {
+    padding-inline-start: var(--s-4);
+    border-inline-start: 2px solid var(--accent);
+  }
+  .beat__rel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3);
+    margin: 0;
+  }
+  .beat__rel .label {
+    margin: 0;
+  }
+  .beat__rel a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-block-size: 44px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-button);
+  }
+
+  /* Decision */
+  .decision {
+    display: grid;
+    gap: var(--s-4);
+    padding-block: var(--s-7);
+    border-block-end: 1px solid var(--rule);
+    scroll-margin-top: 0;
+  }
+  .decision__at {
+    margin: 0;
+    color: var(--threat);
+  }
+  .decision__set {
+    display: grid;
+    gap: var(--s-2);
+    margin: 0;
+    padding: var(--s-5);
+    min-inline-size: 0;
+    border: 1px solid var(--rule-ui);
+    border-radius: 0;
+    background: var(--surface);
+  }
+  .decision__q {
+    padding: 0;
+    margin-block-end: var(--s-3);
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    font-weight: 300;
+    line-height: 1.35;
+    inline-size: 100%;
+  }
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    min-block-size: 48px;
+    padding: var(--s-2) var(--s-3);
+    border: 1px solid var(--rule);
+    cursor: pointer;
+  }
+  .opt:hover {
+    border-color: var(--rule-ui);
+  }
+  .opt:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--surface-2);
+  }
+  .opt:has(input:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .opt input {
+    inline-size: 20px;
+    block-size: 20px;
+    margin: 0;
+    flex: none;
+    accent-color: var(--accent);
+  }
+  .decision__set:disabled .opt {
+    cursor: default;
+    opacity: 1;
+  }
+  .decision__err {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin: 0;
+    color: var(--threat);
+    font-family: var(--font-mono);
+    font-size: var(--fs-data);
+  }
+  .decision__err[hidden] {
+    display: none;
+  }
+  .decision__err svg {
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5px;
+    stroke-linejoin: miter;
+  }
+  .decision > .btn {
+    justify-self: start;
+  }
+  .decision > .btn[hidden] {
+    display: none;
+  }
+  .outcome {
+    display: grid;
+    gap: var(--s-3);
+    padding: var(--s-5);
+    border: 1px solid var(--accent);
+    background: var(--surface);
+  }
+  .outcome[hidden] {
+    display: none;
+  }
+  .outcome:focus-visible {
+    outline-offset: 4px;
+  }
+  .outcome > * {
+    margin: 0;
+  }
+  .outcome .btn {
+    justify-self: start;
+  }
+  .outcome__playbook {
+    font-family: var(--font-mono);
+    font-size: var(--fs-data);
+    color: var(--text-dim);
+  }
+
+  /* Resilience report */
+  .bj__report {
+    padding-block: var(--s-8);
+    border-top: 1px solid var(--rule);
+  }
+  .bj__reportBody {
+    display: grid;
+    gap: var(--s-7);
+  }
+  .bj__changes,
+  .bj__svc {
+    margin: 0 0 var(--s-5);
+    padding: 0;
+    list-style: none;
+  }
+  .bj__changes {
+    display: grid;
+    gap: var(--s-2);
+  }
+  .bj__changes li {
+    padding-block: var(--s-2);
+    border-block-start: 1px solid var(--rule);
+  }
+  .bj__changes li::before {
+    content: '+ ';
+    font-family: var(--font-mono);
+    color: var(--accent);
+  }
+  .bj__svc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+  }
+  .bj__svc a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+  }
+  .bj__report .label {
+    margin: 0 0 var(--s-3);
+  }
+  .bj__report .section__label {
+    margin-block-end: var(--s-6);
+  }
+  .bj__other {
+    border-top: 1px solid var(--rule);
+    padding-block: var(--s-6) var(--s-8);
+  }
+  .bj__otherIn {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-3);
+  }
+  .bj__otherIn p {
+    margin: 0;
+  }
+  .bj__otherIn a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-block-size: 44px;
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    font-weight: 300;
+  }
+
+  @media (min-width: 720px) {
+    .beat__tracks {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--gutter);
+    }
+    .bj__reportBody {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--gutter);
+    }
+  }
+  @media (min-width: 1080px) {
+    .bj__grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--gutter);
+      align-items: start;
+    }
+    .bj__board {
+      display: block;
+      grid-column: 1 / span 5;
+      position: sticky;
+      inset-block-start: 128px;
+      padding-block-start: var(--s-6);
+    }
+    .bj__main {
+      grid-column: 6 / span 7;
+    }
+  }
+</style>
+
+<script>
+  import { interpolate } from '../lib/interpolate';
+  import { JOURNEY_BY_ID, isOption } from '../lib/journeys';
+
+  let teardown: (() => void) | null = null;
+
+  function init(root: HTMLElement): () => void {
+    const journey = JOURNEY_BY_ID[root.dataset.journey ?? ''];
+    if (!journey) throw new Error('unknown journey');
+    const strings = JSON.parse(root.dataset.strings ?? '{}') as Record<string, string>;
+    const q = <T extends Element>(sel: string) => root.querySelector<T>(sel);
+    const beats = [...root.querySelectorAll<HTMLElement>('[data-beat]')];
+    const ticks = [...root.querySelectorAll<HTMLElement>('[data-tick]')];
+    const total = beats.length;
+    if (!total) throw new Error('no beats');
+    const stripEl = q<HTMLElement>('[data-strip]');
+    const countEl = q<HTMLElement>('[data-count]');
+    const prev = q<HTMLButtonElement>('[data-prev]');
+    const next = q<HTMLButtonElement>('[data-next]');
+    const fill = q<HTMLElement>('[data-fill]');
+    const token = q<SVGGElement>('[data-token]');
+    const nodes = new Map<string, SVGGElement>();
+    root.querySelectorAll<SVGGElement>('[data-node]').forEach((n) => nodes.set(n.dataset.node!, n));
+    const svg = q<SVGSVGElement>('.sb__svg');
+    const dx = Number(svg?.dataset.tokenDx ?? 18);
+    const dy = Number(svg?.dataset.tokenDy ?? -8);
+    const reducedMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    let active = 0;
+    let scrub = false;
+    let lockUntil = 0;
+    const cleanups: (() => void)[] = [];
+
+    const headingOf = (b: HTMLElement) => b.querySelector<HTMLElement>('h3')!;
+
+    function applyBoard(beat: HTMLElement) {
+      const list = (v?: string) => (v ?? '').split(/\s+/).filter((id) => nodes.has(id));
+      const comp = new Set(list(beat.dataset.compromised));
+      const cont = new Set(list(beat.dataset.contained));
+      nodes.forEach((g, id) => {
+        g.toggleAttribute('data-compromised', comp.has(id));
+        g.toggleAttribute('data-contained', cont.has(id));
+      });
+      if (!token) return;
+      const at = beat.dataset.attacker ?? '';
+      if (!at) {
+        token.setAttribute('data-off', '');
+        return;
+      }
+      const node = nodes.get(at);
+      if (!node) return; // unknown id: leave the token where it is
+      token.style.setProperty('--x', String(Number(node.dataset.x) + dx));
+      token.style.setProperty('--y', String(Number(node.dataset.y) + dy));
+      token.dataset.at = at;
+      token.removeAttribute('data-off');
+    }
+
+    function updateButtons() {
+      const rescue = (btn: HTMLButtonElement | null, atEnd: boolean) => {
+        if (!btn) return;
+        if (atEnd && document.activeElement === btn)
+          headingOf(beats[active]!).focus({ preventScroll: true });
+        btn.disabled = atEnd;
+      };
+      rescue(prev, active === 0);
+      rescue(next, active === total - 1);
+    }
+
+    function setActive(i: number) {
+      if (i < 0 || i >= total) return;
+      active = i;
+      const beat = beats[i]!;
+      ticks.forEach((a, j) => {
+        if (j === i) a.setAttribute('aria-current', 'step');
+        else a.removeAttribute('aria-current');
+      });
+      if (stripEl)
+        stripEl.textContent = interpolate(strings.strip ?? '', {
+          n: beat.dataset.act ?? '',
+          clock: beat.dataset.clockText ?? '',
+        });
+      if (countEl) countEl.textContent = interpolate(strings.count ?? '', { n: i + 1, total });
+      if (fill && !scrub) fill.style.setProperty('--p', String((i + 0.5) / total));
+      applyBoard(beat);
+      updateButtons();
+    }
+
+    // The beat nearest the middle of the viewport band is the active one.
+    function recalc() {
+      if (performance.now() < lockUntil) return;
+      const vh = window.innerHeight;
+      let best = -1;
+      let bestDist = Infinity;
+      beats.forEach((b, i) => {
+        const r = b.getBoundingClientRect();
+        if (r.top >= vh * 0.6 || r.bottom <= vh * 0.4) return;
+        const dist = Math.abs((r.top + r.bottom) / 2 - vh / 2);
+        if (dist < bestDist) {
+          best = i;
+          bestDist = dist;
+        }
+      });
+      if (best !== -1 && best !== active) setActive(best);
+    }
+
+    const io = new IntersectionObserver(recalc, {
+      threshold: [0, 0.5],
+      rootMargin: '-40% 0px -40% 0px',
+    });
+    beats.forEach((b) => io.observe(b));
+    cleanups.push(() => io.disconnect());
+
+    // Mobile prev / next
+    function go(delta: number) {
+      const target = Math.min(total - 1, Math.max(0, active + delta));
+      if (target === active) return;
+      const beat = beats[target]!;
+      const reduced = reducedMq.matches;
+      history.replaceState(history.state, '', `#beat-${target + 1}`);
+      lockUntil = performance.now() + (reduced ? 0 : 900);
+      setActive(target);
+      beat.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
+      headingOf(beat).focus({ preventScroll: true });
+      if (!reduced) window.setTimeout(recalc, 950);
+    }
+    const onPrev = () => go(-1);
+    const onNext = () => go(1);
+    prev?.addEventListener('click', onPrev);
+    next?.addEventListener('click', onNext);
+    cleanups.push(() => {
+      prev?.removeEventListener('click', onPrev);
+      next?.removeEventListener('click', onNext);
+    });
+
+    // Decision
+    const set = q<HTMLFieldSetElement>('[data-decision]');
+    const err = q<HTMLElement>('[data-error]');
+    const commit = q<HTMLButtonElement>('[data-commit]');
+    const outcomes = [...root.querySelectorAll<HTMLElement>('[data-outcome]')];
+    const radios = [
+      ...root.querySelectorAll<HTMLInputElement>('[data-decision] input[type="radio"]'),
+    ];
+    const showError = (on: boolean) => {
+      if (!err || !set) return;
+      err.hidden = !on;
+      if (on) set.setAttribute('aria-describedby', err.id);
+      else set.removeAttribute('aria-describedby');
+    };
+    const onCommit = () => {
+      const chosen = radios.find((r) => r.checked)?.value;
+      if (!isOption(journey, chosen)) {
+        showError(true);
+        return;
+      }
+      showError(false);
+      outcomes.forEach((o) => (o.hidden = o.dataset.outcome !== chosen));
+      if (set) set.disabled = true;
+      if (commit) commit.hidden = true;
+      outcomes.find((o) => !o.hidden)?.focus();
+    };
+    const onRetry = () => {
+      outcomes.forEach((o) => (o.hidden = true));
+      radios.forEach((r) => (r.checked = false));
+      if (set) {
+        set.disabled = false;
+        set.focus();
+      }
+      if (commit) commit.hidden = false;
+    };
+    const onChange = () => showError(false);
+    commit?.addEventListener('click', onCommit);
+    radios.forEach((r) => r.addEventListener('change', onChange));
+    const retries = [...root.querySelectorAll<HTMLButtonElement>('[data-retry]')];
+    retries.forEach((b) => b.addEventListener('click', onRetry));
+    cleanups.push(() => {
+      commit?.removeEventListener('click', onCommit);
+      radios.forEach((r) => r.removeEventListener('change', onChange));
+      retries.forEach((b) => b.removeEventListener('click', onRetry));
+    });
+
+    // Scrub (GSAP): only with motion allowed and room for it, after the clock first shows.
+    const clock = q<HTMLElement>('[data-clock]');
+    const open = q<HTMLElement>('[data-open]');
+    const headline = q<HTMLElement>('[data-headline]');
+    const list = q<HTMLElement>('[data-beats]');
+    if (clock && !reducedMq.matches && window.innerWidth >= 720) {
+      const seen = new IntersectionObserver((entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        seen.disconnect();
+        void startScrub();
+      });
+      seen.observe(clock);
+      cleanups.push(() => seen.disconnect());
+    }
+    async function startScrub() {
+      try {
+        const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+          import('gsap'),
+          import('gsap/ScrollTrigger'),
+        ]);
+        if (!root.isConnected || reducedMq.matches) return;
+        gsap.registerPlugin(ScrollTrigger);
+        scrub = true;
+        const made: gsap.core.Tween[] = [];
+        if (fill && list) {
+          made.push(
+            gsap.fromTo(
+              fill,
+              { scaleX: 0.5 / total },
+              {
+                scaleX: (total - 0.5) / total,
+                ease: 'none',
+                scrollTrigger: { trigger: list, start: 'top 60%', end: 'bottom 40%', scrub: true },
+              },
+            ),
+          );
+        }
+        if (headline && open) {
+          const dim = getComputedStyle(root).getPropertyValue('--text-dim').trim();
+          made.push(
+            gsap.fromTo(
+              headline,
+              { y: 0, color: getComputedStyle(headline).color },
+              {
+                y: -40,
+                color: dim || getComputedStyle(headline).color,
+                ease: 'none',
+                scrollTrigger: { trigger: open, start: 'top top', end: 'bottom top', scrub: true },
+              },
+            ),
+          );
+        }
+        cleanups.push(() => {
+          made.forEach((tw) => {
+            tw.scrollTrigger?.kill();
+            tw.kill();
+          });
+          if (fill) gsap.set(fill, { clearProps: 'transform' });
+          if (headline) gsap.set(headline, { clearProps: 'transform,color' });
+          scrub = false;
+        });
+      } catch (e) {
+        console.warn('[journey] scrub unavailable', e);
+      }
+    }
+
+    setActive(0);
+    recalc();
+    root.setAttribute('data-live', '');
+    return () => {
+      cleanups.forEach((fn) => fn());
+      root.removeAttribute('data-live');
+    };
+  }
+
+  function boot() {
+    teardown?.();
+    teardown = null;
+    const root = document.querySelector<HTMLElement>('[data-journey]');
+    if (!root || root.hasAttribute('data-live')) return;
+    try {
+      teardown = init(root);
+    } catch (e) {
+      console.error('[journey] init failed', e);
+    }
+  }
+
+  document.addEventListener('astro:page-load', boot);
+  document.addEventListener('astro:before-swap', () => {
+    teardown?.();
+    teardown = null;
+  });
+</script>

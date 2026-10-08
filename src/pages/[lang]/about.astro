@@ -1,0 +1,169 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHero from '../../components/SectionHero.astro';
+import Credentials from '../../components/Credentials.astro';
+import OwnerSlot from '../../components/OwnerSlot.astro';
+import { publishedTeam } from '../../lib/content';
+import { langStaticPaths } from '../../lib/paths';
+import { localizedPath, useT, type Lang } from '../../lib/i18n';
+
+export const getStaticPaths = langStaticPaths;
+const lang = Astro.params.lang as Lang;
+const t = useT(lang);
+
+// Nothing is rendered for people or credentials until team.json / certifications.json publish them.
+const certs = (await getCollection('certifications')).map((c) => c.data);
+const nameKeyOf = new Map(certs.map((c) => [c.id, c.nameKey]));
+const team = publishedTeam(
+  (await getCollection('team')).map((m) => m.data),
+  certs,
+);
+
+const DISCIPLINES = [
+  { id: 'offensive', solution: 'consulting' },
+  { id: 'architecture', solution: 'consulting' },
+  { id: 'grc', solution: 'audit' },
+  { id: 'detection', solution: 'soc' },
+  { id: 'ir', solution: 'soc' },
+] as const;
+---
+
+<BaseLayout lang={lang} title={t('nav.about')} description={t('about.lede')}>
+  <SectionHero eyebrow={t('nav.about')} title={t('about.title')} lede={t('about.lede')} />
+
+  <section class="container section" aria-labelledby="values-h">
+    <h2 id="values-h" class="label section__label">
+      {t('about.values.title')}
+    </h2>
+    <ul class="values">
+      {[1, 2, 3, 4].map((n) => (
+        <li>
+          <h3>{t(`about.v${n}.title`)}</h3>
+          <p>{t(`about.v${n}.body`)}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section id="expertise" class="container section" aria-labelledby="expertise-h">
+    <h2 id="expertise-h" class="label section__label">
+      {t('about.expertise.title')}
+    </h2>
+    <ul class="disciplines">
+      {DISCIPLINES.map((d) => (
+        <li class="discipline" data-discipline={d.id}>
+          <h3>{t(`about.disc.${d.id}.title`)}</h3>
+          <p>
+            <span class="label">{t('about.disc.coversLabel')}</span>
+            {t(`about.disc.${d.id}.covers`)}
+          </p>
+          <p class="mono discipline__roles">
+            {t('about.disc.rolesLabel')}: {t(`about.disc.${d.id}.roles`)}
+          </p>
+          <p>
+            <a href={localizedPath(lang, `/solutions/${d.solution}/`)}>
+              {t('about.disc.relatedLabel')}: {t(`nav.${d.solution}`)}
+            </a>
+          </p>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <OwnerSlot label="team" file="src/content/data/team.json" />
+  {team.length > 0 && (
+    <section class="container section" aria-labelledby="team-h" data-team>
+      <h2 id="team-h" class="label section__label">
+        {t('nav.about')}
+      </h2>
+      <ul class="people">
+        {team.map((m) => (
+          <li>
+            <h3>{m.name}</h3>
+            <p>{t(m.roleKey)}</p>
+            {m.credentials.length > 0 && (
+              <p class="mono">
+                {m.credentials.map((id) => t(nameKeyOf.get(id) ?? id)).join(' · ')}
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <Credentials lang={lang} />
+  <OwnerSlot label="History" file="src/pages/[lang]/about.astro" />
+
+  <section class="container section--tight">
+    <p>
+      <a class="btn" href={localizedPath(lang, '/careers/')}>
+        {t('careers.open')}
+      </a>
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .values {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    border: 1px solid var(--rule);
+  }
+  .values li {
+    padding: var(--s-5);
+    border-top: 1px solid var(--rule);
+  }
+  .values li:first-child {
+    border-top: 0;
+  }
+  .values h3 {
+    margin-bottom: var(--s-2);
+  }
+  .values p {
+    margin: 0;
+    color: var(--text-dim);
+  }
+  .disciplines {
+    display: grid;
+  }
+  .discipline {
+    display: grid;
+    gap: var(--s-3);
+    padding-block: var(--s-5);
+    border-top: 1px solid var(--rule);
+  }
+  .discipline h3,
+  .discipline p {
+    margin: 0;
+  }
+  .discipline .label {
+    display: block;
+    margin-bottom: var(--s-1);
+  }
+  .discipline__roles {
+    color: var(--text-dim);
+    font-size: var(--fs-label);
+  }
+  .people {
+    display: grid;
+    gap: var(--s-5);
+  }
+  @media (min-width: 720px) {
+    .values {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .values li:nth-child(2) {
+      border-top: 0;
+    }
+    .values li:nth-child(even) {
+      border-left: 1px solid var(--rule);
+    }
+  }
+</style>

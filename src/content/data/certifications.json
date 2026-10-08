@@ -1,0 +1,58 @@
+[
+  {
+    "id": "iso27001",
+    "nameKey": "cert.iso27001",
+    "kind": "company",
+    "issuer": "ISO/IEC",
+    "publish": false
+  },
+  {
+    "id": "soc2",
+    "nameKey": "cert.soc2",
+    "kind": "company",
+    "issuer": "AICPA",
+    "publish": false
+  },
+  {
+    "id": "crest",
+    "nameKey": "cert.crest",
+    "kind": "company",
+    "issuer": "CREST",
+    "publish": false
+  },
+  {
+    "id": "pci",
+    "nameKey": "cert.pci",
+    "kind": "company",
+    "issuer": "PCI SSC",
+    "publish": false
+  },
+  {
+    "id": "oscp",
+    "nameKey": "cert.oscp",
+    "kind": "credential",
+    "issuer": "OffSec",
+    "publish": false
+  },
+  {
+    "id": "osce",
+    "nameKey": "cert.osce",
+    "kind": "credential",
+    "issuer": "OffSec",
+    "publish": false
+  },
+  {
+    "id": "cissp",
+    "nameKey": "cert.cissp",
+    "kind": "credential",
+    "issuer": "ISC2",
+    "publish": false
+  },
+  {
+    "id": "giac",
+    "nameKey": "cert.giac",
+    "kind": "credential",
+    "issuer": "GIAC",
+    "publish": false
+  }
+]

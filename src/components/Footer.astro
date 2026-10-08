@@ -1,0 +1,136 @@
+---
+import Logo from './Logo.astro';
+import { localizedHref, useT, type Lang } from '../lib/i18n';
+import { FOOTER_COMPANY, FOOTER_EXPERIENCE, FOOTER_SOLUTIONS } from '../lib/nav';
+import { CONTACT_EMAIL } from '../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const year = new Date().getFullYear();
+const columns = [
+  { heading: t('footer.solutions'), items: FOOTER_SOLUTIONS, extra: false },
+  { heading: t('footer.experience'), items: FOOTER_EXPERIENCE, extra: false },
+  { heading: t('footer.company'), items: FOOTER_COMPANY, extra: true },
+];
+---
+
+<footer class="site-footer" data-theme="nexus">
+  <div class="container">
+    <div class="site-footer__grid">
+      <div class="site-footer__brand">
+        <Logo lang={lang} />
+        <p>{t('footer.blurb')}</p>
+        <p class="mono">
+          <a href={'mailto:' + CONTACT_EMAIL}>{CONTACT_EMAIL}</a>
+        </p>
+      </div>
+      {columns.map((col) => (
+        <nav aria-label={t('a11y.footerNav') + ' – ' + col.heading}>
+          <h2 class="footer-h">{col.heading}</h2>
+          <ul>
+            {col.items.map((s) => (
+              <li>
+                <a href={localizedHref(lang, s.path)}>{t(s.key)}</a>
+              </li>
+            ))}
+            {col.extra && (
+              <li>
+                <a href="/.well-known/security.txt">{t('footer.securityTxt')}</a>
+              </li>
+            )}
+          </ul>
+        </nav>
+      ))}
+    </div>
+
+    <div class="site-footer__legal">
+      <p>{t('footer.rights', { year })}</p>
+      <p class="mono">{t('footer.simulation')}</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  /* Always the dark Nexus band, also on Atlas pages (nested theme scope). */
+  .site-footer {
+    margin-top: var(--s-9);
+    padding-block: var(--s-8) var(--s-6);
+    background: var(--surface);
+    color: var(--text);
+    border-top: 1px solid var(--rule);
+  }
+  .site-footer__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: var(--s-7);
+  }
+  .site-footer__brand {
+    grid-column: 1 / -1;
+  }
+  .site-footer__grid nav {
+    grid-column: span 2;
+  }
+  @media (min-width: 1080px) {
+    .site-footer__brand {
+      grid-column: 1 / span 5;
+    }
+    .site-footer__grid nav:first-of-type {
+      grid-column: 7 / span 2;
+    }
+  }
+  .site-footer__brand p {
+    margin-top: var(--s-4);
+    color: var(--text-dim);
+    max-width: 32ch;
+  }
+  .site-footer__brand a {
+    color: var(--text);
+  }
+  .footer-h {
+    margin: 0 0 var(--s-4);
+    font: 500 var(--fs-label) / 1.4 var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  :global(html[lang='vi']) .footer-h {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+  }
+  nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    color: var(--text);
+    font-size: var(--fs-small);
+    text-decoration: none;
+  }
+  nav a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .site-footer__legal {
+    margin-top: var(--s-8);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-3);
+    color: var(--text-dim);
+    font-size: var(--fs-label);
+  }
+  .site-footer__legal p {
+    margin: 0;
+  }
+</style>

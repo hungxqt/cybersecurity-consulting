@@ -1,0 +1,42 @@
+---
+/**
+ * Inline SVG arrows and carets (design §3.1): → ← ▾ are outside the fonts' latin subsets,
+ * so they are never set as text. Decorative only: the surrounding control carries the name.
+ */
+interface Props {
+  name: 'arrow-right' | 'arrow-left' | 'caret-down';
+  class?: string;
+}
+const { name, class: className } = Astro.props;
+const PATHS: Record<Props['name'], string> = {
+  'arrow-right': 'M2 8h12M9 3l5 5-5 5',
+  'arrow-left': 'M14 8H2M7 3 2 8l5 5',
+  'caret-down': 'M3 6l5 5 5-5',
+};
+---
+
+<svg
+  class:list={['icon', className]}
+  viewBox="0 0 16 16"
+  width="16"
+  height="16"
+  aria-hidden="true"
+  focusable="false"
+>
+  <path d={PATHS[name]}></path>
+</svg>
+
+<style>
+  .icon {
+    flex: none;
+    width: 0.75em;
+    height: 0.75em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5px;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: square;
+    stroke-linejoin: miter;
+    overflow: visible;
+  }
+</style>
