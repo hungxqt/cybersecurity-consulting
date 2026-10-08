@@ -43,7 +43,7 @@ Performance gates (LHCI `assertMatrix`, mobile and desktop, six URLs): LCP 2500 
 
 1. **Domain**: set `SITE_URL` (repository variable) and update `public/.well-known/security.txt` (`Canonical`, `Contact`, and the `Expires` date, which must be renewed within a year).
 2. **Contact form**: create a form at [formspree.io](https://formspree.io), then set `PUBLIC_FORMSPREE_ID` (Cloudflare Pages / GitHub secret). Until then the form shows a "not configured" message with the fallback email.
-3. **Emails**: `src/lib/site.ts` (`CONTACT_EMAIL`, `SECURITY_EMAIL`).
+3. **Emails**: `src/lib/site.ts` (`CONTACT_EMAIL`, `SECURITY_EMAIL`). The vulnerability disclosure policy at `/security/` (`src/pages/[lang]/security.astro`, keys `sec.*`) makes commitments (acknowledging reports, good-faith legal wording, no bounty program) and names no response time on purpose: confirm you can honour them, and add a timeframe only once you can meet it, and bump `SECURITY_POLICY_UPDATED` when you change it.
 4. **Team**: add people to `src/content/data/team.json` (`publish: true`). The About page, in `astro dev`, shows a dashed box where they will appear; in production it renders nothing until a published entry exists.
 5. **Certifications**: every entry in `src/content/data/certifications.json` has `publish: false`. Set `publish: true` **and** an `evidenceUrl` only for credentials you really hold. The schema rejects a published entry without evidence.
 6. **Case references**: the three cases are illustrative scenarios. For an approved real engagement set `illustrative: false` and `verified: true`; only then may it carry `metrics`.

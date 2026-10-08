@@ -38,7 +38,7 @@ const columns = [
             ))}
             {col.extra && (
               <li>
-                <a href="/.well-known/security.txt">{t('footer.securityTxt')}</a>
+                <a href={localizedHref(lang, '/security/')}>{t('footer.securityTxt')}</a>
               </li>
             )}
           </ul>

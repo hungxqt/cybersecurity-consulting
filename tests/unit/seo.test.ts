@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
+import { SECURITY_EMAIL } from '@/lib/site';
 import { article, jobPosting, organization, serializeJsonLd } from '@/lib/jsonld';
 
 describe('json-ld', () => {
@@ -101,5 +102,16 @@ describe('security.txt', () => {
     const exp = /^Expires: (.+)$/m.exec(txt)?.[1];
     expect(exp).toBeTruthy();
     expect(new Date(exp!).getTime()).toBeGreaterThan(Date.now());
+  });
+  it('uses the real security mailbox and domain, and points at the policy page', () => {
+    expect(txt).toContain(`Contact: mailto:${SECURITY_EMAIL}`);
+    expect(txt).toContain('Policy: https://hungtran.id.vn/en/security/');
+    expect(txt).toContain('Canonical: https://hungtran.id.vn/.well-known/security.txt');
+    expect(txt).not.toContain('hungtran.example');
+    expect(SECURITY_EMAIL).toBe('security@hungtran.id.vn');
+  });
+  it('every Policy URL path is a page that exists', () => {
+    const policy = /^Policy: https?:\/\/[^/]+(\/.+)$/m.exec(txt)![1]!;
+    expect(existsSync(`src/pages/[lang]/${policy.split('/')[2]}.astro`)).toBe(true);
   });
 });

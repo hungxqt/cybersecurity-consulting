@@ -1,6 +1,9 @@
 /** Site-wide settings. Replace the placeholders before going live (see README). */
 export const CONTACT_EMAIL = 'info@hungtran.id.vn';
-export const SECURITY_EMAIL = 'security@hungtran.example';
+export const SECURITY_EMAIL = 'security@hungtran.id.vn';
+
+/** Shown on /security/. Update when the disclosure policy changes. */
+export const SECURITY_POLICY_UPDATED = new Date('2026-10-08T00:00:00Z');
 
 /**
  * Formspree form id, set with PUBLIC_FORMSPREE_ID at build time (Cloudflare Pages env var).
