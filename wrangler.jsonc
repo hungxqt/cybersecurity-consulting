@@ -1,0 +1,13 @@
+{
+  // Static site served by Cloudflare Workers Static Assets (no Worker script, no Astro adapter).
+  // Its mere presence stops `wrangler deploy` from running its Astro auto-setup in CI, which adds
+  // @astrojs/cloudflare and writes duplicate rules into _redirects (build error 100324).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cybersecurity-consulting",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // Unknown URLs get /404.html with a real 404 status.
+    "not_found_handling": "404-page"
+  }
+}

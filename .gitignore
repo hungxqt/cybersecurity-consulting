@@ -13,6 +13,9 @@ test-results/
 .env.*
 !.env.example
 
+# Downloaded Cloudflare build logs
+logs/
+
 # Agent working notes, screenshots and design docs (local only)
 .agents/
 
