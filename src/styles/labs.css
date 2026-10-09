@@ -1,0 +1,321 @@
+.lab-heading {
+  padding-block: var(--s-7);
+}
+.lab-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  gap: var(--s-2);
+  margin-bottom: var(--s-5);
+}
+.lab-heading h1 {
+  max-width: 20ch;
+}
+.lab-heading .lede {
+  max-width: var(--measure);
+}
+.lab-grid {
+  display: grid;
+  border: 1px solid var(--rule-ui);
+}
+.lab-controls,
+.lab-workspace {
+  padding: clamp(1rem, 3vw, 2rem);
+  min-width: 0;
+}
+.lab-controls {
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule-ui);
+}
+.lab h2 {
+  font-size: var(--fs-h3);
+  font-family: var(--font-strong);
+  font-weight: 600;
+}
+.lab h3 {
+  margin-top: var(--s-5);
+  font-size: var(--fs-small);
+}
+.lab label,
+.lab legend {
+  font-size: var(--fs-small);
+}
+.lab select {
+  width: 100%;
+  min-height: 48px;
+  margin-block: var(--s-2) var(--s-4);
+  border: 1px solid var(--rule-ui);
+  background: var(--bg);
+  color: var(--text);
+  padding: var(--s-2);
+  font: inherit;
+  font-size: var(--fs-small);
+}
+.lab fieldset {
+  min-width: 0;
+  padding: 0;
+  margin: var(--s-5) 0;
+  border: 0;
+}
+.lab legend {
+  font-weight: 600;
+  margin-bottom: var(--s-2);
+}
+.lab-check {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 48px;
+  cursor: pointer;
+}
+.lab input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+.lab input[type='range'] {
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--accent);
+  margin: 0;
+}
+.lab-range label {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+.lab-range output {
+  font-family: var(--font-mono);
+  color: var(--accent);
+}
+.lab-help,
+.lab-disclosure {
+  color: var(--text-dim);
+  font-size: var(--fs-small);
+  max-width: var(--measure);
+}
+.lab-disclosure {
+  border-left: 2px solid var(--accent);
+  padding-left: var(--s-4);
+  margin-block: var(--s-5) var(--s-7);
+}
+.lab-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-block: var(--s-4);
+}
+.lab .btn {
+  min-height: 44px;
+  font-size: var(--fs-small);
+  white-space: normal;
+}
+.lab button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.lab-graph,
+.lab-chart {
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  background: var(--bg);
+}
+.lab-graph svg {
+  display: block;
+  width: 100%;
+  min-width: 600px;
+  height: auto;
+}
+.lab-chart svg {
+  display: block;
+  width: 100%;
+  min-width: 540px;
+  height: auto;
+}
+.lab-graph text,
+.lab-chart text {
+  fill: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.lab-graph .graph-node {
+  fill: var(--surface);
+  stroke: var(--rule-ui);
+  stroke-width: 1.5;
+}
+.lab-graph .graph-node.active {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.lab-graph .graph-node.exposed {
+  stroke: var(--threat);
+  stroke-width: 2;
+}
+.lab-graph .graph-node.safe,
+.lab-graph .graph-node.restored {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.lab-graph .graph-boundary {
+  fill: var(--surface-2);
+  stroke: var(--accent);
+  stroke-dasharray: 3 5;
+}
+.lab-graph .graph-node.blocked,
+.lab-graph .graph-node.contained {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+.lab-graph .graph-node.absent {
+  stroke-dasharray: 3 6;
+}
+.lab-graph .graph-edge {
+  stroke: var(--rule-ui);
+  stroke-width: 2;
+  fill: none;
+}
+.lab-graph .graph-edge.exposed {
+  stroke: var(--threat);
+  stroke-dasharray: 7 5;
+}
+.lab-graph .graph-edge.active {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.lab-graph .graph-edge.blocked {
+  stroke: var(--accent);
+  stroke-dasharray: 2 8;
+}
+.lab-graph .graph-state {
+  font-size: 12px;
+  fill: var(--text-dim);
+}
+.lab-result {
+  border-top: 1px solid var(--rule-ui);
+  margin-top: var(--s-5);
+}
+.lab-result p {
+  font-size: var(--fs-small);
+  max-width: var(--measure);
+}
+.lab-alerts {
+  display: grid;
+  gap: var(--s-2);
+}
+.lab-alert {
+  text-align: start;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--rule-ui);
+  padding: var(--s-4);
+  cursor: pointer;
+  font: inherit;
+}
+.lab-alert span {
+  display: block;
+  color: var(--text-dim);
+  font-size: var(--fs-label);
+  margin-bottom: var(--s-2);
+}
+.lab-alert strong {
+  font-size: var(--fs-small);
+}
+.lab-evidence {
+  padding-left: var(--s-5);
+  font-size: var(--fs-small);
+}
+.lab-evidence li {
+  padding-block: var(--s-2);
+}
+.lab-stages {
+  list-style: none;
+  padding: 0;
+}
+.lab-stages button {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--s-2);
+  border: 0;
+  border-left: 2px solid var(--rule-ui);
+  color: var(--text-dim);
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--fs-small);
+}
+.lab-stages button[aria-current='step'] {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+.lab-chart .traffic-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.lab-chart .threshold-line {
+  stroke: var(--threat);
+  stroke-width: 2;
+  stroke-dasharray: 6 6;
+}
+.lab-chart .chart-grid {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+.lab-chart .crossing {
+  fill: var(--threat);
+}
+.lab-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-5);
+  padding-block: var(--s-5);
+  border-top: 1px solid var(--rule);
+}
+.lab-nav a {
+  font-size: var(--fs-small);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.lab-nav a[aria-current='page'] {
+  color: var(--text);
+  text-decoration: none;
+}
+.lab[data-playing='true'] .graph-edge.active {
+  stroke-dasharray: 8 5;
+  animation: lab-flow 800ms linear infinite;
+}
+@keyframes lab-flow {
+  to {
+    stroke-dashoffset: -26;
+  }
+}
+@media (min-width: 1080px) {
+  .lab-grid {
+    grid-template-columns: minmax(280px, 1fr) minmax(0, 2.4fr);
+  }
+  .lab-controls {
+    border-bottom: 0;
+    border-right: 1px solid var(--rule-ui);
+  }
+}
+@media (max-width: 719px) {
+  .lab-graph svg {
+    min-width: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab *,
+  .lab *::before,
+  .lab *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

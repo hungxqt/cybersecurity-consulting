@@ -5,6 +5,7 @@ import JourneyReel from '../../../components/JourneyReel.astro';
 import ScenarioRows from '../../../components/ScenarioRows.astro';
 import HuntSpot from '../../../components/HuntSpot.astro';
 import Icon from '../../../components/Icon.astro';
+import ExperienceLabs from '../../../components/ExperienceLabs.astro';
 import { resolveForLang, verifiedCases } from '../../../lib/content';
 import { JOURNEYS } from '../../../lib/journeys';
 import { langStaticPaths } from '../../../lib/paths';
@@ -53,6 +54,8 @@ const references = verifiedCases(resolveForLang(await getCollection('cases'), la
       </p>
     </div>
   </section>
+
+  <ExperienceLabs lang={lang} />
 
   <section id="review" class="section" aria-labelledby="review-h">
     <div class="container">

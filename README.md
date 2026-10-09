@@ -10,6 +10,10 @@ One brand, three coordinated design languages on a shared token system:
 
 Signature features: the Nexus graph, the Atlas exploded architecture, the two Breach to Resilience playbooks, a maturity quiz, a compliance matrix, a "Phish or Not?" game, a glossary and a site-wide **Threat Hunt**. Nothing is sent anywhere except the contact form.
 
+The Experience page indexes 14 bilingual interactive security labs at `/{en,vi}/experience/labs/<slug>/`. The original six cover attack defense, SOC investigation, architecture building, incident timelines, traffic anomalies and packet journeys. Eight immersive exercises add a 3D network digital twin, DDoS defense, a response terminal, ransomware containment and recovery, packet inspection, zero-trust checkpoints, SOC replay and cloud permission blast radius. Terminal commands update the same models as the controls. All systems and traffic are fictional browser simulations; no shell execution, scans or attack requests occur. Controls support keyboards, diagrams carry accessible descriptions, playback stops on navigation, and mobile layouts adapt to narrow screens. Three.js loads only on the 3D pages, with an SVG fallback when WebGL is unavailable. Text view blocks are removed.
+
+After `npm run build`, run `npx playwright test --config playwright.range.config.ts tests/e2e/cyber-range.spec.ts tests/e2e/labs.spec.ts tests/e2e/engagement.spec.ts tests/e2e/production-gate.spec.ts --workers=2` to check the labs against an isolated static preview on port 4322. This avoids reusing a development server on 4321. The range configuration enables software WebGL in Chromium so the tests exercise actual 3D rendering as well as initialization and context-loss fallbacks. The suite covers both languages, accessibility, production CSP, outcome changes, resets, mobile layout and screenshot artifacts in `test-results/`. Traffic animation starts disabled; explicitly checking Animate traffic enables it even with reduced-motion settings. Reduced motion still suppresses automatic playback effects. The floating Threat Hunt control stays compact, expands on hover or keyboard focus, and opens its detail panel on click.
+
 Nothing unverified is shown: no certifications, team members, partners, result metrics or testimonials render until you publish them with evidence (see "Replace before going live").
 
 ## Run it
@@ -91,7 +95,7 @@ The runtime keeps English fallback for missing content during editing, but the r
 
 Easiest: connect the repository in the Cloudflare dashboard (build command `npm run build`, output `dist`, Node 22) and set `SITE_URL` and `PUBLIC_FORMSPREE_ID` as environment variables. Cloudflare reads `public/_headers` (CSP, HSTS and others) and `public/_redirects` (`/` to `/en/` and the legacy `/services/` and `/case-studies/` redirects).
 
-Or use the GitHub Actions workflow in `.github/workflows/ci.yml`, which runs lint, types, unit tests, Playwright + axe, Lighthouse (mobile and desktop) and the `[VI]` report, then deploys `main` with Wrangler. Add:
+GitHub Actions is temporarily disabled. The entire CI and deployment workflow is commented out in `.github/workflows/ci.yml.disabled`; restoration instructions are at the top of that file. When restored as `.github/workflows/ci.yml`, it runs lint, types, unit tests, Playwright + axe, Lighthouse (mobile and desktop) and the `[VI]` report, then deploys `main` with Wrangler. It requires:
 
 - Secrets: `CLOUDFLARE_API_TOKEN` (Pages edit permission), `CLOUDFLARE_ACCOUNT_ID`, `PUBLIC_FORMSPREE_ID`
 - Variables: `SITE_URL`, `CLOUDFLARE_PAGES_PROJECT`

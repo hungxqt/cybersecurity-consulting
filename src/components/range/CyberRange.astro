@@ -1,0 +1,313 @@
+---
+import type { Lang } from '../../lib/i18n';
+import type { RangeId } from '../../lib/rangeCatalog';
+import { rangeCopy, type RangeCopyKey } from '../../lib/rangeCopy';
+import { SYSTEMS, PERMISSIONS, PACKETS } from '../../lib/rangeModels';
+import '../../styles/range.css';
+interface Props {
+  lang: Lang;
+  mode: string;
+}
+const { lang } = Astro.props;
+const mode = Astro.props.mode as RangeId;
+const c = rangeCopy(lang);
+const three = !['packet-workbench', 'zero-trust-journey'].includes(mode);
+const terminal = ['network-digital-twin', 'ddos-defense', 'response-terminal'].includes(mode);
+const selectFields: Partial<Record<RangeId, { key: RangeCopyKey; values: RangeCopyKey[] }[]>> = {
+  'network-digital-twin': [{ key: 'entry', values: ['password', 'attachment'] }],
+  'zero-trust-journey': [
+    { key: 'role', values: ['employee', 'administrator', 'guest'] },
+    { key: 'device', values: ['managed', 'unmanaged'] },
+    { key: 'location', values: ['trusted', 'unfamiliar'] },
+    { key: 'resource', values: ['docs', 'console'] },
+  ],
+  'soc-replay': [{ key: 'viewpoint', values: ['defender', 'attacker', 'business'] }],
+  'cloud-blast-radius': [{ key: 'principal', values: ['developer', 'service'] }],
+};
+const toggles: Partial<Record<RangeId, RangeCopyKey[]>> = {
+  'network-digital-twin': ['mfa', 'edr', 'segment', 'backups'],
+  'ddos-defense': ['filter'],
+  'ransomware-race': ['backups'],
+  'packet-workbench': ['sourceRule', 'portRule', 'inspectRule'],
+  'zero-trust-journey': ['verified'],
+};
+const hints: Record<RangeId, RangeCopyKey> = {
+  'network-digital-twin': 'twinHint',
+  'ddos-defense': 'ddosHint',
+  'response-terminal': 'terminalIntro',
+  'ransomware-race': 'ransomwareHint',
+  'packet-workbench': 'packetHint',
+  'zero-trust-journey': 'zeroHint',
+  'soc-replay': 'replayHint',
+  'cloud-blast-radius': 'blastHint',
+};
+const sceneSystems =
+  mode === 'cloud-blast-radius'
+    ? (['developer', 'service', 'admin', 'app', 'db', 'storage', 'backup'] as const)
+    : SYSTEMS;
+---
+
+<div data-range={mode} data-range-copy={JSON.stringify(c)}>
+  <div class="range-layout">
+    <aside class="range-controls">
+      <h2>{c.controls}</h2>
+      {(selectFields[mode] ?? []).map((field) => (
+        <div class="range-field">
+          <label for={`range-${field.key}`}>{c[field.key]}</label>
+          <select id={`range-${field.key}`} data-option={field.key} disabled>
+            {field.values.map((value) => (
+              <option value={value}>{c[value]}</option>
+            ))}
+          </select>
+        </div>
+      ))}
+      {mode === 'ddos-defense' &&
+        (
+          [
+            ['legitimate', 100, 0, 300],
+            ['attack', 500, 0, 1000],
+            ['capacity', 200, 50, 500],
+            ['rate', 1000, 10, 1000],
+            ['cache', 0, 0, 90],
+          ] as const
+        ).map(([key, value, min, max]) => (
+          <div class="range-field">
+            <label for={`range-${key}`}>
+              {c[key]}{' '}
+              <output for={`range-${key}`} data-range-value={key}>
+                {value}
+              </output>
+            </label>
+            <input
+              id={`range-${key}`}
+              type="range"
+              min={min}
+              max={max}
+              value={value}
+              step="10"
+              data-range-input={key}
+              disabled
+            />
+          </div>
+        ))}
+      {(toggles[mode] ?? []).length > 0 && (
+        <fieldset>
+          <legend>{mode === 'packet-workbench' ? c.protocol : c.controls}</legend>
+          {(toggles[mode] ?? []).map((key) => (
+            <label class="lab-check">
+              <input
+                type="checkbox"
+                data-range-toggle={key}
+                checked={['backups', 'verified', 'sourceRule', 'portRule', 'inspectRule'].includes(
+                  key,
+                )}
+                disabled
+              />
+              {c[key]}
+            </label>
+          ))}
+        </fieldset>
+      )}
+      {mode === 'network-digital-twin' && (
+        <button class="btn btn--primary" data-launch disabled>
+          {c.launch}
+        </button>
+      )}
+      {mode === 'cloud-blast-radius' && (
+        <fieldset>
+          <legend>{c.permissions}</legend>
+          {PERMISSIONS.map((permission) => (
+            <label class="lab-check">
+              <input type="checkbox" data-permission={permission.id} checked disabled />
+              {c[permission.id]}
+            </label>
+          ))}
+        </fieldset>
+      )}
+      {mode === 'soc-replay' && (
+        <div class="range-field">
+          <label for="range-frame">{c.frame}</label>
+          <input
+            id="range-frame"
+            data-frame
+            type="range"
+            min="0"
+            max="5"
+            step="1"
+            value="0"
+            disabled
+          />
+          <p class="mono" data-frame-label>
+            09:12
+          </p>
+        </div>
+      )}
+      {['ddos-defense', 'ransomware-race', 'soc-replay'].includes(mode) && (
+        <div class="lab-actions">
+          {mode === 'soc-replay' && (
+            <button class="btn" data-range-previous disabled>
+              {c.previous}
+            </button>
+          )}
+          <button class="btn" data-range-next disabled>
+            {c.next}
+          </button>
+          <button class="btn btn--primary" data-range-play disabled>
+            {c.play}
+          </button>
+        </div>
+      )}
+      {mode === 'ransomware-race' && (
+        <div class="lab-actions">
+          <button class="btn" data-isolate disabled>
+            {c.isolate}
+          </button>
+          <button class="btn" data-restore disabled>
+            {c.restore}
+          </button>
+        </div>
+      )}
+      <p class="lab-help">{c[hints[mode]]}</p>
+      <button class="btn" data-range-reset disabled>
+        {c.reset}
+      </button>
+    </aside>
+    <div class="range-workspace">
+      <div class="range-view-header">
+        <h2>{c.scene}</h2>
+        <span class="mono range-selected" data-selected></span>
+      </div>
+      <div class="range-scene" data-range-scene></div>
+      {three && (
+        <>
+          <p class="lab-help range-orbit" data-orbit-hint>
+            {c.orbit}
+          </p>
+          <p class="lab-help" data-fallback hidden>
+            {c.fallback}
+          </p>
+          <div class="range-camera" role="group" aria-label={c.camera}>
+            {(['left', 'right', 'zoomIn', 'zoomOut', 'home'] as const).map((key) => (
+              <button class="btn" data-camera={key} disabled>
+                {c[key]}
+              </button>
+            ))}
+            <label class="lab-check">
+              <input type="checkbox" data-motion disabled />
+              {c.motion}
+            </label>
+          </div>
+          <div class="range-system-picker" role="group" aria-label={c.selected}>
+            {sceneSystems.map((key) => (
+              <button class="btn" data-system={key} aria-pressed="false" disabled>
+                {c[key]}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      {mode === 'packet-workbench' && (
+        <>
+          <label class="lab-check">
+            <input type="checkbox" data-motion disabled />
+            {c.motion}
+          </label>
+          <div class="range-packet-picker" role="group" aria-label={c.packets}>
+            {PACKETS.map((packet, i) => (
+              <button
+                class="btn"
+                data-range-packet={i}
+                aria-pressed={i === 0 ? 'true' : 'false'}
+                disabled
+              >
+                {packet.id} · {c[packet.kind]}
+              </button>
+            ))}
+          </div>
+          <section class="range-inspector" aria-label={c.protocol}>
+            {(['ethernet', 'network', 'transport', 'application'] as const).map((key, i) => (
+              <details open={i === 2}>
+                <summary>{c[key]}</summary>
+                <p class="mono" data-layer={key}></p>
+              </details>
+            ))}
+          </section>
+        </>
+      )}
+      <div class="range-metrics" data-range-metrics></div>
+      {mode === 'soc-replay' && (
+        <div class="range-replay-panels">
+          <section>
+            <h3>{c.log}</h3>
+            <p class="mono" data-replay-log></p>
+          </section>
+          <section>
+            <h3>{c.action}</h3>
+            <p data-replay-action></p>
+          </section>
+        </div>
+      )}
+      <section class="lab-result" role="status" aria-live="polite">
+        <h3>{c.findings}</h3>
+        <div data-range-findings>
+          <p>{c.idle}</p>
+        </div>
+      </section>
+    </div>
+  </div>
+  {terminal && (
+    <section class="range-terminal" aria-labelledby="terminal-heading">
+      <div class="range-terminal-header">
+        <h2 id="terminal-heading">{c.terminal}</h2>
+        <span class="mono" aria-hidden="true">
+          LOCAL / RANGE-01
+        </span>
+      </div>
+      <p class="lab-help">{c.terminalIntro}</p>
+      <div
+        class="range-terminal-log"
+        data-terminal-log
+        role="log"
+        aria-live="polite"
+        aria-label={c.terminal}
+      >
+        <p>range-01 &gt; help</p>
+      </div>
+      <form data-terminal-form>
+        <label for="range-command">{c.command}</label>
+        <div class="range-command-row">
+          <span class="mono" aria-hidden="true">
+            &gt;
+          </span>
+          <input
+            id="range-command"
+            data-command
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            maxlength="120"
+            disabled
+          />
+          <button class="btn btn--primary" disabled>
+            {c.execute}
+          </button>
+        </div>
+      </form>
+      <div class="range-command-shortcuts" role="group" aria-label={c.command}>
+        {[
+          'help',
+          'alerts',
+          'inspect WS-17',
+          'isolate WS-17',
+          'revoke session-04',
+          'rate-limit 200',
+          'filter on',
+        ].map((command) => (
+          <button class="btn" data-command-shortcut={command} disabled>
+            {command}
+          </button>
+        ))}
+      </div>
+    </section>
+  )}
+</div>

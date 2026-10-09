@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import AttackLab from '../../../../components/labs/AttackLab.astro';
+import SocLab from '../../../../components/labs/SocLab.astro';
+import ArchitectureLab from '../../../../components/labs/ArchitectureLab.astro';
+import TimelineLab from '../../../../components/labs/TimelineLab.astro';
+import TrafficLab from '../../../../components/labs/TrafficLab.astro';
+import PacketLab from '../../../../components/labs/PacketLab.astro';
+import CyberRange from '../../../../components/range/CyberRange.astro';
+import { ALL_LABS, labCopy, local, type LabId } from '../../../../lib/labs';
+import { LOCALES, localizedHref, type Lang } from '../../../../lib/i18n';
+import '../../../../styles/labs.css';
+export function getStaticPaths() {
+  return LOCALES.flatMap((lang) =>
+    ALL_LABS.map((lab) => ({ params: { lang, lab: lab.id }, props: { lab } })),
+  );
+}
+const { lab } = Astro.props;
+const lang = Astro.params.lang as Lang;
+const c = labCopy(lang);
+const components = {
+  'attack-defense': AttackLab,
+  'soc-console': SocLab,
+  'architecture-builder': ArchitectureLab,
+  'incident-timeline': TimelineLab,
+  'traffic-anomalies': TrafficLab,
+  'packet-journey': PacketLab,
+};
+const Lab = 'immersive' in lab ? CyberRange : components[lab.id as LabId];
+---
+
+<BaseLayout lang={lang} title={local(lab.title, lang)} description={local(lab.description, lang)}>
+  <header class="container lab-heading">
+    <a class="lab-back" href={localizedHref(lang, '/experience/#labs')}>
+      <span aria-hidden="true">←</span> {c.back}
+    </a>
+    <p class="label">
+      {c.index} / {String(ALL_LABS.findIndex((item) => item.id === lab.id) + 1).padStart(2, '0')}
+    </p>
+    <h1>{local(lab.title, lang)}</h1>
+    <p class="lede">{local(lab.description, lang)}</p>
+  </header>
+  <section
+    class="container lab"
+    data-lab={lab.id}
+    data-copy={JSON.stringify(c)}
+    aria-label={local(lab.title, lang)}
+  >
+    <noscript>
+      <p>{c.nojs}</p>
+    </noscript>
+    <Lab lang={lang} mode={lab.id} />
+    <p class="lab-disclosure">{c.note}</p>
+  </section>
+  <nav class="container lab-nav" aria-label={c.index}>
+    {ALL_LABS.map((item) => (
+      <a
+        href={localizedHref(lang, `/experience/labs/${item.id}/`)}
+        aria-current={item.id === lab.id ? 'page' : undefined}
+      >
+        {local(item.title, lang)}
+      </a>
+    ))}
+  </nav>
+  <script>
+    import '../../../../scripts/labs';
+  </script>
+</BaseLayout>

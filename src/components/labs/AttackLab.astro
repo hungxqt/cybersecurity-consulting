@@ -1,0 +1,42 @@
+---
+import { labCopy } from '../../lib/labs';
+import type { Lang } from '../../lib/i18n';
+interface Props {
+  lang: Lang;
+}
+const c = labCopy(Astro.props.lang);
+---
+
+<div class="lab-grid">
+  <div class="lab-controls">
+    <h2>{c.controls}</h2>
+    <label for="route">{c.scenario}</label>
+    <select id="route" data-route disabled>
+      <option value="credential">{c.credential}</option>
+      <option value="malware">{c.malware}</option>
+    </select>
+    <fieldset>
+      <legend>{c.controls}</legend>
+      {(['mfa', 'edr', 'segment', 'backups'] as const).map((key) => (
+        <label class="lab-check">
+          <input type="checkbox" data-defense={key} disabled />
+          {c[key]}
+        </label>
+      ))}
+    </fieldset>
+    <p class="lab-help">{c.attackHint}</p>
+    <button class="btn" data-reset disabled>
+      {c.reset}
+    </button>
+  </div>
+  <div class="lab-workspace">
+    <h2>{c.view}</h2>
+    <div class="lab-graph" data-graph></div>
+    <div class="lab-result" role="status" aria-live="polite">
+      <h3>{c.findings}</h3>
+      <div data-result>
+        <p>{c.passwordOpen}</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,57 @@
+---
+import { labCopy } from '../../lib/labs';
+import type { Lang } from '../../lib/i18n';
+interface Props {
+  lang: Lang;
+}
+const c = labCopy(Astro.props.lang);
+---
+
+<div class="lab-grid">
+  <div class="lab-controls">
+    <h2>{c.controls}</h2>
+    <label for="request">{c.requestType}</label>
+    <select id="request" data-request disabled>
+      <option value="normal">{c.normalRequest}</option>
+      <option value="injection">{c.injectionRequest}</option>
+      <option value="unauthorized">{c.unauthorizedRequest}</option>
+    </select>
+    <fieldset>
+      <legend>{c.controls}</legend>
+      {(['tls', 'waf', 'sourceFilter', 'leastPrivilege'] as const).map((key) => (
+        <label class="lab-check">
+          <input type="checkbox" data-packet-control={key} checked disabled />
+          {c[key]}
+        </label>
+      ))}
+    </fieldset>
+    <div class="lab-actions">
+      <button class="btn" data-previous disabled>
+        {c.previous}
+      </button>
+      <button class="btn" data-next disabled>
+        {c.next}
+      </button>
+      <button class="btn btn--primary" data-play disabled>
+        {c.play}
+      </button>
+    </div>
+    <p class="lab-help">{c.packetHint}</p>
+    <button class="btn" data-reset disabled>
+      {c.reset}
+    </button>
+  </div>
+  <div class="lab-workspace">
+    <h2>{c.view}</h2>
+    <p class="mono" data-position-label>
+      {c.step} 1 {c.of} 4
+    </p>
+    <div class="lab-graph" data-graph></div>
+    <div class="lab-result" role="status" aria-live="polite">
+      <h3>{c.findings}</h3>
+      <div data-result>
+        <p>{c.packetDns}</p>
+      </div>
+    </div>
+  </div>
+</div>

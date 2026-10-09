@@ -1,0 +1,54 @@
+---
+import { labCopy } from '../../lib/labs';
+import type { Lang } from '../../lib/i18n';
+interface Props {
+  lang: Lang;
+}
+const c = labCopy(Astro.props.lang);
+---
+
+<div class="lab-grid">
+  <div class="lab-controls">
+    <h2>{c.controls}</h2>
+    <label for="position">{c.time}</label>
+    <input id="position" type="range" min="0" max="4" value="0" step="1" data-position disabled />
+    <p class="mono" data-position-label>
+      {c.stages.split('|')[0]}
+    </p>
+    <div class="lab-actions">
+      <button class="btn" data-previous disabled>
+        {c.previous}
+      </button>
+      <button class="btn" data-next disabled>
+        {c.next}
+      </button>
+      <button class="btn btn--primary" data-play disabled>
+        {c.play}
+      </button>
+    </div>
+    <ol class="lab-stages">
+      {c.stages.split('|').map((stage, i) => (
+        <li>
+          <button data-stage={i} aria-current={i === 0 ? 'step' : undefined} disabled>
+            <span class="mono">0{i + 1}</span>
+            {stage}
+          </button>
+        </li>
+      ))}
+    </ol>
+    <p class="lab-help">{c.timelineHint}</p>
+    <button class="btn" data-reset disabled>
+      {c.reset}
+    </button>
+  </div>
+  <div class="lab-workspace">
+    <h2 data-stage-title>{c.stages.split('|')[0]}</h2>
+    <div class="lab-graph" data-graph></div>
+    <div class="lab-result" role="status" aria-live="polite">
+      <h3>{c.findings}</h3>
+      <div data-result>
+        <p>{c.stageNotes.split('|')[0]}</p>
+      </div>
+    </div>
+  </div>
+</div>

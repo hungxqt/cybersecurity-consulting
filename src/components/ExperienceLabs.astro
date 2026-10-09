@@ -1,0 +1,85 @@
+---
+import { ALL_LABS, labCopy, local } from '../lib/labs';
+import { localizedPath, type Lang } from '../lib/i18n';
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const c = labCopy(lang);
+---
+
+<section id="labs" class="section lab-index" aria-labelledby="labs-h">
+  <div class="container">
+    <p class="label">{c.index}</p>
+    <h2 id="labs-h">{c.intro}</h2>
+    <p class="lede">{c.indexBody}</p>
+    <div class="lab-index__grid">
+      {ALL_LABS.map((lab, i) => (
+        <a class="lab-index__item" href={localizedPath(lang, `/experience/labs/${lab.id}/`)}>
+          <span class="lab-index__number mono" aria-hidden="true">
+            {String(i + 1).padStart(2, '0')} /
+          </span>
+          <h3>{local(lab.title, lang)}</h3>
+          <p>{local(lab.description, lang)}</p>
+          <span class="lab-index__action">
+            {local(lab.action, lang)} <span aria-hidden="true">↗</span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+<style>
+  .lab-index__grid {
+    display: grid;
+    border-top: 1px solid var(--rule);
+    margin-top: var(--s-7);
+  }
+  .lab-index__item {
+    color: var(--text);
+    text-decoration: none;
+    padding: var(--s-6);
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    transition: background var(--dur-fast);
+  }
+  .lab-index__item:hover {
+    background: var(--surface);
+  }
+  .lab-index__number {
+    color: var(--accent);
+    font-size: var(--fs-label);
+  }
+  .lab-index__item h3,
+  .lab-index__item p {
+    margin: 0;
+  }
+  .lab-index__item p {
+    color: var(--text-dim);
+    font-size: var(--fs-small);
+  }
+  .lab-index__action {
+    color: var(--accent);
+    margin-top: auto;
+    padding-top: var(--s-4);
+    font-size: var(--fs-small);
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+  }
+  @media (min-width: 720px) {
+    .lab-index__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .lab-index__item:nth-child(odd) {
+      border-right: 1px solid var(--rule);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lab-index__item {
+      transition: none;
+    }
+  }
+</style>

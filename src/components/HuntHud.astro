@@ -30,6 +30,10 @@ const strings = {
     aria-controls="hud-panel"
     data-hud-toggle
   >
+    <span class="hud__compact" aria-hidden="true">
+      <span class="hud__crosshair"></span>
+      <span data-hud-count>0/5</span>
+    </span>
     <span class="hud__pips" aria-hidden="true">
       {HUNT_ITEMS.map((id) => (
         <i data-pip={id}></i>
@@ -82,10 +86,10 @@ const strings = {
   .hud__toggle {
     display: inline-flex;
     align-items: center;
-    gap: var(--s-3);
+    gap: 0;
     min-height: 44px;
     min-width: 44px;
-    padding: 0 var(--s-4);
+    padding: 0 var(--s-3);
     border: 1px solid var(--rule-ui);
     border-radius: 0;
     background: var(--surface);
@@ -104,9 +108,55 @@ const strings = {
   .hud__toggle:hover {
     border-color: var(--accent);
   }
+  .hud__compact {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+  .hud__crosshair {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--accent);
+    position: relative;
+  }
+  .hud__crosshair::before,
+  .hud__crosshair::after {
+    content: '';
+    position: absolute;
+    background: var(--accent);
+  }
+  .hud__crosshair::before {
+    width: 6px;
+    height: 2px;
+    left: 4px;
+    top: 6px;
+  }
+  .hud__crosshair::after {
+    width: 2px;
+    height: 6px;
+    left: 6px;
+    top: 4px;
+  }
+  .hud__label {
+    display: none;
+  }
+  .hud__toggle:is(:hover, :focus-visible) .hud__compact {
+    display: none;
+  }
+  .hud__toggle:is(:hover, :focus-visible) .hud__label {
+    display: inline;
+  }
+  .hud__toggle:is(:hover, :focus-visible) {
+    gap: var(--s-3);
+  }
   .hud__pips {
-    display: inline-flex;
+    display: none;
     gap: 4px;
+  }
+  .hud__toggle:is(:hover, :focus-visible) .hud__pips {
+    display: inline-flex;
   }
   .hud__pips i {
     width: 8px;
@@ -118,7 +168,7 @@ const strings = {
     border-color: var(--accent);
   }
   .hud__panel {
-    width: 100%;
+    width: min(340px, calc(100vw - 2rem));
     padding: var(--s-4);
     border: 1px solid var(--rule-ui);
     background: var(--surface);
@@ -131,9 +181,6 @@ const strings = {
   }
   /* 2.4.11: while the visitor types, collapse to the 44 px toggle so fields stay visible. */
   body:has(:is(input, textarea, select):focus) .hud__panel {
-    display: none;
-  }
-  body:has(:is(input, textarea, select):focus) .hud__label {
     display: none;
   }
   .hud__panel p {
@@ -223,6 +270,7 @@ const strings = {
     const found = hunt.found();
     const label = hud.querySelector<HTMLElement>('[data-hud-label]')!;
     label.textContent = `${label.textContent!.replace(/\s*\d\/5$/, '')} ${found.length}/5`;
+    hud.querySelector('[data-hud-count]')!.textContent = `${found.length}/5`;
     hud
       .querySelector('[data-hud-toggle]')!
       .setAttribute('aria-label', S.toggle.replace('{n}', String(found.length)));

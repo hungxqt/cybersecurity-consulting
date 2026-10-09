@@ -1,0 +1,53 @@
+---
+import { labCopy } from '../../lib/labs';
+import type { Lang } from '../../lib/i18n';
+interface Props {
+  lang: Lang;
+}
+const c = labCopy(Astro.props.lang);
+---
+
+<div class="lab-grid">
+  <div class="lab-controls">
+    <h2>{c.controls}</h2>
+    <label for="pattern">{c.pattern}</label>
+    <select id="pattern" data-pattern disabled>
+      {(['spike', 'beacon', 'exfil'] as const).map((key) => (
+        <option value={key}>{c[key]}</option>
+      ))}
+    </select>
+    {(['baseline', 'intensity', 'threshold'] as const).map((key, i) => (
+      <div class="lab-range">
+        <label for={key}>
+          {c[key]}{' '}
+          <output data-value={key} for={key}>
+            {[80, 100, 180][i]}
+          </output>
+        </label>
+        <input
+          id={key}
+          data-traffic={key}
+          type="range"
+          min={key === 'threshold' ? 20 : 0}
+          max={key === 'threshold' ? 500 : 200}
+          step="10"
+          value={[80, 100, 180][i]}
+          disabled
+        />
+      </div>
+    ))}
+    <p class="lab-help">{c.trafficHint}</p>
+    <button class="btn" data-reset disabled>
+      {c.reset}
+    </button>
+  </div>
+  <div class="lab-workspace">
+    <h2>{c.requests}</h2>
+    <div class="lab-chart" data-chart></div>
+    <div class="lab-result" role="status" aria-live="polite">
+      <h3>{c.findings}</h3>
+      <div data-result></div>
+    </div>
+    <p class="lab-help">{c.trafficNote}</p>
+  </div>
+</div>

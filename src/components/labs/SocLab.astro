@@ -1,0 +1,55 @@
+---
+import { labCopy } from '../../lib/labs';
+import type { Lang } from '../../lib/i18n';
+interface Props {
+  lang: Lang;
+}
+const c = labCopy(Astro.props.lang);
+---
+
+<div class="lab-grid">
+  <div class="lab-controls">
+    <h2>{c.alerts}</h2>
+    <div class="lab-alerts">
+      {(['suspiciousLogin', 'scriptAlert', 'transferAlert'] as const).map((key, i) => (
+        <button class="lab-alert" data-alert={i} aria-pressed={i === 0 ? 'true' : 'false'} disabled>
+          <span class="mono">
+            {i === 1 ? 'WS-17' : i === 0 ? 'IAM-04' : 'NET-09'} · {c.severity}:{' '}
+            {i === 1 ? c.medium : c.high}
+          </span>
+          <strong>{c[key]}</strong>
+        </button>
+      ))}
+    </div>
+    <p class="lab-help">{c.socHint}</p>
+    <button class="btn" data-reset disabled>
+      {c.reset}
+    </button>
+  </div>
+  <div class="lab-workspace">
+    <h2 data-alert-title>{c.suspiciousLogin}</h2>
+    <div class="lab-graph" data-graph></div>
+    <h3>{c.evidence}</h3>
+    <ol class="lab-evidence" data-evidence>
+      {c.loginEvidence.split('|').map((line) => (
+        <li>{line}</li>
+      ))}
+    </ol>
+    <fieldset>
+      <legend>{c.respond}</legend>
+      <div class="lab-actions">
+        {(['revoke', 'isolate', 'blockTransfer', 'monitor'] as const).map((key) => (
+          <button class="btn" data-response={key} aria-pressed="false" disabled>
+            {c[key]}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+    <div class="lab-result" role="status" aria-live="polite">
+      <h3>{c.findings}</h3>
+      <div data-result>
+        <p>{c.loginAdvice}</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,53 @@
+---
+import { labCopy } from '../../lib/labs';
+import { COMPONENTS } from '../../lib/labModels';
+import type { Lang } from '../../lib/i18n';
+interface Props {
+  lang: Lang;
+}
+const c = labCopy(Astro.props.lang);
+---
+
+<div class="lab-grid">
+  <div class="lab-controls">
+    <h2>{c.controls}</h2>
+    <fieldset>
+      <legend>{c.components}</legend>
+      {COMPONENTS.map((key) => (
+        <label class="lab-check">
+          <input
+            type="checkbox"
+            data-component={key}
+            checked={['endpoint', 'app', 'database'].includes(key)}
+            disabled
+          />
+          {c[key]}
+        </label>
+      ))}
+    </fieldset>
+    <fieldset>
+      <legend>{c.boundaries}</legend>
+      {(['privateData', 'identityGate'] as const).map((key) => (
+        <label class="lab-check">
+          <input type="checkbox" data-boundary={key} disabled />
+          {c[key]}
+        </label>
+      ))}
+    </fieldset>
+    <p class="lab-help">{c.architectureHint}</p>
+    <button class="btn" data-reset disabled>
+      {c.reset}
+    </button>
+  </div>
+  <div class="lab-workspace">
+    <h2>{c.view}</h2>
+    <div class="lab-graph" data-graph></div>
+    <div class="lab-result" role="status" aria-live="polite">
+      <h3>{c.findings}</h3>
+      <div data-result>
+        <p>{c.publicData}</p>
+        <p>{c.missingIdentity}</p>
+      </div>
+    </div>
+  </div>
+</div>
