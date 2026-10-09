@@ -91,6 +91,7 @@ function init(): void {
 
   /** Warm the browser cache with the assets the prefetched page needs and this page does not have. */
   function hintAssets(html: string, pageUrl: string): void {
+    if (document.querySelector('.mx')) return;
     const known = knownAssetUrls();
     for (const hint of assetsToHint(extractAssets(html, pageUrl), known)) {
       const link = document.createElement('link');
@@ -143,6 +144,7 @@ function init(): void {
   }
 
   function pump(): void {
+    if (document.querySelector('.mx')) return;
     while (inFlight < MAX_IN_FLIGHT) {
       const task = queue[0];
       if (task === undefined) return;
@@ -177,6 +179,7 @@ function init(): void {
   }
 
   function prefetchAnchor(a: HTMLAnchorElement): void {
+    if (document.querySelector('.mx')) return;
     const verdict = eligibility(
       {
         href: a.getAttribute('href') ?? '',
@@ -296,6 +299,7 @@ function init(): void {
     }, IDLE_START_DELAY_MS);
   }
   document.addEventListener('astro:page-load', scheduleIdle);
+  document.addEventListener('ht:matrix-close', pump);
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'hidden') return;
