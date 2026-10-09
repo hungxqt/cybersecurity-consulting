@@ -1,0 +1,403 @@
+---
+import type { Lang } from '../lib/i18n';
+import { cities, routes, taxonomy, attackTypes } from '../lib/cyberGlobe';
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const vi = lang === 'vi';
+const types = Object.fromEntries(attackTypes.map((id) => [id, taxonomy[id][lang]]));
+const priorities = {
+  critical: vi ? 'Khẩn cấp' : 'Critical',
+  high: vi ? 'Cao' : 'High',
+  medium: vi ? 'Trung bình' : 'Medium',
+};
+---
+
+<section
+  id="cyber-map"
+  class="section cyber"
+  aria-labelledby="cyber-title"
+  data-cyber-globe
+  data-lang={lang}
+>
+  <div class="container">
+    <div class="cyber__heading">
+      <div>
+        <p class="section__label">{vi ? 'Phạm vi an ninh toàn cầu' : 'Global security coverage'}</p>
+        <h1 id="cyber-title">{vi ? 'Bản đồ an ninh mạng' : 'Cyber threat atlas'}</h1>
+      </div>
+      <span class="cyber__badge" role="status">
+        {vi ? 'Chưa kết nối dữ liệu' : 'Telemetry offline'}
+      </span>
+    </div>
+    <p class="cyber__intro">
+      {vi
+        ? 'Khám phá các loại tấn công và sự cố trên địa cầu 3D. Các tuyến được biên soạn cho bản đồ phạm vi; không phải sự cố đã quan sát và không quy kết nguồn tấn công.'
+        : 'Explore attack and incident categories on a 3D Earth. Routes are curated coverage geography; they do not report observed incidents or attribute attacks.'}
+    </p>
+    <dl class="cyber__metrics">
+      <div>
+        <dt>{vi ? 'Loại tấn công và sự cố' : 'Attack & incident categories'}</dt>
+        <dd>{attackTypes.length}</dd>
+      </div>
+      <div>
+        <dt>{vi ? 'Tuyến phạm vi' : 'Coverage paths'}</dt>
+        <dd>{routes.length}</dd>
+      </div>
+      <div>
+        <dt>{vi ? 'Địa điểm' : 'Locations'}</dt>
+        <dd>{cities.length}</dd>
+      </div>
+      <div>
+        <dt>{vi ? 'Sự cố đã quan sát' : 'Observed incidents'}</dt>
+        <dd>
+          — <span>{vi ? 'Chưa có nguồn dữ liệu' : 'No feed connected'}</span>
+        </dd>
+      </div>
+    </dl>
+    <div class="cyber__console" data-theme="nexus">
+      <div class="cyber__view">
+        <canvas
+          tabindex="0"
+          role="img"
+          aria-label={
+            vi
+              ? 'Địa cầu 3D. Dùng phím mũi tên để xoay, cộng và trừ để thu phóng.'
+              : '3D Earth. Use arrow keys to rotate, plus and minus to zoom.'
+          }
+          aria-describedby="cyber-help"
+        >
+          {vi
+            ? 'Các tuyến phạm vi được liệt kê bên cạnh.'
+            : 'Coverage paths are listed alongside this globe.'}
+        </canvas>
+        <p id="cyber-help" class="cyber__hint">
+          {vi
+            ? 'Kéo để xoay · Chọn tuyến để khám phá'
+            : 'Drag to rotate · Select a route to explore'}
+        </p>
+        <p class="cyber__hint">
+          {vi
+            ? 'Nét liền: tấn công · Nét đứt: sự cố'
+            : 'Solid paths: attacks · Dashed paths: incidents'}
+        </p>
+        <div class="cyber__navigation" aria-label={vi ? 'Điều khiển địa cầu' : 'Globe controls'}>
+          <button type="button" data-control="left" aria-label={vi ? 'Xoay trái' : 'Rotate left'}>
+            ←
+          </button>
+          <button type="button" data-control="right" aria-label={vi ? 'Xoay phải' : 'Rotate right'}>
+            →
+          </button>
+          <button type="button" data-control="up" aria-label={vi ? 'Xoay lên' : 'Rotate up'}>
+            ↑
+          </button>
+          <button type="button" data-control="down" aria-label={vi ? 'Xoay xuống' : 'Rotate down'}>
+            ↓
+          </button>
+          <button type="button" data-control="in" aria-label={vi ? 'Phóng to' : 'Zoom in'}>
+            +
+          </button>
+          <button type="button" data-control="out" aria-label={vi ? 'Thu nhỏ' : 'Zoom out'}>
+            −
+          </button>
+          <button type="button" data-control="reset">
+            {vi ? 'Đặt lại' : 'Reset'}
+          </button>
+        </div>
+      </div>
+      <aside
+        class="cyber__sidebar"
+        aria-label={vi ? 'Phạm vi tấn công và sự cố' : 'Attack and incident coverage'}
+      >
+        <div class="cyber__toolbar">
+          <label for="cyber-filter">
+            {vi ? 'Loại tấn công / sự cố' : 'Attack / incident type'}
+          </label>
+          <select id="cyber-filter">
+            <option value="all">{vi ? 'Tất cả' : 'All types'}</option>
+            {Object.entries(types).map(([id, name]) => (
+              <option value={id}>{name}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            data-pause
+            data-resume-label={vi ? 'Tiếp tục' : 'Resume'}
+            data-pause-label={vi ? 'Tạm dừng' : 'Pause'}
+            aria-pressed="false"
+          >
+            {vi ? 'Tạm dừng' : 'Pause'}
+          </button>
+        </div>
+        <div class="cyber__filters">
+          <label for="cyber-group">{vi ? 'Nhóm' : 'Category'}</label>
+          <select id="cyber-group" data-group-filter>
+            <option value="all">{vi ? 'Tất cả nhóm' : 'All categories'}</option>
+            <option value="attack">{vi ? 'Tấn công' : 'Attacks'}</option>
+            <option value="incident">{vi ? 'Sự cố' : 'Incidents'}</option>
+          </select>
+          <label for="cyber-priority">{vi ? 'Ưu tiên đánh giá' : 'Review priority'}</label>
+          <select id="cyber-priority" data-priority-filter>
+            <option value="all">{vi ? 'Tất cả mức ưu tiên' : 'All priorities'}</option>
+            {Object.entries(priorities).map(([id, label]) => (
+              <option value={id}>{label}</option>
+            ))}
+          </select>
+        </div>
+        <p class="cyber__count">
+          <span data-count>{routes.length}</span> {vi ? 'tuyến phạm vi' : 'coverage paths'}
+        </p>
+        <ul class="cyber__routes">
+          {routes.map((route, i) => (
+            <li
+              data-route-item
+              data-type={route.type}
+              data-group={taxonomy[route.type].group}
+              data-priority={taxonomy[route.type].priority}
+            >
+              <button type="button" data-route={i} aria-pressed="false">
+                <span class="cyber__type" data-priority={taxonomy[route.type].priority}>
+                  {types[route.type]} · {priorities[taxonomy[route.type].priority]}
+                </span>
+                <span>
+                  {cities[route.from]!.name} <span aria-hidden="true">→</span>
+                  <span class="sr-only">{vi ? ' đến ' : ' to '}</span> {cities[route.to]!.name}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <p data-empty hidden>
+          {vi
+            ? 'Không có tuyến phù hợp. Thay đổi bộ lọc.'
+            : 'No matching paths. Adjust the filters.'}
+        </p>
+        <p class="cyber__selection" data-selection aria-live="polite">
+          {vi ? 'Chọn tuyến để xem điểm đến.' : 'Select a route to focus its destination.'}
+        </p>
+        <div class="cyber__detail" data-detail hidden>
+          <h2 data-detail-title></h2>
+          <p data-detail-description></p>
+          <h3>{vi ? 'Trọng tâm ứng phó' : 'Response focus'}</h3>
+          <p data-detail-action></p>
+        </div>
+        <noscript>
+          <p>
+            {vi
+              ? 'Bật JavaScript để tương tác với địa cầu.'
+              : 'Enable JavaScript to interact with the globe.'}
+          </p>
+        </noscript>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cyber__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+  }
+  .cyber h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-display-l);
+    font-weight: 300;
+    margin: var(--s-3) 0;
+  }
+  .cyber__badge {
+    padding: var(--s-2) var(--s-3);
+    border: 1px solid var(--rule-ui);
+    color: var(--accent);
+    font: var(--fs-label) var(--font-mono);
+  }
+  .cyber__intro {
+    color: var(--text-dim);
+    margin: var(--s-3) 0 var(--s-6);
+  }
+  .cyber__metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0 0 var(--s-6);
+    border-top: 1px solid var(--rule);
+  }
+  .cyber__metrics > div {
+    padding: var(--s-4);
+    border-bottom: 1px solid var(--rule);
+  }
+  .cyber__metrics dt {
+    color: var(--text-dim);
+    font: var(--fs-label)/1.5 var(--font-mono);
+  }
+  .cyber__metrics dd {
+    margin: var(--s-2) 0 0;
+    font: var(--fs-h2) var(--font-mono);
+  }
+  .cyber__metrics dd span {
+    display: block;
+    color: var(--text-dim);
+    font: var(--fs-label)/1.5 var(--font-mono);
+  }
+  .cyber__filters {
+    display: grid;
+    gap: var(--s-2);
+    margin-top: var(--s-3);
+  }
+  .cyber__filters label {
+    font: var(--fs-label) var(--font-mono);
+    color: var(--text-dim);
+  }
+  .cyber__detail {
+    border-top: 1px solid var(--rule);
+    padding-top: var(--s-4);
+  }
+  .cyber__detail h2,
+  .cyber__detail h3 {
+    font: 600 var(--fs-small)/1.5 var(--font-body);
+    margin: 0 0 var(--s-2);
+  }
+  .cyber__detail p {
+    font-size: var(--fs-small);
+    margin: 0 0 var(--s-4);
+  }
+  .cyber__console {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    border: 1px solid var(--rule-ui);
+    color: var(--text);
+    background: var(--bg);
+  }
+  .cyber__view {
+    min-width: 0;
+    position: relative;
+    background: var(--bg);
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: clamp(320px, 52vw, 590px);
+    cursor: grab;
+    touch-action: pan-y;
+  }
+  canvas:active {
+    cursor: grabbing;
+  }
+  .cyber__hint {
+    text-align: center;
+    color: var(--text-dim);
+    font: var(--fs-label) var(--font-mono);
+    margin: 0;
+    max-width: none;
+    padding: var(--s-3);
+  }
+  .cyber__navigation {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--s-2);
+    padding: var(--s-3) var(--s-4) var(--s-5);
+  }
+  .cyber button,
+  .cyber select {
+    min-height: 44px;
+    min-width: 44px;
+    padding: var(--s-2) var(--s-3);
+    border: 1px solid var(--rule-ui);
+    background: var(--surface);
+    color: var(--text);
+    font: var(--fs-label) var(--font-mono);
+    cursor: pointer;
+  }
+  .cyber button:hover,
+  .cyber button[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--surface-2);
+  }
+  .cyber :is(button, select, canvas):focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+  .cyber__sidebar {
+    padding: var(--s-5);
+    min-width: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .cyber__toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--s-2);
+  }
+  .cyber__toolbar label {
+    grid-column: 1 / -1;
+    font: var(--fs-label) var(--font-mono);
+    color: var(--text-dim);
+  }
+  .cyber select {
+    width: 100%;
+  }
+  .cyber__count,
+  .cyber__selection {
+    color: var(--text-dim);
+    font: var(--fs-label)/1.6 var(--font-mono);
+    margin: var(--s-4) 0;
+  }
+  .cyber__routes {
+    /* Contain absolute screen-reader labels inside this scrolling list. */
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .cyber__routes button {
+    display: grid;
+    gap: var(--s-1);
+    width: 100%;
+    text-align: left;
+    border: 0;
+    border-top: 1px solid var(--rule);
+    padding: var(--s-3);
+    font: var(--fs-small)/1.5 var(--font-body);
+  }
+  .cyber__type {
+    font: var(--fs-label) var(--font-mono);
+  }
+  .cyber__type[data-priority='critical'] {
+    color: var(--threat);
+  }
+  .cyber__type[data-priority='high'] {
+    color: var(--accent);
+  }
+  .cyber__type[data-priority='medium'] {
+    color: var(--text);
+  }
+  @media (min-width: 900px) {
+    .cyber__metrics {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .cyber__console {
+      grid-template-columns: minmax(0, 1fr) 380px;
+    }
+    .cyber__sidebar {
+      border-top: 0;
+      border-left: 1px solid var(--rule);
+    }
+  }
+</style>
+
+<script>
+  import { initCyberGlobe } from '../scripts/cyberGlobe';
+  let cleanup: (() => void) | undefined;
+  function setup() {
+    cleanup?.();
+    const root = document.querySelector<HTMLElement>('[data-cyber-globe]');
+    cleanup = root ? initCyberGlobe(root) : undefined;
+  }
+  setup();
+  document.addEventListener('astro:page-load', setup);
+  document.addEventListener('astro:before-swap', () => cleanup?.());
+</script>

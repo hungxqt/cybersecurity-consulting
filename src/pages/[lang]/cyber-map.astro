@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CyberGlobe from '../../components/CyberGlobe.astro';
+import { langStaticPaths } from '../../lib/paths';
+import type { Lang } from '../../lib/i18n';
+export const getStaticPaths = langStaticPaths;
+const lang = Astro.params.lang as Lang;
+---
+
+<BaseLayout
+  lang={lang}
+  title={lang === 'vi' ? 'Bản đồ an ninh mạng' : 'Cyber threat atlas'}
+  description={
+    lang === 'vi'
+      ? 'Khám phá phạm vi tấn công và sự cố trên địa cầu tương tác 3D.'
+      : 'Explore attack and incident coverage on an interactive 3D Earth.'
+  }
+  nextStep={false}
+>
+  <CyberGlobe lang={lang} />
+</BaseLayout>

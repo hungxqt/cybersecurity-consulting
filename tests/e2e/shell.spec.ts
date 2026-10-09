@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 
 const ROUTES = [
   '',
+  'cyber-map/',
   'solutions/',
   'solutions/consulting/',
   'solutions/audit/',

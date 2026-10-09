@@ -12,6 +12,7 @@ export const SOLUTIONS: NavItem[] = [
 ];
 
 export const PRIMARY: NavItem[] = [
+  { key: 'nav.cyberMap', path: '/cyber-map/' },
   { key: 'nav.experience', path: '/experience/' },
   { key: 'nav.blog', path: '/blog/' },
   { key: 'nav.resources', path: '/resources/' },
@@ -23,6 +24,7 @@ export const METHOD: NavItem = { key: 'nav.method', path: '/solutions/#method' }
 export const FOOTER_SOLUTIONS: NavItem[] = [...SOLUTIONS, METHOD];
 
 export const FOOTER_EXPERIENCE: NavItem[] = [
+  { key: 'nav.cyberMap', path: '/cyber-map/' },
   { key: 'nav.journeys', path: '/experience/#journeys' },
   { key: 'nav.blog', path: '/blog/' },
   { key: 'nav.resources', path: '/resources/' },
