@@ -1,0 +1,34 @@
+---
+title: "Báo cáo phòng thủ số 2026: điều tra cần kết nối các tín hiệu"
+description: "Báo cáo mới của Microsoft kết nối rủi ro danh tính, hạ tầng, đám mây và AI. Cách biến góc nhìn đó thành cuộc điều tra SOC có thể hoàn thành."
+date: 2026-10-01
+author: "Đội ngũ HungTran"
+tags: ["soc","identity","cloud"]
+service: "soc"
+---
+
+Microsoft phát hành Báo cáo phòng thủ số 2026 vào ngày 1/10. Phần giới thiệu nhấn mạnh mối liên hệ giữa danh tính, hạ tầng, ứng dụng, dịch vụ đám mây và chuỗi cung ứng phần mềm. Đây là phát hiện trong phạm vi quan sát của Microsoft, không phải thống kê toàn bộ tổ chức. [Đọc giới thiệu báo cáo của Microsoft](https://www.microsoft.com/en-us/security/blog/2026/10/01/insights-from-the-2026-microsoft-digital-defense-report/).
+
+## Góc nhìn HungTran: điều tra đường đi xuyên hệ thống
+
+Đăng nhập đáng ngờ có thể do đội danh tính xử lý, trong khi tải xuống bất thường được chuyển cho đội đám mây. Nếu không nhìn thấy sự kiện của nhau, mỗi đội có thể đóng một mảnh nhỏ của cuộc xâm nhập lớn hơn.
+
+Chọn một đường điều tra quan trọng với doanh nghiệp: tài khoản nhân viên bị chiếm quyền truy cập tài liệu nhạy cảm rồi tạo thông tin xác thực ứng dụng mới. Kiểm tra xem chuyên viên có nối được các hành động với cùng danh tính, thiết bị và phiên hay không.
+
+## Thiết lập hồ sơ điều tra dùng chung
+
+Chúng tôi khuyến nghị xác định trường dữ liệu tối thiểu để nối sự kiện trước khi mua thêm bảng điều khiển:
+
+- Định danh tài khoản ổn định, gồm tài khoản dịch vụ và khách.
+- Dấu thời gian có múi giờ rõ ràng và thứ tự sự kiện đáng tin cậy.
+- Ứng dụng, thiết bị và tài nguyên liên quan.
+- Người phê duyệt hoặc thực hiện thay đổi đặc quyền.
+- Liên kết đến bằng chứng được lưu giữ và người phụ trách ứng phó.
+
+Kiểm tra giới hạn thu thập do yêu cầu riêng tư hoặc nền tảng. Ghi nhận khoảng trống để người ứng phó biết điều gì không thể xác minh.
+
+## Kiểm tra bàn giao
+
+Tổ chức diễn tập được phép, chuyển hồ sơ từ đội danh tính sang đội thiết bị đầu cuối và đám mây. Đo xem đội tiếp nhận có nhận đủ bằng chứng, bối cảnh và quyết định cần đưa ra, hay chỉ nhận phiếu với tên cảnh báo.
+
+Rà soát kết quả cùng chủ dịch vụ. Giá trị thực tế là điều tra được kết nối và quyết định cô lập rõ ràng. Báo cáo mối đe dọa giúp chọn ưu tiên, còn quy trình đã diễn tập mới cho biết tổ chức có thể lần theo đường tấn công hay không.

@@ -1,0 +1,36 @@
+---
+title: "Cyber decoys need a response owner, not only an alert"
+description: "CISA's September guidance brings cyber decoys into detection planning. Define what a trigger means, who investigates and how to keep the deployment contained."
+date: 2026-09-16
+author: "HungTran team"
+tags: ["detection","soc","incident-response"]
+service: "soc"
+---
+
+On 16 September 2026, CISA released guidance on using cyber decoys to strengthen detection and response. Its announcement describes monitored systems, accounts or data intended to reveal intruder activity, including activity that uses legitimate tools. [Read CISA's official announcement](https://content.govdelivery.com/accounts/USDHSCISA/bulletins/42aff90).
+
+## Our assessment: design the investigation before the trigger
+
+A decoy can create a distinctive signal, but an unattended signal will not contain an intrusion. Before deployment, decide what an interaction means and who will examine it.
+
+Start with one protected environment and a narrow detection objective. Define the expected legitimate interactions, including backup, indexing and vulnerability scanning. A trigger should lead an analyst to a clear question about the actor and the surrounding activity.
+
+## Keep the deployment bounded
+
+Our recommended deployment record includes:
+
+- The asset owner and reason for placing the decoy.
+- Its permissions, reachable services and network boundaries.
+- An explanation of why it contains no real sensitive business data.
+- The alert destination, evidence retained and on-call owner.
+- The removal procedure and conditions requiring immediate shutdown.
+
+For a decoy credential, verify that it cannot grant unintended access to real resources. Review the design with the environment's owner before introducing it.
+
+## Exercise the whole response path
+
+Perform an authorized interaction and follow the alert into the SOC queue. Check whether the analyst can locate the source identity or device, establish what happened and escalate with the evidence intact.
+
+Then examine ordinary maintenance activity to see whether it creates distracting signals. Adjust the design based on observed behavior rather than assuming that all decoy events are hostile.
+
+Use the exercise to agree on a response decision. The investment becomes useful when a trigger starts an investigation that somebody owns and can complete.

@@ -1,0 +1,36 @@
+---
+title: "Rà soát mã bằng AI cần được xác minh độc lập"
+description: "Báo cáo kỹ thuật tháng 9 của Google mô tả quét bảo mật trong rà soát mã. Xây dựng quy trình kiểm tra bằng chứng và giữ trách nhiệm phát hành rõ ràng."
+date: 2026-09-19
+author: "Đội ngũ HungTran"
+tags: ["application-security","ai","secure-development"]
+service: "consulting"
+---
+
+Ngày 19/9/2026, Google mô tả quy trình bảo mật hạ tầng nội bộ kết hợp quét bằng AI, xác minh cấu trúc và đề xuất bản sửa để con người rà soát. Kết quả hiệu năng thuộc triển khai của Google; chúng không xác nhận độ chính xác của công cụ quét ở đội ngũ khác. [Đọc báo cáo kỹ thuật của Google](https://cloud.google.com/blog/topics/systems/using-ai-agents-to-secure-google-infrastructure/).
+
+## Góc nhìn HungTran: xác định điều người rà soát cần chứng minh
+
+Giải thích do AI tạo có thể thuyết phục nhưng bỏ sót cách thành phần thực sự được sử dụng. Người rà soát cần biết đường bị ảnh hưởng có thể tiếp cận không, thay đổi có bảo vệ ranh giới dự kiến không và hành vi bình thường còn hoạt động không.
+
+Bắt đầu với một nhóm lỗi hẹp trong thành phần đã hiểu rõ. Thống nhất bằng chứng cần có trước khi phát hiện trở thành yêu cầu chặn duyệt mã.
+
+## Tách xác minh khỏi tạo nội dung
+
+Quy trình chúng tôi khuyến nghị yêu cầu bên tạo báo cáo đưa ra nghi vấn và bên rà soát xác minh với ứng dụng thực tế. Dùng kiểm tra thực thi khi khả thi và lưu kết quả cùng bản sửa.
+
+Với mỗi thay đổi được chấp nhận, ghi nhận:
+
+- Đầu vào hoặc hành động tiếp cận hành vi bị ảnh hưởng.
+- Thuộc tính bảo mật thay đổi cần bảo đảm.
+- Kiểm tra hồi quy thất bại trên phiên bản có lỗi.
+- Kiểm tra sử dụng bình thường để tránh phá vỡ hành vi dự kiến.
+- Kỹ sư chịu trách nhiệm phê duyệt và phát hành.
+
+Không coi lần đánh giá thứ hai của cùng bộ tạo là bằng chứng độc lập.
+
+## Thử nghiệm mà không che giấu chi phí kỹ thuật
+
+Theo dõi phát hiện được chấp nhận, nghi vấn bị loại, thời gian rà soát và lỗi hồi quy do thay đổi gợi ý gây ra. So sánh với quy trình hiện tại trên thành phần mà đội ngũ đã hiểu rủi ro.
+
+Giữ quyền phát hành ở người phụ trách hiện hành. Nếu thử nghiệm tạo ra bản sửa hữu ích với công sức rà soát hợp lý, mở rộng phạm vi có chủ đích. Niềm tin hình thành từ bằng chứng được giữ lại và quyết định nhất quán, thay vì mức tự tin của bình luận tự động.

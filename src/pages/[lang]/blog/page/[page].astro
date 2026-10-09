@@ -1,0 +1,31 @@
+---
+import { getCollection } from 'astro:content';
+import BlogListing from '../../../../components/BlogListing.astro';
+import { BLOG_PAGE_SIZE } from '../../../../lib/blog';
+import { resolveForLang } from '../../../../lib/content';
+import { LOCALES, type Lang } from '../../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const all = await getCollection('posts');
+  return LOCALES.flatMap((lang) => {
+    const posts = resolveForLang(all, lang);
+    const pages = Math.ceil(posts.length / BLOG_PAGE_SIZE);
+    return Array.from({ length: Math.max(0, pages - 1) }, (_, index) => {
+      const currentPage = index + 2;
+      return {
+        params: { lang, page: String(currentPage) },
+        props: {
+          posts: posts.slice((currentPage - 1) * BLOG_PAGE_SIZE, currentPage * BLOG_PAGE_SIZE),
+          currentPage,
+          total: posts.length,
+        },
+      };
+    });
+  });
+}
+
+const lang = Astro.params.lang as Lang;
+const { posts, currentPage, total } = Astro.props;
+---
+
+<BlogListing lang={lang} posts={posts} currentPage={currentPage} total={total} />

@@ -76,16 +76,16 @@ Measure it (build first with `npm run build`):
 
 ## Vietnamese translation
 
-English is the source of truth. Every Vietnamese string and MDX entry starts as a `[VI] ...` placeholder with the same keys.
+English is the source of truth. The Vietnamese dictionary and articles are fully translated. New keys created by the sync scripts start as `[VI] ...` placeholders and must be translated before release.
 
 - Add or change English strings in a JSON file and run `node scripts/add-keys.mjs <file.json>`. It merges into `src/i18n/en.json` and runs `sync-vi.mjs`.
 - To delete keys, remove them from `en.json`, then run `node scripts/sync-vi.mjs` (it prunes `vi.json` and refreshes `[VI]` placeholders whose English changed).
 - Content: edit only the English MDX in `src/content/{posts,cases}/en/`, then run `node scripts/sync-vi-content.mjs`. It regenerates Vietnamese files that still carry the `[VI]` marker and deletes marker-carrying orphans. A file you translated (no marker) is never overwritten.
 - To translate, replace the `[VI] ` text in `src/i18n/vi.json` or the Vietnamese MDX.
-- CI prints the remaining count in the job summary. Switch `vi-placeholders` to `--strict` to block releases until it is zero.
+- `npm run build` runs the strict translation check and fails if any `[VI]` entries remain. Unit tests also check dictionary completeness and interpolation tokens. `npm run vi:report` lists outstanding entries during editing.
 - Run `npm run og` after translating so the Vietnamese share image uses real text.
 
-Until a string or entry is translated, `/vi/` shows the English text: the `[VI]` placeholders never render (`translate()` and `resolveForLang()` fall back to English). `<html lang="vi">` and the `hreflang` alternates still declare Vietnamese.
+The runtime keeps English fallback for missing content during editing, but the release checks prevent untranslated dictionary entries or articles from shipping. Language switching preserves the current page, and `/vi/` renders Vietnamese text, metadata and article bodies.
 
 ## Deploy (Cloudflare Pages)
 

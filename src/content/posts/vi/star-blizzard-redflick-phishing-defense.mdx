@@ -1,0 +1,33 @@
+---
+title: "RedFlick của Star Blizzard đặt ra yêu cầu phòng thủ theo hành vi"
+description: "Nghiên cứu tháng 9 mô tả thay đổi trong cách phát tán của Star Blizzard. Cách chuyển thông tin tình báo thành ứng phó với tài liệu và tác vụ đáng ngờ."
+date: 2026-09-29
+author: "Đội ngũ HungTran"
+tags: ["phishing","threat-intelligence","detection"]
+service: "soc"
+---
+
+Ngày 29/9/2026, Microsoft mô tả Star Blizzard sử dụng RedFlick, kỹ thuật phát tán liên quan đến tác vụ định kỳ và cửa hậu CosmicPulse. Quan sát bao gồm hoạt động từ tháng 1/2026, trong đó có lừa đảo và website bị chiếm quyền. [Đọc nghiên cứu mối đe dọa của Microsoft](https://www.microsoft.com/en-us/security/blog/2026/09/29/star-blizzard-refines-phishing-and-malware-delivery-with-the-redflick-technique/).
+
+## Góc nhìn HungTran: dựng chuỗi sự kiện có thể kiểm chứng
+
+Tác vụ định kỳ không quen thuộc là đầu mối hữu ích, nhưng phần mềm hợp pháp cũng tạo tác vụ. Chuyên viên cần chuỗi bối cảnh: thư đến, truy cập tài liệu, tạo tiến trình, đăng ký tác vụ và hoạt động mạng tiếp theo.
+
+Giữ các định danh nối những sự kiện đó. Nếu hệ thống thư và thiết bị đầu cuối dùng tên tài khoản khác nhau, ghi lại cách ánh xạ trước khi phải điều tra khẩn cấp.
+
+## Cung cấp đường ra quyết định cho chuyên viên
+
+Các câu hỏi phân loại chúng tôi khuyến nghị:
+
+1. Thông điệp hoặc website nào xuất hiện trước hoạt động, và có thể lưu bản gốc an toàn không?
+2. Tiến trình nào tạo tác vụ, bằng tài khoản nào?
+3. Tác vụ thực thi gì, và người phụ trách được duyệt có nhận ra nó không?
+4. Thiết bị hoặc danh tính có kết nối đến nơi bất thường hay truy cập dữ liệu nhạy cảm không?
+
+Yêu cầu người ứng phó rà soát bằng chứng tổng hợp trước khi quy kết tác nhân. Hành vi tương tự trong hai sự cố không chứng minh cùng một nhóm thực hiện.
+
+## Giúp nhân viên báo cáo dễ dàng
+
+Cung cấp cách đơn giản để báo cáo lời mời, yêu cầu tài liệu hoặc yêu cầu đăng nhập bất thường. Nhân viên không cần xác định nhóm tấn công nào liên quan. Báo cáo hữu ích giữ được thông điệp và thời gian mà không yêu cầu tiếp tục tương tác với nội dung.
+
+Diễn tập bàn giao từ bộ phận hỗ trợ sang SOC với một hồ sơ tài liệu đáng ngờ. Kiểm tra người ứng phó có lấy được bằng chứng thư và thiết bị, liên hệ người dùng và cô lập quyền truy cập khi có căn cứ không. Doanh nghiệp có quy trình điều tra lặp lại được ngay cả khi chiến dịch tiếp theo đổi tên miền hoặc tên tệp.

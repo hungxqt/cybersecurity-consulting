@@ -75,7 +75,9 @@ test('every page ends with next-step cards that lead somewhere else', async ({ p
   ];
   for (const url of pages) {
     await page.goto(url);
-    const links = page.getByRole('navigation', { name: 'Where to next' }).getByRole('link');
+    const links = page
+      .getByRole('navigation', { name: url.startsWith('/vi/') ? 'Khám phá tiếp' : 'Where to next' })
+      .getByRole('link');
     await expect(links).toHaveCount(2);
     const hrefs = await links.evaluateAll((els) =>
       els.map((e) => (e as HTMLAnchorElement).getAttribute('href')),

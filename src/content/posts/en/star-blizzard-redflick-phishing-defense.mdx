@@ -1,0 +1,33 @@
+---
+title: "Star Blizzard's RedFlick evolution calls for behavior-based phishing defense"
+description: "September research describes evolving Star Blizzard delivery methods. Translate the threat intelligence into a usable response to suspicious documents and tasks."
+date: 2026-09-29
+author: "HungTran team"
+tags: ["phishing","threat-intelligence","detection"]
+service: "soc"
+---
+
+On 29 September 2026, Microsoft described Star Blizzard's use of RedFlick, a delivery technique involving scheduled tasks and the CosmicPulse backdoor. Its observations cover activity since January 2026, including phishing and compromised websites. [Read Microsoft's threat research](https://www.microsoft.com/en-us/security/blog/2026/09/29/star-blizzard-refines-phishing-and-malware-delivery-with-the-redflick-technique/).
+
+## Our assessment: build a defensible sequence of events
+
+An unfamiliar scheduled task is a useful lead, but legitimate software creates tasks too. Analysts need the surrounding sequence: message delivery, document access, process creation, task registration and subsequent network activity.
+
+Retain the identifiers that connect those events. If mail and endpoint systems use different account names, document the mapping before an urgent investigation begins.
+
+## Give the analyst a decision path
+
+Our recommended triage asks:
+
+1. What message or site preceded the activity, and can the original artifact be retained safely?
+2. Which process created the task, under which account?
+3. What does the task execute, and does an approved owner recognize it?
+4. Did the device or identity contact an unexpected destination or access sensitive data?
+
+Have a responder review the combined evidence before assigning attribution. Similar behavior across two incidents does not establish that the same group performed both.
+
+## Make reporting easy for staff
+
+Provide a simple way to report an unexpected invitation, document request or sign-in prompt. The employee should not have to decide which threat actor is involved. A useful report preserves the message and time without requiring further interaction with the content.
+
+Exercise the handover from the help desk to the SOC on one suspicious-document case. Check that the responder can obtain both mail and endpoint evidence, contact the user and contain access when justified. The business gains a repeatable investigation even when the next campaign changes its domain or file name.

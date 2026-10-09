@@ -1,0 +1,34 @@
+---
+title: "The 2026 Digital Defense Report makes a case for connected investigations"
+description: "Microsoft's latest report connects identity, infrastructure, cloud and AI risk. Turn that perspective into an investigation your SOC can actually complete."
+date: 2026-10-01
+author: "HungTran team"
+tags: ["soc","identity","cloud"]
+service: "soc"
+---
+
+Microsoft released its 2026 Digital Defense Report on 1 October. Its introductory analysis emphasizes the links between identities, infrastructure, applications, cloud services and software supply chains. These are findings from Microsoft's visibility, not a census of every organization. [Read Microsoft's report overview](https://www.microsoft.com/en-us/security/blog/2026/10/01/insights-from-the-2026-microsoft-digital-defense-report/).
+
+## Our assessment: investigate a path across systems
+
+A suspicious login may be handled by the identity team while an unusual download goes to the cloud team. If neither can see the other event, each might close a small piece of a larger intrusion.
+
+Choose one investigation path that matters to the business: a compromised employee account accessing sensitive documents and creating a new application credential. Ask whether an analyst can connect those actions to the same identity, device and session.
+
+## Establish a shared investigation record
+
+Our recommendation is to define the minimum fields needed to join events before buying another dashboard:
+
+- A stable account identifier, including service and guest identities.
+- A timestamp with a known time zone and a reliable event order.
+- The application, device and resource involved.
+- The actor who approved or performed a privileged change.
+- A link to retained evidence and the response owner.
+
+Check whether privacy requirements or platform limits restrict collection. Document those gaps so responders know what cannot be established.
+
+## Test the handover
+
+Run an authorized exercise that moves a case from identity to endpoint and cloud responders. Measure whether the second team receives evidence, context and a decision to make, rather than a ticket containing only an alert name.
+
+Review the outcome with service owners. The practical improvement is a joined investigation and a clear containment decision. A threat report can inform priorities, but only an exercised workflow establishes whether your organization can follow the attack path.

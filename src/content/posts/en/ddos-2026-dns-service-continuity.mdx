@@ -1,0 +1,34 @@
+---
+title: "DDoS readiness must include DNS and the customer journey"
+description: "Cloudflare's first-half 2026 data brings DNS resilience into focus. Review the dependencies and operational decisions behind keeping a service available."
+date: 2026-08-11
+author: "HungTran team"
+tags: ["resilience","ddos","network-security"]
+service: "consulting"
+---
+
+Cloudflare's report, published on 11 August 2026 and covering January–June, says DNS-based vectors accounted for 34.3% of network-layer DDoS attacks it observed. The percentage describes Cloudflare's dataset, rather than every attack worldwide. [Read Cloudflare's H1 2026 report](https://blog.cloudflare.com/ddos-threat-report-2026-h1/).
+
+## Our assessment: test the route the customer depends on
+
+A website can have healthy servers while customers cannot reach it. DNS, upstream connectivity, identity and application dependencies can each interrupt a transaction before it reaches the application.
+
+Map the route from name resolution to a completed customer action. Identify where traffic is protected, where it can bypass protection and which provider owns each part of the path. Include externally hosted sign-in and payment services when they are needed to complete the transaction.
+
+## Prepare decisions before traffic spikes
+
+Our recommended readiness review asks:
+
+- Which team can change protective controls and contact the provider?
+- Can customers still resolve the service name during a DNS disruption?
+- Is the origin reachable through a route that bypasses the intended protection?
+- Which rate limits preserve legitimate customer behavior?
+- Where will status updates appear if the main site is unavailable?
+
+Document the answers with contact details and change authority. Evaluate provider capacity and contractual coverage against your architecture rather than assuming a product name covers every dependency.
+
+## Verify continuity with controlled checks
+
+Use authorized load and failover checks agreed with the infrastructure provider. Measure customer outcomes such as sign-in and checkout completion alongside latency and error rates.
+
+Review false blocks and the recovery time after protective settings are removed. Give the business owner the result as a service-continuity decision: what remains available, what degrades and what requires manual action. Availability becomes an operational capability when those decisions have owners and evidence.

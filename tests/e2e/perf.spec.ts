@@ -3,10 +3,11 @@ import { gzipSync } from 'node:zlib';
 
 /** Loads a URL and records every same-origin response body so sizes do not depend on server compression. */
 async function load(page: Page, path: string) {
+  const origin = new URL(test.info().project.use.baseURL ?? 'http://localhost:4321').origin;
   const bodies = new Map<string, { type: string; raw: number; gz: number }>();
   const pending: Promise<void>[] = [];
   page.on('response', (res: Response) => {
-    if (!res.url().startsWith('http://localhost:4321/')) return;
+    if (new URL(res.url()).origin !== origin) return;
     pending.push(
       res
         .body()

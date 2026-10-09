@@ -1,0 +1,33 @@
+---
+title: "Chuẩn bị hậu lượng tử bắt đầu từ danh mục chứng thư"
+description: "Nghiên cứu tháng 10 của Microsoft đặt ra yêu cầu kiểm tra tương thích chứng thư. Cách rà soát phụ thuộc PKI trước khi chuyển đổi."
+date: 2026-10-08
+author: "Đội ngũ HungTran"
+tags: ["cryptography","identity","architecture"]
+service: "consulting"
+---
+
+Ngày 8/10/2026, Microsoft công bố hướng dẫn chuẩn bị hệ sinh thái chứng thư cho xác thực hậu lượng tử. Tài liệu nêu rủi ro tương thích giữa ứng dụng, thiết bị và PKI khi thuật toán và kích thước chứng thư thay đổi. [Đọc nghiên cứu của Microsoft](https://www.microsoft.com/en-us/security/blog/2026/10/08/post-quantum-authentication-why-organizations-should-start-testing-certificate-ecosystems-now/).
+
+## Góc nhìn HungTran: chuyển đổi theo kết nối nghiệp vụ
+
+Danh mục mật mã chỉ hữu ích khi có người giải thích được điều gì sẽ ngừng hoạt động nếu một thành phần thay đổi. Một chứng thư có thể kết nối cổng thanh toán, máy quét trong kho hoặc quản trị viên với dịch vụ quan trọng. Mỗi kết nối có mức chấp nhận gián đoạn khác nhau.
+
+Bắt đầu từ một quy trình nghiệp vụ. Lập bản đồ tổ chức cấp chứng thư, kho tin cậy, thư viện phía khách, điểm kết thúc kết nối, quy trình gia hạn và người phụ trách vận hành. Bao gồm cả chứng thư giữa các dịch vụ nội bộ; website công khai chỉ là một phần của hệ thống.
+
+## Lập hồ sơ tương thích
+
+Với mỗi kết nối quan trọng, ghi nhận:
+
+- Thành phần xác minh chứng thư và người có quyền cập nhật.
+- Cơ chế gia hạn, theo dõi hết hạn và người phụ trách khôi phục.
+- Giới hạn kích thước, độ trễ hoặc thiết bị cần kiểm thử có kiểm soát.
+- Kế hoạch chuyển đổi của nhà cung cấp và những phụ thuộc chưa giải quyết.
+
+Tách tuyên bố của nhà cung cấp khỏi kết quả đội ngũ đã trực tiếp quan sát. Lộ trình hỗ trợ lập kế hoạch; kiểm thử tích hợp tạo bằng chứng.
+
+## Mốc khởi đầu có giá trị
+
+Chúng tôi khuyến nghị chọn một quy trình ít ảnh hưởng và kiểm thử trong môi trường tách biệt bằng các thành phần được hỗ trợ. Đo khả năng kết nối, gia hạn và quay lui. Duy trì đường kết nối hiện tại trong môi trường vận hành cho đến khi người phụ trách đánh giá kết quả.
+
+Đưa kết quả vào buổi rà soát kiến trúc dưới dạng bản đồ phụ thuộc với người chịu trách nhiệm rõ ràng. Đội mua sắm và kỹ thuật sẽ có vấn đề cụ thể để xử lý, thay vì đặt thời hạn thiếu căn cứ về thời điểm máy tính lượng tử có thể phá vỡ mật mã.

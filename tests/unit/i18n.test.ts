@@ -96,4 +96,19 @@ describe('dictionaries', () => {
   it('vi has exactly the same keys as en', () => {
     expect(Object.keys(dictionaries.vi).sort()).toEqual(Object.keys(dictionaries.en).sort());
   });
+  it('ships complete Vietnamese translations rather than English fallback', () => {
+    expect(Object.entries(dictionaries.vi).filter(([, value]) => isPlaceholder(value))).toEqual([]);
+    const englishProse = Object.entries(dictionaries.en).filter(
+      ([key, value]) => value.split(/\s+/).length >= 5 && dictionaries.vi[key] === value,
+    );
+    expect(englishProse).toEqual([]);
+    expect(dictionaries.vi['nav.home']).toBe('Trang chủ');
+    expect(dictionaries.vi['nav.contact']).toBe('Liên hệ');
+  });
+  it('preserves every interpolation token in Vietnamese translations', () => {
+    const tokens = (value: string) => [...value.matchAll(/\{\w+\}/g)].map((m) => m[0]).sort();
+    for (const [key, value] of Object.entries(dictionaries.en)) {
+      expect(tokens(dictionaries.vi[key]!), key).toEqual(tokens(value));
+    }
+  });
 });

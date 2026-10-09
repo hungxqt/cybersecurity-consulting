@@ -1,0 +1,34 @@
+---
+title: "Hướng dẫn bảo vệ token của NIST đưa quyền truy cập phiên vào kế hoạch sự cố"
+description: "NIST và CISA hoàn thiện IR 8587 trong tháng 9. Rà soát xử lý token, trách nhiệm nhà cung cấp và bằng chứng xác minh quyền truy cập đã thu hồi."
+date: 2026-09-15
+author: "Đội ngũ HungTran"
+tags: ["identity","cloud","governance"]
+service: "consulting"
+---
+
+Ngày 15/9/2026, NIST thông báo hoàn thiện IR 8587 cùng CISA về bảo vệ token và xác nhận danh tính khỏi trộm cắp, giả mạo và lạm dụng. Tài liệu hướng tới cơ quan và nhà cung cấp đám mây, đồng thời có giá trị ngoài khu vực chính phủ. [Đọc thông báo công bố của NIST](https://www.nist.gov/news-events/news/2026/09/nist-finalizes-guidelines-protecting-online-identity-and-access-tokens).
+
+## Góc nhìn HungTran: lập bản đồ mọi hình thức truy cập còn hiệu lực
+
+Khôi phục tài khoản chưa đầy đủ nếu người ứng phó không biết phiên, quyền cấp cho ứng dụng hoặc thông tin xác thực nào vẫn có thể cho phép hoạt động. Mỗi nền tảng có hành vi thu hồi khác nhau, nên quy trình ứng phó cần cụ thể theo dịch vụ.
+
+Với mỗi ứng dụng quan trọng, ghi lại cách quyền truy cập được cấp, xác minh, gia hạn và thu hồi. Xác định việc khách hàng kiểm soát và việc cần nhà cung cấp tham gia.
+
+## Đặt câu hỏi vận hành trước sự cố
+
+Rà soát chúng tôi khuyến nghị bao gồm:
+
+- Nơi lưu token và khóa ký, cùng người được phép truy cập.
+- Nhật ký chẩn đoán hoặc gói hỗ trợ có thể làm lộ thông tin xác thực không.
+- Cách ứng dụng xác minh bên phát hành và bên nhận dự kiến.
+- Điều gì xảy ra với phiên hiện có khi quyền bị thu hồi.
+- Nhật ký nào chứng minh truy cập có tiếp tục sau đó không.
+
+Không dán token thật vào phiếu hỗ trợ hoặc ghi chú điều tra. Dùng tham chiếu đến bằng chứng được bảo vệ và chỉ giữ thông tin người ứng phó cần.
+
+## Xác minh thu hồi trên ứng dụng thực tế
+
+Trong kiểm thử được phép với tài khoản riêng, thiết lập truy cập, thực hiện quy trình thu hồi rồi kiểm tra lại ứng dụng. Ghi thời điểm truy cập dừng và hành động bổ sung cần từ nhà cung cấp hoặc ứng dụng.
+
+Dùng kết quả cập nhật quy trình sự cố và hồ sơ trách nhiệm. Yêu cầu nhà cung cấp giải thích khoảng thời gian truy cập hiện tại còn hợp lệ. Chúng tôi khuyến nghị rà soát đồng thời kiến trúc và ứng phó: kết quả cần là bằng chứng quyền dự kiến đã chấm dứt, cùng đường khôi phục cho người dùng hợp pháp.

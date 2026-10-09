@@ -1,15 +1,15 @@
 ---
 import { ClientRouter } from 'astro:transitions';
-// Weight-level Fontsource files: each declares latin / latin-ext / vietnamese faces gated by
-// unicode-range, so a page downloads only the subsets its text uses (design §3.1).
+// Font ranges overlap (notably Đ/đ). Declare Vietnamese last so those glyphs use
+// the Vietnamese subset instead of downloading Latin Extended as well.
 import '@fontsource-variable/jetbrains-mono/index.css';
 import '@fontsource/be-vietnam-pro/300.css';
 import '@fontsource/be-vietnam-pro/400.css';
 import '@fontsource/be-vietnam-pro/600.css';
+import '../styles/fonts.css';
 // The LCP face (h1 = Be Vietnam Pro 300) is preloaded; Vite dedupes these with the CSS assets.
 import bvp300Latin from '@fontsource/be-vietnam-pro/files/be-vietnam-pro-latin-300-normal.woff2?url';
 import bvp300Vietnamese from '@fontsource/be-vietnam-pro/files/be-vietnam-pro-vietnamese-300-normal.woff2?url';
-import bvp300LatinExt from '@fontsource/be-vietnam-pro/files/be-vietnam-pro-latin-ext-300-normal.woff2?url';
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -43,7 +43,7 @@ const {
   theme = 'nexus',
 } = Astro.props;
 const themeColor = theme === 'atlas' ? '#F2F4F5' : '#0D0F11';
-const fontPreloads = lang === 'vi' ? [bvp300Latin, bvp300Vietnamese, bvp300LatinExt] : [bvp300Latin];
+const fontPreloads = lang === 'vi' ? [bvp300Latin, bvp300Vietnamese] : [bvp300Latin];
 const t = useT(lang);
 const path = Astro.props.path ?? stripLocale(Astro.url.pathname);
 const site = Astro.site ?? new URL('https://hungtran.id.vn');

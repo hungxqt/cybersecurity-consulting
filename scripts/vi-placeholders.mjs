@@ -1,5 +1,5 @@
-// Lists every remaining "[VI]" placeholder (dictionary + MDX content). Never fails the build:
-// it reports progress so translation gaps are visible in CI. Use --strict to fail on any.
+// Lists remaining "[VI]" placeholders in the dictionary and MDX content.
+// The release build uses --strict to reject unfinished translations.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 

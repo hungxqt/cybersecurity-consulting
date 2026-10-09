@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/vi-placeholders.mjs --strict && astro build",
     "preview": "astro preview --port 4321",
     "check": "astro check",
     "lint": "eslint .",

@@ -1,0 +1,36 @@
+---
+title: "When a phishing attachment installs a legitimate remote-management tool"
+description: "Microsoft's September findings on MSP360 and ScreenConnect explain why approved software names are not enough to establish authorized access."
+date: 2026-09-29
+author: "HungTran team"
+tags: ["phishing","endpoint-security","incident-response"]
+service: "soc"
+---
+
+Microsoft's 29 September 2026 report describes July phishing campaigns that installed MSP360 RMM, then added ScreenConnect for another access channel. The researchers reported abuse of legitimate software, rather than exploitation of ScreenConnect itself. [Read Microsoft's campaign research](https://www.microsoft.com/en-us/security/blog/2026/09/29/phishing-abuses-rmm-tools-persistent-access/).
+
+## Our assessment: authorize the session, not only the executable
+
+Remote-management software often has a legitimate business purpose. Blocking every tool can interrupt support; allowing every signed installer can leave an attacker with an administrator's capabilities.
+
+Create an approval model that connects a tool to its operator, management tenant, intended devices and support process. A familiar application running against an unknown tenant should still require investigation.
+
+## Make the approved estate visible
+
+Our recommended baseline includes:
+
+- Tool name, supported version and accountable business owner.
+- Expected installation source and permitted deployment method.
+- Authorized tenant or management endpoint where available.
+- Approved devices, operator identities and access hours.
+- The process for disabling access during an incident.
+
+Compare new installations with this record. Include tools used by outsourced support providers so analysts can ask a useful question when something changes.
+
+## Contain all access paths
+
+If an unexpected remote-management client appears, preserve installation and session evidence, identify the associated account or tenant, and determine what the operator accessed. Check for additional remote-access products on the same device.
+
+Removing one client should be a step in a documented containment decision. Confirm with IT support that the remaining tools and accounts have a legitimate owner, then verify that unauthorized access has ended.
+
+The management question is specific: can your team distinguish an approved support session from a new operator using the same software? That capability is more useful than a software allowlist with no ownership context.

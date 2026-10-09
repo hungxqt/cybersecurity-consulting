@@ -1,0 +1,36 @@
+---
+title: "Khi tệp đính kèm lừa đảo cài công cụ quản trị từ xa hợp pháp"
+description: "Phát hiện tháng 9 của Microsoft về MSP360 và ScreenConnect cho thấy tên phần mềm hợp pháp chưa đủ để xác nhận truy cập được phép."
+date: 2026-09-29
+author: "Đội ngũ HungTran"
+tags: ["phishing","endpoint-security","incident-response"]
+service: "soc"
+---
+
+Báo cáo ngày 29/9/2026 của Microsoft mô tả các chiến dịch lừa đảo trong tháng 7 cài MSP360 RMM, sau đó thêm ScreenConnect để tạo kênh truy cập khác. Nhóm nghiên cứu ghi nhận việc lạm dụng phần mềm hợp pháp, không phải khai thác lỗ hổng của ScreenConnect. [Đọc nghiên cứu chiến dịch của Microsoft](https://www.microsoft.com/en-us/security/blog/2026/09/29/phishing-abuses-rmm-tools-persistent-access/).
+
+## Góc nhìn HungTran: xác thực phiên truy cập, không chỉ tệp thực thi
+
+Phần mềm quản trị từ xa thường phục vụ nhu cầu nghiệp vụ hợp pháp. Chặn mọi công cụ có thể làm gián đoạn hỗ trợ; cho phép mọi bộ cài có chữ ký có thể trao khả năng quản trị cho kẻ tấn công.
+
+Xây dựng mô hình phê duyệt gắn công cụ với người vận hành, môi trường quản lý, thiết bị dự kiến và quy trình hỗ trợ. Ứng dụng quen thuộc kết nối đến môi trường quản lý không rõ nguồn vẫn cần điều tra.
+
+## Làm rõ phạm vi công cụ được phép
+
+Danh mục cơ sở chúng tôi khuyến nghị gồm:
+
+- Tên công cụ, phiên bản được hỗ trợ và chủ nghiệp vụ.
+- Nguồn bộ cài dự kiến và cách triển khai được phép.
+- Môi trường hoặc điểm kết nối quản lý được phê duyệt nếu xác định được.
+- Thiết bị, danh tính người vận hành và thời gian truy cập.
+- Quy trình vô hiệu hóa truy cập khi có sự cố.
+
+Đối chiếu các lần cài mới với danh mục. Bao gồm cả công cụ của đơn vị hỗ trợ thuê ngoài để chuyên viên biết cần hỏi gì khi có thay đổi.
+
+## Cô lập mọi đường truy cập
+
+Khi phát hiện công cụ quản trị từ xa ngoài dự kiến, bảo toàn bằng chứng cài đặt và phiên, xác định tài khoản hoặc môi trường quản lý liên quan, rồi kiểm tra người vận hành đã truy cập gì. Tìm các sản phẩm truy cập từ xa khác trên cùng thiết bị.
+
+Gỡ một công cụ là một bước trong quyết định cô lập có ghi chép. Xác nhận với bộ phận hỗ trợ CNTT rằng các công cụ và tài khoản còn lại có người phụ trách hợp pháp, rồi kiểm tra truy cập trái phép đã chấm dứt.
+
+Câu hỏi quản lý rất cụ thể: đội ngũ có phân biệt được phiên hỗ trợ được duyệt với người vận hành mới dùng cùng phần mềm hay không? Khả năng đó hữu ích hơn danh sách phần mềm cho phép nhưng thiếu bối cảnh sở hữu.

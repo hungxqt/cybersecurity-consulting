@@ -1,0 +1,250 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SheetHeader from './SheetHeader.astro';
+import HuntSpot from './HuntSpot.astro';
+import Icon from './Icon.astro';
+import { formatDate, readingMinutes, slugOf } from '../lib/content';
+import { blogPagePath, BLOG_PAGE_SIZE } from '../lib/blog';
+import { localizedPath, useT, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+  posts: CollectionEntry<'posts'>[];
+  currentPage: number;
+  total: number;
+}
+const { lang, posts, currentPage, total } = Astro.props;
+const t = useT(lang);
+const totalPages = Math.max(1, Math.ceil(total / BLOG_PAGE_SIZE));
+const start = (currentPage - 1) * BLOG_PAGE_SIZE + 1;
+const end = Math.min(currentPage * BLOG_PAGE_SIZE, total);
+const title =
+  currentPage === 1
+    ? t('nav.blog')
+    : `${t('nav.blog')} · ${t('blog.pageOf', { current: currentPage, total: totalPages })}`;
+---
+
+<BaseLayout lang={lang} theme="atlas" title={title} description={t('blog.lede')}>
+  <SheetHeader
+    lang={lang}
+    label={t('nav.blog')}
+    titleDim={t('blog.title.dim')}
+    titleStrong={t('blog.title.strong')}
+    lede={t('blog.lede')}
+  />
+  <section class="section" aria-labelledby="articles-h" data-blog-listing>
+    <div id="articles" class="container" tabindex="-1">
+      <h2 id="articles-h" class="section__label">
+        {t('blog.articles')}
+      </h2>
+      {total > 0 && <p class="page-summary label">{t('blog.showing', { start, end, total })}</p>}
+      {totalPages > 1 && (
+        <nav class="pagination" aria-label={t('blog.pagination')}>
+          {currentPage > 1 ? (
+            <a
+              class="pagination__direction"
+              href={`${blogPagePath(lang, currentPage - 1)}#articles`}
+              rel="prev"
+            >
+              <Icon name="arrow-left" /> {t('blog.previous')}
+            </a>
+          ) : (
+            <span class="pagination__direction" aria-disabled="true">
+              <Icon name="arrow-left" /> {t('blog.previous')}
+            </span>
+          )}
+          <ul>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+              <li>
+                <a
+                  href={`${blogPagePath(lang, page)}#articles`}
+                  aria-label={t('blog.page', { n: page })}
+                  aria-current={page === currentPage ? 'page' : undefined}
+                >
+                  {page}
+                </a>
+              </li>
+            ))}
+          </ul>
+          {currentPage < totalPages ? (
+            <a
+              class="pagination__direction"
+              href={`${blogPagePath(lang, currentPage + 1)}#articles`}
+              rel="next"
+            >
+              {t('blog.next')} <Icon name="arrow-right" />
+            </a>
+          ) : (
+            <span class="pagination__direction" aria-disabled="true">
+              {t('blog.next')} <Icon name="arrow-right" />
+            </span>
+          )}
+        </nav>
+      )}
+      {posts.length === 0 ? (
+        <p>{t('blog.empty')}</p>
+      ) : (
+        <ul class="rows">
+          {posts.map((p) => (
+            <li class="row">
+              <p class="row__rail label">
+                <time datetime={p.data.date.toISOString()}>{formatDate(p.data.date, lang)}</time>
+                <span>{p.data.tags[0]}</span>
+              </p>
+              <div class="row__body">
+                <h3>
+                  <a href={localizedPath(lang, `/blog/${slugOf(p.id)}/`)}>{p.data.title}</a>
+                </h3>
+                <p>{p.data.description}</p>
+              </div>
+              <p class="row__time label">
+                {t('blog.minRead', { n: readingMinutes(p.body ?? '') })}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p class="spot">
+        <HuntSpot lang={lang} id="stale-dependency" />
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Hash navigation must land before the new view is painted, rather than animate from the top. */
+  :global(html:has([data-blog-listing])) {
+    scroll-behavior: auto;
+  }
+  .page-summary {
+    margin: 0 0 var(--s-4);
+    color: var(--text-dim);
+  }
+  .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s-3);
+    padding-bottom: var(--s-5);
+  }
+  .pagination ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .pagination a,
+  .pagination__direction {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid var(--rule);
+  }
+  .pagination a:hover {
+    border-color: var(--text);
+    background: var(--surface);
+  }
+  .pagination a[aria-current='page'] {
+    background: var(--text);
+    color: var(--surface);
+    border-color: var(--text);
+  }
+  .pagination [aria-disabled='true'] {
+    color: var(--text-dim);
+    border-color: transparent;
+  }
+  @media (max-width: 479px) {
+    .pagination ul {
+      order: -1;
+      width: 100%;
+      justify-content: center;
+    }
+    .pagination__direction {
+      flex: 1;
+    }
+  }
+  .rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .row {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-2);
+    padding-block: var(--s-5);
+    border-top: 1px solid var(--rule);
+  }
+  .row p {
+    margin: 0;
+    max-width: none;
+  }
+  .row__rail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1) var(--s-3);
+  }
+  .row h3 {
+    margin: 0 0 var(--s-2);
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: var(--fs-lead);
+  }
+  .row h3 a {
+    color: var(--text);
+    text-decoration: none;
+  }
+  /* The title link covers the whole row. */
+  .row h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .row h3 a:hover {
+    text-decoration: underline 1px var(--accent);
+    text-underline-offset: 0.2em;
+  }
+  .row h3 a:focus-visible {
+    outline: none;
+  }
+  .row:has(a:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .row__body p {
+    color: var(--text-dim);
+    max-width: 64ch;
+  }
+  .spot {
+    margin-top: var(--s-6);
+  }
+  @media (min-width: 1080px) {
+    .row {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--gutter);
+    }
+    .row__rail {
+      grid-column: 1 / span 3;
+      flex-direction: column;
+    }
+    .row__body {
+      grid-column: 4 / span 7;
+    }
+    .row__time {
+      grid-column: 11 / span 2;
+      text-align: right;
+    }
+  }
+</style>

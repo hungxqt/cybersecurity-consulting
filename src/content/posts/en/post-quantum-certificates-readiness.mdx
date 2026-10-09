@@ -1,0 +1,33 @@
+---
+title: "Post-quantum readiness starts with your certificate inventory"
+description: "Microsoft's October research puts certificate compatibility on the agenda. A practical way to assess PKI dependencies before migration."
+date: 2026-10-08
+author: "HungTran team"
+tags: ["cryptography","identity","architecture"]
+service: "consulting"
+---
+
+On 8 October 2026, Microsoft published guidance on preparing certificate ecosystems for post-quantum authentication. It highlights compatibility risks across applications, devices and PKI as algorithms and certificate sizes change. [Read Microsoft's research](https://www.microsoft.com/en-us/security/blog/2026/10/08/post-quantum-authentication-why-organizations-should-start-testing-certificate-ecosystems-now/).
+
+## Our assessment: the migration unit is a business connection
+
+A cryptographic inventory is useful only when someone can explain what breaks if an entry changes. A certificate may connect a payment gateway, a warehouse scanner or an administrator to a critical service. Those connections have different tolerances for downtime.
+
+Start with one business workflow. Map the issuing authority, trust store, client library, termination point, certificate renewal process and operational owner. Include certificates used between internal services; a public website is only one part of the estate.
+
+## Build a compatibility record
+
+For each critical connection, record:
+
+- The component that validates the certificate and who can update it.
+- The renewal mechanism, expiry monitoring and recovery owner.
+- Any size, latency or device constraints requiring a controlled test.
+- The supplier's documented migration position and its unresolved dependencies.
+
+Keep vendor statements separate from results your team has observed. A roadmap provides a planning input; an integration test provides evidence.
+
+## A useful first milestone
+
+Our recommendation is to select one low-impact workflow and test it in an isolated environment using supported components. Measure connection success, renewal and rollback. Keep the existing production path until the operational owner has reviewed the results.
+
+Bring the findings to architecture review as a dependency map with named owners. This gives procurement and engineering something concrete to resolve, without setting an unsupported deadline for the arrival of cryptographically relevant quantum computers.

@@ -6,7 +6,7 @@ import { expect, test, type Page } from '@playwright/test';
  * or from the router's default loader.
  */
 
-const ORIGIN = 'http://localhost:4321';
+const testOrigin = () => new URL(test.info().project.use.baseURL ?? 'http://localhost:4321').origin;
 
 interface Logged {
   path: string;
@@ -19,7 +19,8 @@ function track(page: Page) {
   const log: Logged[] = [];
   page.on('request', (r) => {
     const u = new URL(r.url());
-    if (u.origin === ORIGIN) log.push({ path: u.pathname, type: r.resourceType(), t: Date.now() });
+    if (u.origin === testOrigin())
+      log.push({ path: u.pathname, type: r.resourceType(), t: Date.now() });
   });
   return {
     log,
@@ -370,7 +371,9 @@ test('at most two page requests are in flight', async ({ page }) => {
   let peak = 0;
   const isPage = (url: string) => {
     const u = new URL(url);
-    return u.origin === ORIGIN && /^\/en\/(blog|experience|resources|about)\/$/.test(u.pathname);
+    return (
+      u.origin === testOrigin() && /^\/en\/(blog|experience|resources|about)\/$/.test(u.pathname)
+    );
   };
   const seen = new Set<string>();
   page.on('request', (r) => {

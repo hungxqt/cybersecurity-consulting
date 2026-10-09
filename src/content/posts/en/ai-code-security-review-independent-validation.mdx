@@ -1,0 +1,36 @@
+---
+title: "AI code review earns trust through independent validation"
+description: "Google's September engineering report describes scanning within code review. Build a review process that checks evidence and preserves release ownership."
+date: 2026-09-19
+author: "HungTran team"
+tags: ["application-security","ai","secure-development"]
+service: "consulting"
+---
+
+On 19 September 2026, Google described an internal infrastructure-security workflow combining AI scanning, structural validation and proposed fixes submitted for human review. Its performance results describe Google's implementation; they do not establish the accuracy of another team's scanner. [Read Google's engineering report](https://cloud.google.com/blog/topics/systems/using-ai-agents-to-secure-google-infrastructure/).
+
+## Our assessment: define what the reviewer must establish
+
+An AI-generated explanation can sound convincing while missing how a component is actually used. A reviewer needs to know whether the affected path is reachable, whether the proposed change protects the intended boundary and whether normal behavior still works.
+
+Start with a narrow class of defects in a well-understood component. Agree on what evidence is required before a finding becomes a blocking review comment.
+
+## Keep verification separate from generation
+
+Our recommended workflow asks the author to produce a candidate finding and the reviewer to validate it against the actual application. Use executable checks where feasible and retain the result alongside the patch.
+
+For each accepted correction, record:
+
+- The input or action that reaches the affected behavior.
+- The security property the change should enforce.
+- A regression check that fails on the vulnerable version.
+- A normal-use check that guards against breaking expected behavior.
+- The engineer accountable for approval and release.
+
+Avoid treating a second pass by the same generator as independent proof.
+
+## Pilot without hiding engineering costs
+
+Track accepted findings, rejected candidates, review time and regressions introduced by suggested changes. Compare those outcomes with the existing process on a component where the team already understands its risks.
+
+Keep release authority with the established owners. If the pilot demonstrates useful fixes with manageable review effort, extend coverage deliberately. Trust grows from retained evidence and repeatable decisions, rather than the confidence of an automated comment.

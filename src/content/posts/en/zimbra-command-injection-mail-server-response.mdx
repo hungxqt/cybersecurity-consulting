@@ -1,0 +1,30 @@
+---
+title: "Zimbra exploitation: patch the server and investigate the mailbox"
+description: "September research on CVE-2026-73570 shows why patching an exposed mail server and investigating possible compromise are separate tasks."
+date: 2026-09-30
+author: "HungTran team"
+tags: ["vulnerability-management","email-security","incident-response"]
+service: "soc"
+---
+
+On 30 September 2026, Microsoft reported exploitation of CVE-2026-73570 in Zimbra's SNMP notification path. The described exposure requires the optional zimbra-snmp package and enabled SNMP notifications; exploitation does not require user interaction. [Read Microsoft's investigation and mitigation guidance](https://www.microsoft.com/en-us/security/blog/2026/09/30/unauthenticated-command-injection-on-internet-facing-mail-servers-tracking-cve-2026-73570/).
+
+## Our assessment: separate exposure from compromise
+
+An exposed configuration establishes a remediation need. It does not, by itself, prove the server was breached. Conversely, updating software cannot establish that an earlier intrusion has been removed.
+
+Maintain two workstreams with separate owners. The platform owner verifies affected components and schedules a supported correction. The incident responder determines whether available evidence shows unauthorized execution, persistence or access to mail.
+
+## Record enough evidence to make a decision
+
+Our recommended investigation record covers the installed package inventory, notification settings, upgrade history and relevant log retention. Preserve evidence before changes where operationally feasible; do not delay urgent containment solely to produce a perfect record.
+
+Review unexpected child processes of the mail service, newly created services, changes in application directories and unusual outbound transfers. Correlate findings with maintenance tickets. A known administrative command can become meaningful when it appears under an unexpected service account or outside its approved window.
+
+## Close both workstreams
+
+Follow the current vendor advisory for your supported release. Have the platform owner confirm the corrected version and configuration rather than assuming deployment success.
+
+If investigation identifies unauthorized access, scope affected accounts and data, remove persistence and revoke relevant access under the incident plan. Keep a written distinction between confirmed findings, unresolved questions and evidence that was unavailable.
+
+Close the exposure ticket with configuration evidence. Close the incident only after the responder can explain the remaining risk and the business owner accepts it.

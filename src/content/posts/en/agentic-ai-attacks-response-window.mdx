@@ -1,0 +1,34 @@
+---
+title: "AI-assisted attacks make response delays a business risk"
+description: "Google's September threat research describes faster attack workflows. Review the approvals, cloud credentials and containment paths that determine your response speed."
+date: 2026-09-08
+author: "HungTran team"
+tags: ["ai","cloud","incident-response"]
+service: "soc"
+---
+
+Google Threat Intelligence Group's 8 September 2026 report describes a Q2 case in which attackers progressed from cloud compromise to an AI-assisted credential-harvesting campaign in under six hours. This is one observed operation, not a universal attack timeline. [Read GTIG's AI Threat Tracker](https://cloud.google.com/blog/topics/threat-intelligence/from-prompting-to-autonomy-the-evolution-of-adversarial-ai).
+
+## Our assessment: examine the delay your team controls
+
+An organization cannot choose an attacker's speed. It can choose whether a responder spends the first hour finding an account owner, waiting for a cloud administrator or locating the correct escalation number.
+
+Pick a cloud identity that can create resources or access sensitive data. Walk through the decision to suspend it. Identify the evidence required, who can authorize action, how the responder reaches that person and what critical work would stop.
+
+## Prepare bounded containment actions
+
+Our recommended preparation includes:
+
+- A named owner for each privileged cloud and AI-service identity.
+- A documented method to revoke credentials and verify the result.
+- Restricted access to model repositories and sensitive development secrets.
+- Monitoring for unexpected resource creation and unusual credential use.
+- A recovery path for legitimate workloads affected by containment.
+
+Give the on-call team scoped permissions and rehearsed procedures. Broad automation without clear boundaries can create its own outage.
+
+## Measure a real handover
+
+During an authorized exercise, start the clock when a credible alert reaches the responder. Measure time spent gathering evidence, obtaining approval, executing containment and checking whether access ended. Separate necessary investigation from avoidable waiting.
+
+Use the result to change one bottleneck at a time. Faster attacks do not justify abandoning review; they make it more valuable to decide authority and recovery steps before the incident. The deliverable is a response path that can be executed reliably at night as well as during business hours.

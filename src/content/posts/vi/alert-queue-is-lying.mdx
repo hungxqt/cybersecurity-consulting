@@ -1,30 +1,28 @@
 ---
-title: "[VI] Your SOC alert queue is lying to you"
-description: "[VI] Alert volume is the wrong scoreboard. Here is what to measure instead, and how to tune detections without going blind."
+title: "Hàng đợi cảnh báo SOC đang đánh lừa bạn"
+description: "Số lượng cảnh báo không phải thước đo đúng. Những chỉ số cần theo dõi và cách tinh chỉnh phát hiện mà không bỏ sót tín hiệu."
 date: 2026-08-12
-author: "HungTran team"
+author: "Đội ngũ HungTran"
 tags: ["soc", "detection", "operations"]
 service: "soc"
 ---
 
-[VI] Translate this entry. The English original follows.
+Nhiều đội ngũ đánh giá trung tâm điều hành an ninh bằng số cảnh báo đã đóng. Con số này tăng khi quy tắc phát hiện tạo nhiều nhiễu hơn, nghĩa là chỉ số đang khuyến khích chính hành vi cần tránh.
 
-Most teams measure a security operations centre by how many alerts it closes. That number goes up when detections get noisier, which means the metric rewards exactly the wrong behaviour.
+## Cảnh báo đã đóng không cho bạn biết điều gì
 
-## What a closed alert does not tell you
+Một cảnh báo được đóng trong 90 giây có thể là loại bỏ đúng một hoạt động bình thường, hoặc bỏ sót một vụ xâm nhập. Hàng đợi không phân biệt được hai trường hợp; bảng điều khiển chỉ đếm số lượng xử lý cũng vậy.
 
-An alert closed in 90 seconds could be a correct dismissal or a missed intrusion. The queue cannot tell them apart, and neither can a dashboard that counts throughput.
+Ba chỉ số phản ánh rõ hơn:
 
-Three numbers tell a better story:
+- **Thời gian phát hiện (MTTD).** Từ hành động độc hại đầu tiên đến cảnh báo đầu tiên được con người nhìn thấy.
+- **Thời gian ngăn chặn (MTTR).** Từ cảnh báo đó đến khi kẻ tấn công mất quyền truy cập.
+- **Độ chính xác khi chuyển cấp.** Tỷ lệ cảnh báo được chuyển cấp sau đó xác nhận là sự cố thật.
 
-- **Time to detect (MTTD).** From first malicious action to the first alert a human sees.
-- **Time to contain (MTTR).** From that alert to the attacker losing access.
-- **Escalation precision.** The share of escalated alerts that turned out to be real.
+## Giảm nhiễu thay vì chỉ nâng ngưỡng
 
-## Tune by removing noise, not by raising thresholds
+Nâng ngưỡng có thể che cả tín hiệu yếu lẫn nhiễu. Hãy bắt đầu với quy tắc tạo nhiều nhiễu nhất: bổ sung ngữ cảnh phân biệt hoạt động bình thường với độc hại, như chủ sở hữu tài sản, tác vụ theo lịch và máy quét đã biết, đồng thời giữ độ nhạy cần thiết.
 
-Raising a threshold hides the weak signal along with the noise. Instead, work down your noisiest rule: add the context that separates benign from hostile (asset owner, expected scheduler, known scanner) and keep the rule sensitive.
+## Thói quen hằng tuần có ích
 
-## A weekly habit that pays off
-
-Pick ten closed alerts at random each week and have a second analyst re-triage them cold. The disagreement rate is the most honest quality signal a SOC has.
+Mỗi tuần chọn ngẫu nhiên mười cảnh báo đã đóng và để chuyên viên thứ hai phân loại lại mà không xem kết luận trước. Tỷ lệ bất đồng là tín hiệu chất lượng trung thực nhất của SOC.

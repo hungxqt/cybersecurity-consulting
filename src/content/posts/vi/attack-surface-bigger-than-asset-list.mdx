@@ -1,29 +1,27 @@
 ---
-title: "[VI] Your attack surface is bigger than your asset list"
-description: "[VI] Forgotten subdomains, test environments and third-party scripts are where intrusions start. A practical way to find them first."
+title: "Bề mặt tấn công lớn hơn danh sách tài sản của bạn"
+description: "Tên miền phụ bị quên, môi trường thử nghiệm và mã bên thứ ba có thể là điểm bắt đầu xâm nhập. Cách thực tế để phát hiện chúng trước."
 date: 2026-05-21
-author: "HungTran team"
+author: "Đội ngũ HungTran"
 tags: ["consulting", "attack-surface", "recon"]
 service: "consulting"
 ---
 
-[VI] Translate this entry. The English original follows.
+Kẻ tấn công không đọc cơ sở dữ liệu quản lý cấu hình của bạn. Họ bắt đầu từ chứng thư, bản ghi DNS và công cụ tìm kiếm để tìm những thứ đội ngũ đã quên từ lâu.
 
-Attackers do not read your CMDB. They start with certificates, DNS records and search engines, and they find things your team has long since forgotten.
+## Những điểm thường bị bỏ quên
 
-## The usual suspects
+- Website thử nghiệm vẫn mở trên internet sau khi ra mắt.
+- Tên miền phụ trỏ đến dịch vụ đám mây đã xóa từ nhiều tháng trước, sẵn sàng bị người khác chiếm dụng.
+- Mã tiếp thị của nhà cung cấp đã ngừng thanh toán nhưng vẫn chạy trên trang thanh toán.
 
-- A staging site left on the public internet after a launch.
-- A subdomain pointing at a cloud service that was deleted months ago, ready to be claimed by anyone.
-- A marketing script from a vendor you stopped paying, still running on your checkout page.
+## Rà soát ban đầu trong một buổi chiều
 
-## A first pass in an afternoon
+1. Liệt kê mọi tên miền bạn sở hữu, kể cả tên miền mua cho chiến dịch.
+2. Tra cứu nhật ký minh bạch chứng thư của từng tên miền để tìm tên miền phụ.
+3. Kiểm tra tên miền nào còn phân giải, tên miền nào trả về trang không tìm thấy của nhà cung cấp đám mây và tên miền nào để lộ bảng quản trị.
+4. Giao người phụ trách cho từng tài sản còn hoạt động. Tài sản không có người phụ trách cần được xem xét loại bỏ.
 
-1. List every domain you own, including the ones bought for campaigns.
-2. Pull certificate transparency logs for each to enumerate subdomains.
-3. Check which still resolve, which return a cloud provider's "not found" page, and which expose admin panels.
-4. Assign every survivor an owner. Anything without one is a candidate for removal.
+## Duy trì liên tục
 
-## Make it continuous
-
-A one-off list decays within weeks. Schedule the same checks to run weekly and send new findings to the team that owns the domain, not to a shared inbox.
+Danh sách lập một lần có thể lỗi thời sau vài tuần. Lên lịch kiểm tra hằng tuần và gửi phát hiện mới đến đội phụ trách tên miền, thay vì hộp thư dùng chung.

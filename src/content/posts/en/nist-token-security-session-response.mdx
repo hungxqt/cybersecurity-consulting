@@ -1,0 +1,34 @@
+---
+title: "NIST's token-security guidance brings session access into incident planning"
+description: "NIST and CISA finalized IR 8587 in September. Review token handling, provider responsibilities and the evidence needed to verify revoked access."
+date: 2026-09-15
+author: "HungTran team"
+tags: ["identity","cloud","governance"]
+service: "consulting"
+---
+
+On 15 September 2026, NIST announced the final IR 8587, developed with CISA, on protecting tokens and identity assertions against theft, forgery and misuse. It addresses both agencies and cloud providers, with relevance beyond government. [Read NIST's publication announcement](https://www.nist.gov/news-events/news/2026/09/nist-finalizes-guidelines-protecting-online-identity-and-access-tokens).
+
+## Our assessment: map every form of continuing access
+
+Account recovery is incomplete if responders do not know which sessions, application grants or credentials can still authorize activity. Different platforms have different revocation behavior, so the response procedure needs to be specific to the service.
+
+For each critical application, document how access is issued, validated, renewed and revoked. Identify what the customer controls and what requires the provider's participation.
+
+## Ask operational questions before an incident
+
+Our recommended review covers:
+
+- Where tokens and signing keys are stored and who can access them.
+- Whether diagnostic logs or support bundles can expose credentials.
+- How the application validates the intended issuer and recipient.
+- What happens to existing sessions when access is revoked.
+- Which logs can establish whether access continued afterward.
+
+Do not paste real tokens into support tickets or investigation notes. Use references to protected evidence and retain only the information responders need.
+
+## Verify revocation on the actual application
+
+In an authorized test with a dedicated account, establish access, perform the documented revocation and check the application again. Record when access stops and whether additional provider or application actions are required.
+
+Use that result to update the incident procedure and the ownership record. Ask the provider to explain any period in which existing access remains valid. Our recommendation is to treat this as a joint architecture and response review: the desired outcome is evidence that the intended access ended, plus a recovery path for the legitimate user.

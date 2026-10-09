@@ -1,0 +1,36 @@
+---
+title: "Mồi nhử an ninh mạng cần người phụ trách ứng phó"
+description: "Hướng dẫn tháng 9 của CISA đưa mồi nhử an ninh mạng vào kế hoạch phát hiện. Xác định ý nghĩa tín hiệu, người điều tra và cách giới hạn triển khai."
+date: 2026-09-16
+author: "Đội ngũ HungTran"
+tags: ["detection","soc","incident-response"]
+service: "soc"
+---
+
+Ngày 16/9/2026, CISA phát hành hướng dẫn dùng mồi nhử an ninh mạng để tăng khả năng phát hiện và ứng phó. Thông báo mô tả hệ thống, tài khoản hoặc dữ liệu được giám sát nhằm phát hiện hoạt động xâm nhập, kể cả khi dùng công cụ hợp pháp. [Đọc thông báo chính thức của CISA](https://content.govdelivery.com/accounts/USDHSCISA/bulletins/42aff90).
+
+## Góc nhìn HungTran: thiết kế điều tra trước khi tạo tín hiệu
+
+Mồi nhử có thể tạo tín hiệu đặc trưng, nhưng tín hiệu không có người xử lý sẽ không cô lập được cuộc xâm nhập. Trước triển khai, xác định tương tác có ý nghĩa gì và ai sẽ xem xét.
+
+Bắt đầu với một môi trường được bảo vệ và mục tiêu phát hiện hẹp. Xác định tương tác hợp pháp dự kiến, gồm sao lưu, lập chỉ mục và quét lỗ hổng. Tín hiệu cần dẫn chuyên viên đến câu hỏi rõ ràng về tác nhân và hoạt động xung quanh.
+
+## Giới hạn phạm vi triển khai
+
+Hồ sơ triển khai chúng tôi khuyến nghị gồm:
+
+- Chủ tài sản và lý do đặt mồi nhử.
+- Quyền hạn, dịch vụ có thể tiếp cận và ranh giới mạng.
+- Giải thích vì sao không chứa dữ liệu nghiệp vụ nhạy cảm thật.
+- Nơi nhận cảnh báo, bằng chứng lưu giữ và người phụ trách trực.
+- Quy trình gỡ bỏ và điều kiện cần dừng ngay.
+
+Với thông tin xác thực làm mồi nhử, xác minh nó không trao quyền ngoài dự kiến vào tài nguyên thật. Rà soát thiết kế với chủ môi trường trước khi đưa vào.
+
+## Diễn tập toàn bộ đường ứng phó
+
+Thực hiện tương tác được phép và theo dõi cảnh báo vào hàng đợi SOC. Kiểm tra chuyên viên có xác định được danh tính hoặc thiết bị nguồn, diễn biến và bàn giao đầy đủ bằng chứng hay không.
+
+Sau đó xem hoạt động bảo trì bình thường có tạo tín hiệu gây nhiễu không. Điều chỉnh thiết kế theo hành vi quan sát, thay vì mặc định mọi sự kiện liên quan mồi nhử đều thù địch.
+
+Dùng diễn tập để thống nhất quyết định ứng phó. Khoản đầu tư có giá trị khi tín hiệu mở ra cuộc điều tra có người chịu trách nhiệm và có thể hoàn thành.
