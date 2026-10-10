@@ -9,6 +9,41 @@ const SPOTS: [string, string][] = [
   ['/en/experience/', 'exposed-backup'],
 ];
 
+for (const lang of ['en', 'vi']) {
+  test(`hunt keeps counting after rejected storage writes and navigation (${lang})`, async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      const original = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (key, value) {
+        if (key === 'ht-hunt-v1') throw new DOMException('Storage full', 'QuotaExceededError');
+        return original.call(this, key, value);
+      };
+    });
+    await page.goto(`/${lang}/`);
+    const toggle = page.locator('[data-hud-toggle]');
+    const first = page.locator('[data-hunt-spot="debug-flag"]');
+    await first.click();
+    await expect(first).toHaveAttribute('data-found', '');
+    await expect(toggle).toContainText('1/5');
+    await first.click();
+    await expect(toggle).toContainText('1/5');
+
+    // Follow a real link so the in-memory fallback survives the client-side swap.
+    await page.locator(`header a[href="/${lang}/blog/"]:visible`).click();
+    await expect(page).toHaveURL(new RegExp(`/${lang}/blog/$`));
+    await expect(toggle).toContainText('1/5');
+    await page.locator('[data-hunt-spot="stale-dependency"]').click();
+    await expect(toggle).toContainText('2/5');
+    await toggle.click();
+    await page.locator('[data-hud-reset]').click();
+    await expect(toggle).toContainText('0/5');
+    await expect(page.locator('[data-hunt-spot="stale-dependency"]')).not.toHaveAttribute(
+      'data-found',
+    );
+  });
+}
+
 test('finding all five hidden vulnerabilities unlocks the reward and persists', async ({
   page,
 }) => {

@@ -82,6 +82,25 @@ describe('hunt state', () => {
       expect(h.count()).toBe(0);
     }
   });
+  it('keeps session progress when storage can be read but writes fail', () => {
+    const stored = memoryStorage({ [STORAGE_KEY]: '["debug-flag"]' });
+    const h = createHunt({
+      ...stored,
+      setItem: () => {
+        throw new Error('quota exceeded');
+      },
+      removeItem: () => {
+        throw new Error('blocked');
+      },
+    });
+    expect(h.count()).toBe(1);
+    expect(h.find('open-port').count).toBe(2);
+    expect(h.found()).toEqual(['debug-flag', 'open-port']);
+    expect(h.find('open-port').isNew).toBe(false);
+    h.reset();
+    expect(h.count()).toBe(0);
+    expect(h.find('default-creds').count).toBe(1);
+  });
 });
 
 describe('next steps', () => {

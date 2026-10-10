@@ -44,21 +44,26 @@ export interface FindResult {
 
 export function createHunt(storage: StorageLike | null) {
   let memory: HuntItem[] | null = null;
+  let storageAvailable = storage !== null;
 
   const read = (): HuntItem[] => {
     try {
-      if (storage) return parseFound(storage.getItem(STORAGE_KEY));
+      if (storageAvailable && storage) {
+        memory = parseFound(storage.getItem(STORAGE_KEY));
+        return memory;
+      }
     } catch {
-      /* fall through to memory */
+      storageAvailable = false;
     }
     return memory ?? [];
   };
   const write = (items: HuntItem[]) => {
     memory = items;
     try {
-      storage?.setItem(STORAGE_KEY, JSON.stringify(items));
+      if (storageAvailable) storage?.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch {
-      /* storage full or blocked: keep the in-memory copy */
+      // Reads can still succeed after a write fails. Stop reading stale saved progress.
+      storageAvailable = false;
     }
   };
 
@@ -82,9 +87,9 @@ export function createHunt(storage: StorageLike | null) {
     reset(): void {
       memory = [];
       try {
-        storage?.removeItem(STORAGE_KEY);
+        if (storageAvailable) storage?.removeItem(STORAGE_KEY);
       } catch {
-        /* ignore */
+        storageAvailable = false;
       }
     },
   };
