@@ -73,13 +73,19 @@ describe('legacy Aurora styling is gone from src/', () => {
     ['rgb(124 92 255', /rgb\(\s*124[ ,]+92[ ,]+255/i],
     ['999px', /(?<![0-9])999px/],
     ['radial-gradient', /radial-gradient/],
-    ['backdrop-filter', /backdrop-filter/],
   ];
   for (const [label, re] of banned) {
     it(`contains no ${label}`, () => {
       expect(files.filter(([, text]) => re.test(text)).map(([p]) => p)).toEqual([]);
     });
   }
+
+  it('limits frosted glass to the requested customer reviews component', () => {
+    const hits = files
+      .filter(([, text]) => /backdrop-filter/.test(text))
+      .map(([p]) => p.replaceAll('\\', '/'));
+    expect(hits).toEqual(['src/components/CustomerReviews.astro']);
+  });
 
   const removedTokens = [
     'c-violet',

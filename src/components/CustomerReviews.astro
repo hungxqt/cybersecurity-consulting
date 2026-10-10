@@ -1,0 +1,592 @@
+---
+import Icon from './Icon.astro';
+import { localizedHref, useT, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const reviews = ['consulting', 'audit', 'soc'] as const;
+---
+
+<section
+  id="customer-reviews"
+  class="section reviews"
+  aria-labelledby="reviews-heading"
+  data-reviews
+>
+  <div class="container">
+    <div class="reviews__heading">
+      <div>
+        <p class="label reviews__eyebrow">{t('home.reviews.label')}</p>
+        <h2 id="reviews-heading" class="reviews__title">
+          <span>{t('home.reviews.title')}</span>
+          <span class="reviews__title-accent">{t('home.reviews.titleAccent')}</span>
+        </h2>
+      </div>
+      <div class="reviews__intro">
+        <p>{t('home.reviews.intro')}</p>
+      </div>
+    </div>
+
+    <div class="reviews__body">
+      <div class="reviews__selectors" role="group" aria-label={t('home.reviews.choose')}>
+        {reviews.map((id, index) => (
+          <button
+            type="button"
+            class="reviews__selector"
+            aria-pressed={index === 0 ? 'true' : 'false'}
+            aria-controls={`review-${id}`}
+            data-review-select
+            data-announcement={`${t(`nav.${id}`)}. ${t(`home.reviews.${id}.role`)}`}
+          >
+            <span class="reviews__selector-service">{t(`nav.${id}`)}</span>
+            <span class="reviews__selector-title">{t(`home.reviews.${id}.title`)}</span>
+            <span class="reviews__selector-arrow" aria-hidden="true">
+              <Icon name="arrow-right" />
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div class="reviews__stage" data-review-stage>
+        <div class="reviews__field" aria-hidden="true">
+          <svg viewBox="0 0 800 540" fill="none" preserveAspectRatio="none">
+            <path d="M0 80H180L280 180H560L660 80H800M0 440H150L270 320H530L650 440H800M90 0V130L210 250V410L80 540M710 0V130L590 250V410L720 540" />
+            <path d="M0 260H800M400 0V540" class="reviews__field-faint" />
+            <circle cx="280" cy="180" r="5" />
+            <circle cx="560" cy="180" r="5" />
+            <circle cx="270" cy="320" r="5" />
+            <circle cx="530" cy="320" r="5" />
+          </svg>
+        </div>
+        <div class="reviews__scene">
+          <div class="reviews__plate reviews__plate--back" aria-hidden="true"></div>
+          <div class="reviews__plate reviews__plate--middle" aria-hidden="true"></div>
+          <div class="reviews__quotes">
+            {reviews.map((id, index) => (
+              <figure
+                id={`review-${id}`}
+                class="reviews__quote"
+                data-review-panel
+                data-selected={index === 0 ? '' : undefined}
+              >
+                <div class="reviews__glass" aria-hidden="true"></div>
+                <div class="reviews__quote-top">
+                  <span class="label reviews__service">{t(`nav.${id}`)}</span>
+                  <span class="reviews__quote-mark" aria-hidden="true">
+                    “
+                  </span>
+                </div>
+                <blockquote>
+                  <p>{t(`home.reviews.${id}.quote`)}</p>
+                </blockquote>
+                <figcaption>
+                  <span class="reviews__role-mark" aria-hidden="true">
+                    {t(`home.reviews.${id}.mark`)}
+                  </span>
+                  <span>
+                    <span class="reviews__role">{t(`home.reviews.${id}.role`)}</span>
+                    <span class="reviews__industry">{t(`home.reviews.${id}.industry`)}</span>
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-review-status></p>
+    <div class="reviews__footer">
+      <p>{t('home.reviews.invitation')}</p>
+      <a class="reviews__contact" href={localizedHref(lang, '/contact/?topic=other')}>
+        {t('home.reviews.cta')}
+        <Icon name="arrow-right" />
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .reviews {
+    position: relative;
+    overflow: clip;
+    background: linear-gradient(135deg, var(--bg) 15%, var(--surface) 65%, var(--bg));
+  }
+  .reviews__heading {
+    display: grid;
+    gap: var(--s-5);
+    margin-bottom: var(--s-7);
+  }
+  .reviews__eyebrow {
+    margin-bottom: var(--s-5);
+  }
+  .reviews__title {
+    font-size: var(--fs-display-l);
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+    margin: 0;
+  }
+  .reviews__title > span {
+    display: block;
+  }
+  .reviews__title-accent {
+    color: var(--accent);
+  }
+  .reviews__intro {
+    max-width: 36ch;
+    align-self: end;
+  }
+  .reviews__intro p {
+    color: var(--text-dim);
+    margin-bottom: var(--s-4);
+  }
+  .reviews__body {
+    display: grid;
+    gap: var(--s-6);
+  }
+  .reviews__selectors {
+    display: none;
+  }
+  .reviews__selector {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--s-2) var(--s-4);
+    width: 100%;
+    min-height: 88px;
+    padding: var(--s-5);
+    border: 1px solid var(--rule);
+    border-left: 2px solid var(--rule-ui);
+    background: transparent;
+    color: var(--text-dim);
+    text-align: start;
+    cursor: pointer;
+    transition:
+      background var(--dur-base) var(--ease),
+      border-color var(--dur-base) var(--ease);
+  }
+  .reviews__selector-service {
+    grid-column: 1;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .reviews__selector-title {
+    grid-column: 1;
+    font-family: var(--font-body);
+    font-size: var(--fs-small);
+    line-height: 1.5;
+  }
+  .reviews__selector-arrow {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    color: var(--accent);
+    opacity: 0.4;
+  }
+  .reviews__selector:hover {
+    background: var(--surface-2);
+  }
+  .reviews__selector[aria-pressed='true'] {
+    border-left-color: var(--accent);
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .reviews__selector[aria-pressed='true'] .reviews__selector-service {
+    color: var(--accent);
+  }
+  .reviews__selector[aria-pressed='true'] .reviews__selector-arrow {
+    opacity: 1;
+  }
+  .reviews__stage {
+    position: relative;
+    min-width: 0;
+    perspective: 1200px;
+    isolation: isolate;
+  }
+  .reviews__scene {
+    position: relative;
+    transform: translate3d(0, var(--review-scroll, 0px), 0) rotateX(var(--review-rx, 0deg))
+      rotateY(var(--review-ry, 0deg));
+    transition: transform var(--dur-base) var(--ease);
+  }
+  .reviews__field {
+    position: absolute;
+    inset: -15% 0;
+    pointer-events: none;
+    opacity: 0.35;
+    transform: translateY(var(--review-field, 0px));
+  }
+  .reviews__field svg {
+    width: 100%;
+    height: 100%;
+    stroke: var(--accent);
+    stroke-width: 1;
+  }
+  .reviews__field-faint {
+    opacity: 0.3;
+  }
+  .reviews__plate {
+    display: none;
+  }
+  .reviews__quotes {
+    display: grid;
+    gap: var(--s-5);
+  }
+  .reviews__quote {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    padding: var(--s-5);
+    border: 1px solid var(--rule-ui);
+    border-top-color: var(--accent);
+    border-radius: var(--radius);
+    isolation: isolate;
+    box-shadow: 0 24px 48px color-mix(in srgb, var(--bg) 45%, transparent);
+  }
+  .reviews__glass {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--surface);
+    pointer-events: none;
+  }
+  @supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+    .reviews__glass {
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+    }
+  }
+  .reviews__quote-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    height: 48px;
+    margin-bottom: var(--s-5);
+  }
+  .reviews__service {
+    color: var(--accent);
+  }
+  .reviews__service::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-inline-end: var(--s-3);
+    border: 1px solid currentColor;
+    transform: rotate(45deg);
+    vertical-align: middle;
+  }
+  .reviews__quote-mark {
+    color: var(--accent);
+    font-family: var(--font-display);
+    font-size: 6rem;
+    line-height: 1;
+    transform: translateY(0.2em);
+    opacity: 0.55;
+  }
+  blockquote {
+    margin: 0 0 var(--s-7);
+  }
+  blockquote p {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-lead);
+    font-weight: 300;
+    line-height: 1.65;
+    letter-spacing: -0.015em;
+  }
+  figcaption {
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    margin-top: auto;
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--rule-ui);
+  }
+  .reviews__role-mark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--rule-ui);
+    background: var(--surface-2);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+  }
+  .reviews__role,
+  .reviews__industry {
+    display: block;
+    font-size: var(--fs-small);
+  }
+  .reviews__role {
+    font-family: var(--font-strong);
+    font-weight: 600;
+  }
+  .reviews__industry {
+    color: var(--text-dim);
+  }
+  .reviews__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    margin-top: var(--s-8);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--rule);
+  }
+  .reviews__footer p {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: var(--fs-small);
+  }
+  .reviews__contact {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-5);
+    min-height: 44px;
+    font-size: var(--fs-small);
+  }
+  @media (min-width: 720px) {
+    .reviews__heading {
+      grid-template-columns: 1.4fr 1fr;
+      gap: var(--s-7);
+    }
+    .reviews__quote {
+      padding: var(--s-7);
+    }
+    blockquote p {
+      font-size: clamp(1.25rem, 1rem + 0.6vw, 1.625rem);
+    }
+    .reviews[data-enhanced] .reviews__selectors {
+      display: flex;
+      gap: var(--s-3);
+    }
+    .reviews[data-enhanced] .reviews__selector {
+      flex: 1;
+    }
+    .reviews[data-enhanced] .reviews__quotes {
+      gap: 0;
+    }
+    .reviews[data-enhanced] .reviews__quote {
+      grid-area: 1 / 1;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(6px);
+      transition:
+        opacity var(--dur-base) var(--ease),
+        transform var(--dur-base) var(--ease);
+    }
+    .reviews[data-enhanced] .reviews__quote[data-selected] {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .reviews[data-enhanced] .reviews__scene {
+      transform-style: preserve-3d;
+    }
+    .reviews[data-enhanced] .reviews__plate {
+      display: block;
+      position: absolute;
+      inset: 0;
+      border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--rule));
+      background: color-mix(in srgb, var(--surface-2) 55%, transparent);
+      border-radius: var(--radius);
+      pointer-events: none;
+    }
+    .reviews__plate--back {
+      transform: translate3d(24px, calc(-18px + var(--review-back, 0px)), -64px) rotateZ(4deg);
+    }
+    .reviews__plate--middle {
+      transform: translate3d(-14px, calc(10px + var(--review-middle, 0px)), -32px) rotateZ(-2deg);
+    }
+    .reviews__stage {
+      margin: var(--s-5) var(--s-4);
+    }
+  }
+  @media (min-width: 1080px) {
+    .reviews__heading {
+      grid-template-columns: 1.2fr 1fr;
+      margin-bottom: var(--s-8);
+    }
+    .reviews__intro {
+      justify-self: end;
+    }
+    .reviews[data-enhanced] .reviews__body {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 2fr);
+      gap: var(--s-9);
+      align-items: center;
+    }
+    .reviews[data-enhanced] .reviews__selectors {
+      position: relative;
+      flex-direction: column;
+      gap: var(--s-4);
+    }
+    .reviews[data-enhanced] .reviews__selectors::after {
+      content: '';
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      width: var(--s-9);
+      height: 1px;
+      background: linear-gradient(to right, var(--accent), transparent);
+      pointer-events: none;
+    }
+    .reviews[data-enhanced] .reviews__selector {
+      min-height: 112px;
+    }
+    .reviews__quote {
+      padding: var(--s-7) var(--s-8);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reviews__scene,
+    .reviews__field {
+      transform: none;
+    }
+  }
+  @media (forced-colors: active) {
+    .reviews__glass {
+      background: Canvas;
+    }
+    .reviews__field,
+    .reviews__plate {
+      display: none !important;
+    }
+    .reviews__selector[aria-pressed='true'] {
+      border: 2px solid Highlight;
+    }
+  }
+</style>
+
+<script>
+  let dispose: (() => void) | undefined;
+
+  function bootReviews() {
+    dispose?.();
+    dispose = undefined;
+    const root = document.querySelector<HTMLElement>('[data-reviews]');
+    if (!root) return;
+    const stage = root.querySelector<HTMLElement>('[data-review-stage]')!;
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-review-select]')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-review-panel]')];
+    const status = root.querySelector<HTMLElement>('[data-review-status]')!;
+    const controller = new AbortController();
+    const { signal } = controller;
+    const wide = matchMedia('(min-width: 720px)');
+    const motion = matchMedia('(prefers-reduced-motion: no-preference)');
+    const tilt = matchMedia('(min-width: 1080px) and (hover: hover) and (pointer: fine)');
+    let selected = 0;
+    let visible = false;
+    let frame = 0;
+    let pointerX = 0;
+    let pointerY = 0;
+    const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+    function select(index: number, announce = false) {
+      selected = index;
+      root!.toggleAttribute('data-enhanced', wide.matches);
+      buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === selected)));
+      panels.forEach((panel, i) => {
+        panel.toggleAttribute('data-selected', i === selected);
+        panel.inert = wide.matches && i !== selected;
+        if (wide.matches && i !== selected) panel.setAttribute('aria-hidden', 'true');
+        else panel.removeAttribute('aria-hidden');
+      });
+      if (announce) status.textContent = buttons[index]!.dataset.announcement ?? '';
+    }
+
+    const canMove = () => motion.matches && visible && !document.hidden;
+    const canTilt = () => canMove() && tilt.matches;
+    function paint() {
+      frame = 0;
+      let scroll = 0;
+      if (canMove()) {
+        const rect = stage.getBoundingClientRect();
+        // Map the full viewport crossing to -1..1, independent of card height or input device.
+        scroll = clamp(
+          (innerHeight / 2 - rect.top - rect.height / 2) / ((innerHeight + rect.height) / 2),
+          -1,
+          1,
+        );
+      }
+      stage.style.setProperty('--review-scroll', `${(scroll * 48).toFixed(2)}px`);
+      stage.style.setProperty('--review-back', `${(scroll * -96).toFixed(2)}px`);
+      stage.style.setProperty('--review-middle', `${(scroll * -48).toFixed(2)}px`);
+      stage.style.setProperty('--review-field', `${(scroll * -100).toFixed(2)}px`);
+      stage.style.setProperty('--review-rx', `${(canTilt() ? -pointerY * 3 : 0).toFixed(2)}deg`);
+      stage.style.setProperty('--review-ry', `${(canTilt() ? pointerX * 3 : 0).toFixed(2)}deg`);
+    }
+    function schedule() {
+      if (!frame) frame = requestAnimationFrame(paint);
+    }
+    function resetPointer() {
+      pointerX = 0;
+      pointerY = 0;
+      schedule();
+    }
+
+    buttons.forEach((button, index) =>
+      button.addEventListener('click', () => select(index, true), { signal }),
+    );
+    wide.addEventListener('change', () => select(selected), { signal });
+    motion.addEventListener('change', resetPointer, { signal });
+    tilt.addEventListener('change', resetPointer, { signal });
+    stage.addEventListener(
+      'pointermove',
+      (event) => {
+        if (!canTilt()) return;
+        const rect = stage.getBoundingClientRect();
+        pointerX = clamp(((event.clientX - rect.left) / rect.width - 0.5) * 2, -1, 1);
+        pointerY = clamp(((event.clientY - rect.top) / rect.height - 0.5) * 2, -1, 1);
+        schedule();
+      },
+      { signal, passive: true },
+    );
+    stage.addEventListener('pointerleave', resetPointer, { signal });
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (canMove()) schedule();
+      },
+      { signal, passive: true },
+    );
+    window.addEventListener('resize', schedule, { signal, passive: true });
+    document.addEventListener('visibilitychange', resetPointer, { signal });
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry?.isIntersecting ?? false;
+      if (!visible) pointerX = pointerY = 0;
+      schedule();
+    });
+    observer.observe(stage);
+    select(selected);
+    root.setAttribute('data-ready', '');
+    dispose = () => {
+      controller.abort();
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }
+
+  document.addEventListener('astro:page-load', bootReviews);
+  document.addEventListener('astro:before-swap', () => {
+    dispose?.();
+    dispose = undefined;
+  });
+  bootReviews();
+</script>

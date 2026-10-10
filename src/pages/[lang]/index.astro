@@ -5,11 +5,10 @@ import HomeIndex from '../../components/HomeIndex.astro';
 import SolutionsLedger from '../../components/SolutionsLedger.astro';
 import HuntSpot from '../../components/HuntSpot.astro';
 import Credentials from '../../components/Credentials.astro';
-import JourneyReel from '../../components/JourneyReel.astro';
+import CustomerReviews from '../../components/CustomerReviews.astro';
 import Icon from '../../components/Icon.astro';
-import { JOURNEY_BY_ID } from '../../lib/journeys';
 import { langStaticPaths } from '../../lib/paths';
-import { localizedHref, localizedPath, useT, type Lang } from '../../lib/i18n';
+import { localizedHref, useT, type Lang } from '../../lib/i18n';
 import { organization } from '../../lib/jsonld';
 import { CONTACT_EMAIL } from '../../lib/site';
 
@@ -28,7 +27,6 @@ const tries = [
   { id: 'quiz', path: '/solutions/consulting/#quiz' },
   { id: 'matrix', path: '/solutions/audit/#matrix' },
 ] as const;
-const vendor = JOURNEY_BY_ID['vendor-account']!;
 ---
 
 <BaseLayout lang={lang} title={t('site.name')} description={t('site.description')} jsonLd={ld}>
@@ -58,32 +56,11 @@ const vendor = JOURNEY_BY_ID['vendor-account']!;
       </p>
     </div>
   </section>
-  <section class="section" aria-labelledby="breach-h">
-    <div class="container">
-      <h2 id="breach-h" class="section__label">
-        {t('home.breach.label')}
-      </h2>
-      <p class="breach__lede">{t('home.breach.lede')}</p>
-      <JourneyReel
-        journey={vendor}
-        lang={lang}
-        href={localizedPath(lang, '/experience/journeys/vendor-account/')}
-      />
-    </div>
-  </section>
+  <CustomerReviews lang={lang} />
   <Credentials lang={lang} />
 </BaseLayout>
 
 <style>
-  .breach__lede {
-    max-inline-size: 22ch;
-    margin: 0 0 var(--s-6);
-    font-family: var(--font-display);
-    font-size: var(--fs-h2);
-    font-weight: 300;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-  }
   .try {
     list-style: none;
     margin: 0;
