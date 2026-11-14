@@ -27,7 +27,7 @@
     "@astrojs/sitemap": "3.7.4",
     "@fontsource-variable/jetbrains-mono": "5.3.0",
     "@fontsource/be-vietnam-pro": "5.3.0",
-    "astro": "7.3.7",
+    "astro": "7.4.12",
     "gsap": "3.15.0",
     "three": "0.186.1"
   },
